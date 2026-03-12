@@ -1,0 +1,175 @@
+export type CaseInput = {
+  age: string;
+  sex: string;
+  presentingComplaint: string;
+  history: string;
+  pmh: string;
+  meds: string;
+  social: string;
+  keyPositives: string;
+  keyNegatives: string;
+  observations: string;
+  suspectedDiagnosis: string;
+};
+
+export type ExtractedFeatures = {
+  allText: string;
+  matchedFeatures: string[];
+};
+
+export type RedFlag = {
+  name: string;
+  explanation: string;
+  boostDiagnoses: string[];
+};
+
+export type DifferentialResult = {
+  name: string;
+  score: number;
+  reasonsFor: string[];
+  reasonsAgainst: string[];
+};
+
+export type AnalysisResult = {
+  problemRepresentation: string;
+  redFlags: RedFlag[];
+  differentials: DifferentialResult[];
+  fitCheck: {
+    label: "Strong fit" | "Partial fit" | "Weak fit" | "No diagnosis entered";
+    summary: string;
+    supporting: string[];
+    conflicting: string[];
+  };
+  anchorWarning: string;
+  presentation: string;
+};import type { CaseInput, ExtractedFeatures } from "./types";
+
+const FEATURE_PATTERNS: Record<string, string[]> = {
+  chestPain: ["chest pain", "central chest pain", "chest tightness"],
+  suddenOnset: ["sudden onset", "suddenly", "abrupt onset"],
+  tearingPain: ["tearing", "ripping"],
+  backRadiation: ["radiating to the back", "radiates to the back", "back radiation"],
+  collapse: ["collapse", "collapsed", "syncope", "loss of consciousness", "loc"],
+  pulsatileAbdomen: ["pulsatile abdomen", "pulsating abdomen", "pulsatile mass"],
+  smoker: ["smoker", "smoking"],
+  hypertension: ["hypertension", "untreated hypertension", "high blood pressure"],
+  abdominalPain: ["abdominal pain", "abd pain", "epigastric pain"],
+  painOutOfProportion: ["pain out of proportion"],
+  af: ["af", "atrial fibrillation"],
+  thunderclap: ["thunderclap headache", "thunderclap"],
+  headache: ["headache"],
+  vomiting: ["vomiting", "vomited"],
+  neckStiffness: ["neck stiffness", "meningism"],
+  confusion: ["confusion", "confused", "delirium"],
+  focalNeurology: ["focal neurology", "weakness", "unilateral weakness", "facial droop"],
+  sob: ["shortness of breath", "sob", "dyspnoea", "dyspnea"],
+  hypoxia: ["hypoxia", "hypoxic", "low sats", "oxygen saturation"],
+  pleuriticPain: ["pleuritic pain"],
+  fever: ["fever", "pyrexia"],
+  hypotension: ["hypotension", "bp 80", "bp 70", "shock"],
+};
+
+export function extractFeatures(input: CaseInput): ExtractedFeatures {
+  const allText = [
+    input.presentingComplaint,
+    input.history,
+    input.pmh,
+    input.meds,
+    input.social,
+    input.keyPositives,
+    input.keyNegatives,
+    input.observations,
+    input.suspectedDiagnosis,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const matchedFeatures: string[] = [];
+
+  for (const [feature, patterns] of Object.entries(FEATURE_PATTERNS)) {
+    if (patterns.some((pattern) => allText.includes(pattern))) {
+      matchedFeatures.push(feature);
+    }
+  }
+
+  return { allText, matchedFeatures };
+}
+import type { ExtractedFeatures, RedFlag } from "./types";
+
+function has(features: ExtractedFeatures, key: string) {
+  return features.matchedFeatures.includes(key);
+}
+
+export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
+  const flags: RedFlag[] = [];
+
+  const aorticCount = [
+    has(features, "chestPain"),
+    has(features, "suddenOnset"),
+    has(features, "tearingPain"),
+    has(features, "backRadiation"),
+    has(features, "collapse"),
+    has(features, "hypertension"),
+  ].filter(Boolean).length;
+
+  if (aorticCount >= 3) {
+    flags.push({
+      name: "Acute aortic syndrome pattern",
+      explanation:
+        "This combination of abrupt chest pain, tearing quality, back radiation, collapse, or hypertension should strongly raise concern for acute aortic pathology.",
+      boostDiagnoses: ["Acute aortic syndrome"],
+    });
+  }
+
+  const aaaCount = [
+    has(features, "abdominalPain"),
+    has(features, "backRadiation"),
+    has(features, "collapse"),
+    has(features, "pulsatileAbdomen"),
+    has(features, "smoker"),
+    has(features, "hypotension"),
+  ].filter(Boolean).length;
+
+  if (aaaCount >= 3) {
+    flags.push({
+      name: "AAA pattern",
+      explanation:
+        "Abdominal or back pain with pulsatile abdominal findings, collapse, smoking history, or hypotension should push symptomatic or rupturing AAA higher.",
+      boostDiagnoses: ["Abdominal aortic aneurysm"],
+    });
+  }
+
+  const sahCount = [
+    has(features, "thunderclap"),
+    has(features, "headache"),
+    has(features, "vomiting"),
+    has(features, "neckStiffness"),
+    has(features, "collapse"),
+  ].filter(Boolean).length;
+
+  if (sahCount >= 2) {
+    flags.push({
+      name: "Subarachnoid haemorrhage pattern",
+      explanation:
+        "Thunderclap headache, vomiting, neck stiffness, or collapse should trigger concern for subarachnoid haemorrhage.",
+      boostDiagnoses: ["Subarachnoid haemorrhage"],
+    });
+  }
+
+  const neuroCount = [
+    has(features, "confusion"),
+    has(features, "focalNeurology"),
+    has(features, "collapse"),
+  ].filter(Boolean).length;
+
+  if (neuroCount >= 2) {
+    flags.push({
+      name: "Neurological emergency pattern",
+      explanation:
+        "Confusion with focal neurology or collapse should not be framed as simple delirium until neurological emergency has been considered.",
+      boostDiagnoses: ["Stroke / neurological emergency"],
+    });
+  }
+
+  return flags;
+}
