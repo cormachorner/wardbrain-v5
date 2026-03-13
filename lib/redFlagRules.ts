@@ -16,6 +16,13 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
   for (const rule of GUIDELINE_RULES) {
     if (rule.id === "gmc-ai-001") continue;
 
+    if (
+      rule.requiredAnyFeatures &&
+      !rule.requiredAnyFeatures.some((requiredFeature) => has(features, requiredFeature))
+    ) {
+      continue;
+    }
+
     const matchCount = countMatches(features, rule.triggers);
 
     if (matchCount >= 2) {

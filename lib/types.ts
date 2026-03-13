@@ -33,16 +33,35 @@ export type DifferentialResult = {
   reasonsAgainst: string[];
 };
 
+export type NextStepsRule = {
+  diagnosis: string;
+  sourceBody?: "NICE" | "GMC" | "HSCNI";
+  sourceId?: string;
+  sourceCoverage?: "full" | "partial" | "gap";
+  investigations: string[];
+  immediateNextSteps: string[];
+  notes: string[];
+};
+
 export type DiagnosisBoost = {
   diagnosis: string;
   reason: string;
   points: number;
 };
 
+export type FeatureWeightMap = Record<string, number>;
+
+export type SignatureGate = {
+  features: string[];
+  threshold: number;
+  cappedScore?: number;
+};
+
 export type AnalysisResult = {
   problemRepresentation: string;
   redFlags: RedFlag[];
   differentials: DifferentialResult[];
+  nextSteps?: NextStepsRule;
   fitCheck: {
     label: "Strong fit" | "Partial fit" | "Weak fit" | "No diagnosis entered";
     summary: string;

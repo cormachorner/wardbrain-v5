@@ -1,8 +1,14 @@
+import type { FeatureWeightMap, SignatureGate } from "./types";
+import { normaliseDiagnosisName } from "./diagnosisAliases";
+
 export type DiagnosisRule = {
   name: string;
   supportive: string[];
   conflicting: string[];
   expectedImportant?: string[];
+  supportiveWeights?: FeatureWeightMap;
+  conflictingWeights?: FeatureWeightMap;
+  strongSignatureGate?: SignatureGate;
 };
 
 export const DIAGNOSIS_RULES: DiagnosisRule[] = [
@@ -35,15 +41,73 @@ export const DIAGNOSIS_RULES: DiagnosisRule[] = [
   },
   {
     name: "Acute coronary syndrome",
-    supportive: ["chestPain", "collapse", "hypertension", "sob"],
+    supportive: [
+      "chestPain",
+      "jawPain",
+      "armPain",
+      "sweating",
+      "nausea",
+      "indigestionLikeChestPain",
+      "collapse",
+      "hypertension",
+      "smoker",
+      "sob",
+    ],
     conflicting: ["tearingPain", "pulsatileAbdomen", "backRadiation"],
-    expectedImportant: ["chestPain"],
+    expectedImportant: ["chestPain", "jawPain", "armPain", "sweating"],
+    supportiveWeights: {
+      chestPain: 3,
+      jawPain: 4,
+      armPain: 4,
+      sweating: 3,
+      nausea: 2,
+      indigestionLikeChestPain: 2,
+      collapse: 2,
+      hypertension: 1,
+      smoker: 1,
+      sob: 2,
+    },
+    strongSignatureGate: {
+      features: ["chestPain", "jawPain", "armPain", "sweating", "indigestionLikeChestPain"],
+      threshold: 2,
+      cappedScore: 6,
+    },
   },
   {
     name: "Pulmonary embolism",
-    supportive: ["chestPain", "sob", "collapse", "pleuriticPain", "hypoxia"],
+    supportive: [
+      "chestPain",
+      "sob",
+      "suddenOnset",
+      "tachycardia",
+      "tachypnoea",
+      "collapse",
+      "pleuriticPain",
+      "hypoxia",
+      "recentSurgery",
+      "immobility",
+      "longHaulTravel",
+    ],
     conflicting: ["pulsatileAbdomen", "tearingPain", "backRadiation"],
-    expectedImportant: ["sob", "pleuriticPain"],
+    expectedImportant: ["sob", "suddenOnset"],
+    supportiveWeights: {
+      chestPain: 3,
+      suddenOnset: 3,
+      tachycardia: 3,
+      tachypnoea: 3,
+      sob: 3,
+      pleuriticPain: 3,
+      hypoxia: 2,
+      collapse: 3,
+      recentSurgery: 2,
+      immobility: 2,
+      longHaulTravel: 2,
+    },
+    strongSignatureGate: {
+      features: ["chestPain", "sob", "suddenOnset", "pleuriticPain", "hypoxia"],
+      threshold: 2,
+      cappedScore: 3,
+    },
   },
   {
     name: "GORD",
@@ -63,12 +127,28 @@ export const DIAGNOSIS_RULES: DiagnosisRule[] = [
     supportive: ["abdominalPain", "painOutOfProportion", "af", "collapse"],
     conflicting: ["chestPain"],
     expectedImportant: ["abdominalPain", "painOutOfProportion"],
+    supportiveWeights: {
+      painOutOfProportion: 3,
+      af: 3,
+    },
   },
   {
     name: "Subarachnoid haemorrhage",
     supportive: ["thunderclap", "headache", "vomiting", "neckStiffness", "collapse"],
     conflicting: [],
     expectedImportant: ["thunderclap", "headache"],
+    supportiveWeights: {
+      thunderclap: 6,
+      headache: 2,
+      vomiting: 1,
+      neckStiffness: 1,
+      collapse: 3,
+    },
+    strongSignatureGate: {
+      features: ["thunderclap"],
+      threshold: 1,
+      cappedScore: 4,
+    },
   },
   {
     name: "Stroke / neurological emergency",
@@ -82,8 +162,198 @@ export const DIAGNOSIS_RULES: DiagnosisRule[] = [
     conflicting: ["focalNeurology", "thunderclap"],
     expectedImportant: ["confusion"],
   },
+  {
+    name: "Gastroenteritis",
+    supportive: ["abdominalPain", "diarrhoea", "vomiting", "fever"],
+    conflicting: ["painOutOfProportion", "collapse", "af", "hypotension", "giBleed", "prBleeding"],
+    expectedImportant: ["abdominalPain", "diarrhoea"],
+    conflictingWeights: {
+      painOutOfProportion: 3,
+      collapse: 3,
+      hypotension: 3,
+      giBleed: 4,
+      prBleeding: 4,
+    },
+  },
+  {
+    name: "Pneumonia",
+    supportive: ["sob", "fever", "pleuriticPain", "hypoxia"],
+    conflicting: ["suddenOnset", "collapse"],
+    expectedImportant: ["sob", "fever"],
+    conflictingWeights: {
+      collapse: 3,
+    },
+  },
+  {
+    name: "Pneumothorax",
+    supportive: [
+      "chestPain",
+      "sob",
+      "pleuriticPain",
+      "hypoxia",
+      "suddenOnset",
+      "unilateralReducedAirEntry",
+      "tallThinHabitus",
+      "recentChestDrain",
+      "previousPneumothorax",
+      "trauma",
+    ],
+    conflicting: ["fever"],
+    expectedImportant: ["suddenOnset", "sob", "pleuriticPain"],
+    supportiveWeights: {
+      suddenOnset: 2,
+      hypoxia: 1,
+      chestPain: 1,
+      sob: 2,
+      pleuriticPain: 3,
+      unilateralReducedAirEntry: 6,
+      tallThinHabitus: 3,
+      recentChestDrain: 3,
+      previousPneumothorax: 2,
+      trauma: 3,
+    },
+    strongSignatureGate: {
+      features: ["pleuriticPain", "unilateralReducedAirEntry", "trauma"],
+      threshold: 1,
+      cappedScore: 5,
+    },
+  },
+  {
+    name: "Migraine",
+    supportive: ["headache", "vomiting", "photophobia", "nausea"],
+    conflicting: ["thunderclap", "focalNeurology", "neckStiffness", "fever", "collapse"],
+    expectedImportant: ["headache", "photophobia"],
+    supportiveWeights: {
+      headache: 2,
+      photophobia: 2,
+      nausea: 1,
+    },
+    conflictingWeights: {
+      thunderclap: 5,
+      focalNeurology: 4,
+      neckStiffness: 3,
+      fever: 2,
+      collapse: 3,
+    },
+    strongSignatureGate: {
+      features: ["headache", "photophobia"],
+      threshold: 1,
+      cappedScore: 1,
+    },
+  },
+  {
+    name: "Meningitis / encephalitis",
+    supportive: [
+      "confusion",
+      "fever",
+      "headache",
+      "neckStiffness",
+      "vomiting",
+      "photophobia",
+      "sharedAccommodation",
+      "recentInfection",
+    ],
+    conflicting: [],
+    expectedImportant: ["fever", "headache", "neckStiffness"],
+    supportiveWeights: {
+      neckStiffness: 3,
+      confusion: 3,
+      photophobia: 3,
+      sharedAccommodation: 1,
+      recentInfection: 1,
+    },
+  },
+  {
+    name: "GI bleed",
+    supportive: [
+      "giBleed",
+      "prBleeding",
+      "melaena",
+      "haematemesis",
+      "collapse",
+      "hypotension",
+      "tachycardia",
+      "vomiting",
+      "abdominalPain",
+      "alcoholExcess",
+      "bingeDrinking",
+      "pepticUlcerDisease",
+      "nsaidUse",
+    ],
+    conflicting: ["diarrhoea"],
+    expectedImportant: ["giBleed", "hypotension"],
+    supportiveWeights: {
+      giBleed: 4,
+      prBleeding: 3,
+      melaena: 3,
+      haematemesis: 3,
+      hypotension: 1,
+      collapse: 2,
+      tachycardia: 1,
+      vomiting: 1,
+      abdominalPain: 1,
+      alcoholExcess: 1,
+      bingeDrinking: 1,
+      pepticUlcerDisease: 2,
+      nsaidUse: 2,
+    },
+    strongSignatureGate: {
+      features: ["giBleed", "prBleeding", "melaena", "haematemesis"],
+      threshold: 1,
+      cappedScore: 5,
+    },
+  },
+  {
+    name: "Sepsis",
+    supportive: [
+      "fever",
+      "hypothermia",
+      "rigors",
+      "infectionSource",
+      "hypotension",
+      "tachycardia",
+      "tachypnoea",
+      "confusion",
+      "sob",
+      "collapse",
+    ],
+    conflicting: [],
+    expectedImportant: ["fever", "hypotension", "tachycardia"],
+    supportiveWeights: {
+      fever: 3,
+      hypothermia: 3,
+      rigors: 3,
+      infectionSource: 3,
+      hypotension: 1,
+      tachycardia: 1,
+      tachypnoea: 1,
+      confusion: 3,
+      sob: 1,
+      collapse: 1,
+    },
+    strongSignatureGate: {
+      features: ["fever", "hypothermia", "rigors", "infectionSource"],
+      threshold: 1,
+      cappedScore: 3,
+    },
+  },
+  {
+    name: "Viral illness",
+    supportive: ["fever", "headache", "vomiting"],
+    conflicting: ["hypotension", "collapse", "confusion"],
+    expectedImportant: ["fever"],
+    conflictingWeights: {
+      hypotension: 4,
+      collapse: 3,
+      confusion: 3,
+    },
+  },
 ];
 
 export function findDiagnosisRule(name: string): DiagnosisRule | undefined {
-  return DIAGNOSIS_RULES.find((diagnosisRule) => diagnosisRule.name.toLowerCase() === name.trim().toLowerCase());
+  const canonicalName = normaliseDiagnosisName(name);
+
+  return DIAGNOSIS_RULES.find(
+    (diagnosisRule) => diagnosisRule.name.toLowerCase() === canonicalName.toLowerCase(),
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { analyzeCase } from "../lib/differentialEngine";
 import type { CaseInput } from "../lib/types";
 
@@ -21,11 +21,21 @@ const initialCase: CaseInput = {
 
 export default function Home() {
   const [caseInput, setCaseInput] = useState<CaseInput>(initialCase);
+  const [submittedCase, setSubmittedCase] = useState<CaseInput>(initialCase);
 
-  const result = useMemo(() => analyzeCase(caseInput), [caseInput]);
+  const result = analyzeCase(submittedCase);
 
   function updateField<K extends keyof CaseInput>(field: K, value: CaseInput[K]) {
     setCaseInput((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleAnalyseCase() {
+    setSubmittedCase(caseInput);
+  }
+
+  function handleClearCase() {
+    setCaseInput(initialCase);
+    setSubmittedCase(initialCase);
   }
 
   return (
@@ -134,6 +144,23 @@ export default function Home() {
               onChange={(v) => updateField("suspectedDiagnosis", v)}
               placeholder="GORD"
             />
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                onClick={handleAnalyseCase}
+              >
+                Analyse case
+              </button>
+              <button
+                type="button"
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                onClick={handleClearCase}
+              >
+                Clear
+              </button>
+            </div>
           </section>
 
           <section className="space-y-4">
@@ -217,6 +244,55 @@ export default function Home() {
   )}
 </Card>
 </Card>
+            {result.nextSteps && (
+              <Card title="Investigations and immediate next steps">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="font-semibold text-slate-900">{result.nextSteps.diagnosis}</div>
+
+                  {result.nextSteps.sourceBody && result.nextSteps.sourceId && (
+                    <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs font-medium text-slate-800">
+                      {result.nextSteps.sourceBody} {result.nextSteps.sourceId}
+                    </span>
+                  )}
+
+                  {result.nextSteps.sourceCoverage && (
+                    <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      coverage: {result.nextSteps.sourceCoverage}
+                    </span>
+                  )}
+                </div>
+
+                {result.nextSteps.investigations.length > 0 && (
+                  <div className="mt-3">
+                    <div className="mb-1 text-sm font-medium text-slate-900">Investigations</div>
+                    <ul className="space-y-1 text-sm text-slate-700">
+                      {result.nextSteps.investigations.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {result.nextSteps.immediateNextSteps.length > 0 && (
+                  <div className="mt-3">
+                    <div className="mb-1 text-sm font-medium text-slate-900">
+                      Immediate next steps
+                    </div>
+                    <ul className="space-y-1 text-sm text-slate-700">
+                      {result.nextSteps.immediateNextSteps.map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {result.nextSteps.notes.length > 0 && (
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    {result.nextSteps.notes.join(" ")}
+                  </div>
+                )}
+              </Card>
+            )}
             <Card title="Does your suspected diagnosis fit?">
               <div className="mb-2 text-lg font-semibold">{result.fitCheck.label}</div>
               <p className="mb-3 text-slate-700">{result.fitCheck.summary}</p>

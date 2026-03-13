@@ -29,15 +29,21 @@ run("./node_modules/.bin/tsc", [
   "--noEmit",
   "false",
   "lib/differentialEngine.ts",
+  "lib/diagnosisAliases.ts",
+  "lib/diagnosisScoring.ts",
   "lib/featureExtractor.ts",
   "lib/diagnosisBoosts.ts",
   "lib/diagnosisRules.ts",
   "lib/featureLabels.ts",
+  "lib/nextStepsRules.ts",
   "lib/redFlagRules.ts",
   "lib/guidelineRules.ts",
   "lib/types.ts",
   "tests/featureExtractionCases.ts",
   "tests/featureExtraction.test.mts",
+  "tests/diagnosisAliases.test.mts",
+  "tests/finalCalibration.test.mts",
+  "tests/nextSteps.test.mts",
   "tests/trapCases.ts",
   "tests/trapCases.test.mts",
 ]);
@@ -46,6 +52,9 @@ run("node", [
   "--test",
   join(buildDir, "tests", "trapCases.test.mjs"),
   join(buildDir, "tests", "featureExtraction.test.mjs"),
+  join(buildDir, "tests", "diagnosisAliases.test.mjs"),
+  join(buildDir, "tests", "finalCalibration.test.mjs"),
+  join(buildDir, "tests", "nextSteps.test.mjs"),
 ]);
 
 rmSync(buildDir, { recursive: true, force: true });

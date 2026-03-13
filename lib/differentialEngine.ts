@@ -1,56 +1,107 @@
 import { extractFeatures } from "./featureExtractor";
 import { getDiagnosisBoosts } from "./diagnosisBoosts";
+import {
+  getMatchedConflictingFeatures,
+  getMatchedSupportiveFeatures,
+  scoreDiagnosis,
+} from "./diagnosisScoring";
 import { DIAGNOSIS_RULES, findDiagnosisRule } from "./diagnosisRules";
+import { normaliseDiagnosisName } from "./diagnosisAliases";
 import { formatFeatureLabel } from "./featureLabels";
+import { findNextStepsRule } from "./nextStepsRules";
 import { detectRedFlags } from "./redFlagRules";
 import type {
   AnalysisResult,
   CaseInput,
   DifferentialResult,
-  DiagnosisBoost,
   ExtractedFeatures,
 } from "./types";
 
-function has(features: ExtractedFeatures, key: string) {
-  return features.matchedFeatures.includes(key);
+const DIFFERENTIAL_DISPLAY_THRESHOLD = 6;
+const PLAUSIBLE_DIFFERENTIAL_THRESHOLD = 3;
+const MIN_DISPLAYED_DIFFERENTIALS = 3;
+const FIT_CHECK_PRESENTATION_ORDER = [
+  "collapse",
+  "hypotension",
+  "hypoxia",
+  "tachycardia",
+  "tachypnoea",
+  "focalNeurology",
+  "thunderclap",
+  "neckStiffness",
+  "tearingPain",
+  "backRadiation",
+  "painOutOfProportion",
+  "giBleed",
+  "prBleeding",
+  "melaena",
+  "haematemesis",
+  "pleuriticPain",
+  "chestPain",
+  "abdominalPain",
+  "diarrhoea",
+  "vomiting",
+  "headache",
+  "confusion",
+  "fever",
+  "sob",
+  "constipation",
+  "suddenOnset",
+  "pulsatileAbdomen",
+  "smoker",
+  "hypertension",
+  "af",
+] as const;
+
+const FIT_CHECK_PRESENTATION_PRIORITY = new Map<string, number>(
+  FIT_CHECK_PRESENTATION_ORDER.map((feature, index) => [feature, index]),
+);
+
+function sortFeaturesForCritique(features: string[]): string[] {
+  return [...features].sort((left, right) => {
+    const leftPriority = FIT_CHECK_PRESENTATION_PRIORITY.get(left) ?? Number.MAX_SAFE_INTEGER;
+    const rightPriority = FIT_CHECK_PRESENTATION_PRIORITY.get(right) ?? Number.MAX_SAFE_INTEGER;
+
+    return leftPriority - rightPriority;
+  });
 }
 
-function scoreDiagnosis(
-  rule: (typeof DIAGNOSIS_RULES)[number],
+function buildWeakFitContrast(
+  rule: NonNullable<ReturnType<typeof findDiagnosisRule>>,
   features: ExtractedFeatures,
-  boosts: DiagnosisBoost[],
-): DifferentialResult {
-  let score = 0;
-  const reasonsFor: string[] = [];
-  const reasonsAgainst: string[] = [];
+  conflictingFeatures: string[],
+) {
+  const missingExpected = sortFeaturesForCritique(
+    (rule.expectedImportant ?? []).filter((feature) => !features.matchedFeatures.includes(feature)),
+  )
+    .slice(0, 3)
+    .map(formatFeatureLabel);
 
-  for (const feature of rule.supportive) {
-    if (has(features, feature)) {
-      score += 2;
-      reasonsFor.push(formatFeatureLabel(feature));
-    }
+  const contradictoryPresentation = sortFeaturesForCritique(conflictingFeatures)
+    .slice(0, 3)
+    .map(formatFeatureLabel);
+
+  if (missingExpected.length > 0 && contradictoryPresentation.length > 0) {
+    return `${rule.name} would fit better with ${missingExpected.join(", ")} and without ${contradictoryPresentation.join(", ")}.`;
   }
 
-  for (const feature of rule.conflicting) {
-    if (has(features, feature)) {
-      score -= 2;
-      reasonsAgainst.push(formatFeatureLabel(feature));
-    }
+  if (missingExpected.length > 0) {
+    return `${rule.name} would fit better with ${missingExpected.join(", ")}.`;
   }
 
-  for (const boost of boosts) {
-    if (boost.diagnosis === rule.name) {
-      score += boost.points;
-      reasonsFor.push(boost.reason);
-    }
+  if (contradictoryPresentation.length > 0) {
+    return `${rule.name} would fit better without ${contradictoryPresentation.join(", ")}.`;
   }
 
-  return {
-    name: rule.name,
-    score,
-    reasonsFor,
-    reasonsAgainst,
-  };
+  const alternativeSupport = sortFeaturesForCritique(
+    rule.supportive.filter((feature) => !features.matchedFeatures.includes(feature)),
+  )
+    .slice(0, 3)
+    .map(formatFeatureLabel);
+
+  return alternativeSupport.length > 0
+    ? `${rule.name} would fit better with ${alternativeSupport.join(", ")}.`
+    : "";
 }
 
 function buildProblemRepresentation(input: CaseInput, features: ExtractedFeatures) {
@@ -71,6 +122,8 @@ function buildFitCheck(
   differentials: DifferentialResult[],
   features: ExtractedFeatures,
 ): AnalysisResult["fitCheck"] {
+  const canonicalSuspectedDiagnosis = normaliseDiagnosisName(suspectedDiagnosis);
+
   if (!suspectedDiagnosis.trim()) {
     return {
       label: "No diagnosis entered",
@@ -80,9 +133,9 @@ function buildFitCheck(
     };
   }
 
-  const rule = findDiagnosisRule(suspectedDiagnosis);
+  const rule = findDiagnosisRule(canonicalSuspectedDiagnosis);
   const rankedMatch = differentials.find(
-    (d) => d.name.toLowerCase() === suspectedDiagnosis.trim().toLowerCase(),
+    (d) => d.name.toLowerCase() === canonicalSuspectedDiagnosis.toLowerCase(),
   );
 
   if (!rule) {
@@ -95,21 +148,30 @@ function buildFitCheck(
     };
   }
 
-  const supporting = rule.supportive.filter((f) => has(features, f)).map(formatFeatureLabel);
-  const conflicting = rule.conflicting.filter((f) => has(features, f)).map(formatFeatureLabel);
+  const supporting = getMatchedSupportiveFeatures(rule, features);
+  const conflicting = getMatchedConflictingFeatures(rule, features);
+  const prioritisedConflictingFeatures = sortFeaturesForCritique(
+    rule.conflicting.filter((feature) => features.matchedFeatures.includes(feature)),
+  );
 
   const top = differentials[0];
 
   if (!rankedMatch || rankedMatch.score < 3) {
-    const unexplained = conflicting.slice(0, 5);
+    const unexplained = prioritisedConflictingFeatures.slice(0, 5).map(formatFeatureLabel);
+    const contrastSentence = buildWeakFitContrast(rule, features, prioritisedConflictingFeatures);
+
     return {
       label: "Weak fit",
       summary:
         unexplained.length > 0
           ? `${rule.name} is a poor fit because it does not explain ${unexplained.join(
               ", ",
-            )}.${top?.name ? ` ${top.name} currently provides a better overall explanation.` : ""}`
-          : `${rule.name} is currently a weak fit and is being outperformed by a more plausible explanation.`,
+            )}.${contrastSentence ? ` ${contrastSentence}` : ""}${
+              top?.name ? ` ${top.name} currently provides a better overall explanation.` : ""
+            }`
+          : `${rule.name} is currently a weak fit and is being outperformed by a more plausible explanation.${
+              contrastSentence ? ` ${contrastSentence}` : ""
+            }`,
       supporting,
       conflicting,
     };
@@ -143,13 +205,15 @@ function buildAnchorWarning(
   redFlagCount: number,
   fitLabel: AnalysisResult["fitCheck"]["label"],
 ) {
+  const canonicalSuspectedDiagnosis = normaliseDiagnosisName(suspectedDiagnosis);
+
   if (!suspectedDiagnosis.trim()) {
     return "No anchor tested yet. Enter a suspected diagnosis to stress-test your reasoning.";
   }
 
   const top = differentials[0];
   const suspected = differentials.find(
-    (d) => d.name.toLowerCase() === suspectedDiagnosis.trim().toLowerCase(),
+    (d) => d.name.toLowerCase() === canonicalSuspectedDiagnosis.toLowerCase(),
   );
 
   if (!suspected) {
@@ -188,16 +252,26 @@ function buildPresentation(
     "tearingPain",
     "backRadiation",
     "collapse",
+    "tachycardia",
+    "tachypnoea",
     "pulsatileAbdomen",
+    "abdominalPain",
+    "painOutOfProportion",
+    "diarrhoea",
     "sob",
     "hypoxia",
     "focalNeurology",
     "thunderclap",
+    "neckStiffness",
     "vomiting",
     "confusion",
+    "melaena",
+    "haematemesis",
+    "prBleeding",
+    "giBleed",
   ];
 
-  const riskOrder = ["hypertension", "smoker", "af", "hypotension"];
+  const riskOrder = ["hypertension", "smoker", "af", "hypotension", "fever"];
 
   const summaryFeatures = featureOrder
     .filter((feature) => features.matchedFeatures.includes(feature))
@@ -250,26 +324,56 @@ export function analyzeCase(input: CaseInput): AnalysisResult & { detectedFeatur
     (a, b) => b.score - a.score,
   );
 
-  const differentials = scored
-    .filter(
-      (dx, index) => index < 2 || dx.score >= 3 || dx.reasonsFor.some((r) => r.includes("pattern")),
-    )
-    .slice(0, 5);
+  const filteredDifferentials = scored.filter(
+    (dx, index) =>
+      index < 2 ||
+      dx.score >= DIFFERENTIAL_DISPLAY_THRESHOLD ||
+      dx.reasonsFor.some((reason) => reason.includes("pattern")),
+  );
 
-  const fitCheck = buildFitCheck(input.suspectedDiagnosis, differentials, features);
+  const plausibleDifferentials = scored.filter((dx) => dx.score >= PLAUSIBLE_DIFFERENTIAL_THRESHOLD);
+  const minimumDisplayCount = plausibleDifferentials.length >= MIN_DISPLAYED_DIFFERENTIALS
+    ? MIN_DISPLAYED_DIFFERENTIALS
+    : 2;
+
+  const differentials = [...filteredDifferentials];
+
+  if (differentials.length < minimumDisplayCount) {
+    for (const differential of plausibleDifferentials) {
+      if (differentials.some((existingDifferential) => existingDifferential.name === differential.name)) {
+        continue;
+      }
+
+      differentials.push(differential);
+
+      if (differentials.length >= minimumDisplayCount) {
+        break;
+      }
+    }
+  }
+
+  differentials.sort((a, b) => b.score - a.score);
+
+  const displayedDifferentials = differentials.slice(0, 5);
+
+  const fitCheck = buildFitCheck(input.suspectedDiagnosis, scored, features);
   const anchorWarning = buildAnchorWarning(
     input.suspectedDiagnosis,
-    differentials,
+    scored,
     redFlags.length,
     fitCheck.label,
   );
   const problemRepresentation = buildProblemRepresentation(input, features);
-  const presentation = buildPresentation(input, differentials, features);
+  const presentation = buildPresentation(input, displayedDifferentials, features);
+  const nextSteps = displayedDifferentials[0]
+    ? findNextStepsRule(displayedDifferentials[0].name)
+    : undefined;
 
   return {
     problemRepresentation,
     redFlags,
-    differentials,
+    differentials: displayedDifferentials,
+    nextSteps,
     fitCheck,
     anchorWarning,
     presentation,
