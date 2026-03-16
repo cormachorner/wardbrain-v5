@@ -18,6 +18,7 @@ const FEATURE_LABELS: Record<string, string> = {
   prBleeding: "PR bleeding",
   melaena: "melaena",
   haematemesis: "haematemesis",
+  haemoptysis: "haemoptysis",
   rigors: "rigors",
   infectionSource: "infection source",
   alcoholExcess: "alcohol excess",

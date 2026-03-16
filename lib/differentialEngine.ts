@@ -319,8 +319,10 @@ export function analyzeCase(input: CaseInput): AnalysisResult & { detectedFeatur
   const features = extractFeatures(input);
   const redFlags = detectRedFlags(features);
   const boosts = getDiagnosisBoosts(features);
+  const parsedAge = Number.parseInt(input.age, 10);
+  const age = Number.isNaN(parsedAge) ? undefined : parsedAge;
 
-  const scored = DIAGNOSIS_RULES.map((rule) => scoreDiagnosis(rule, features, boosts)).sort(
+  const scored = DIAGNOSIS_RULES.map((rule) => scoreDiagnosis(rule, features, boosts, age)).sort(
     (a, b) => b.score - a.score,
   );
 

@@ -10,9 +10,94 @@ const GENERIC_INSTABILITY_FEATURES = new Set([
   "hypoxia",
   "tachypnoea",
 ]);
+const PNEUMOTHORAX_YOUNG_SIGNATURE_FEATURES = [
+  "tallThinHabitus",
+  "suddenOnset",
+  "pleuriticPain",
+  "unilateralReducedAirEntry",
+  "sob",
+  "smoker",
+] as const;
+
+type AgeBand = "under30" | "30to49" | "50to64" | "65plus" | "unknown";
 
 function has(features: ExtractedFeatures, key: string) {
   return features.matchedFeatures.includes(key);
+}
+
+function getAgeBand(age?: number): AgeBand {
+  if (!age || Number.isNaN(age)) {
+    return "unknown";
+  }
+
+  if (age < 30) {
+    return "under30";
+  }
+
+  if (age < 50) {
+    return "30to49";
+  }
+
+  if (age < 65) {
+    return "50to64";
+  }
+
+  return "65plus";
+}
+
+function getAgeModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: number) {
+  const ageBand = getAgeBand(age);
+  const acsSignatureCount = ["chestPain", "jawPain", "armPain", "sweating", "indigestionLikeChestPain"].filter(
+    (feature) => has(features, feature),
+  ).length;
+  const aaaSignatureCount = ["abdominalPain", "backRadiation", "pulsatileAbdomen"].filter(
+    (feature) => has(features, feature),
+  ).length;
+  const aorticSignatureCount = ["chestPain", "suddenOnset", "tearingPain", "backRadiation"].filter(
+    (feature) => has(features, feature),
+  ).length;
+
+  switch (rule.name) {
+    case "Acute coronary syndrome":
+      if (ageBand === "under30") return acsSignatureCount >= 2 ? -1 : -3;
+      if (ageBand === "30to49") return acsSignatureCount >= 2 ? 0 : -1;
+      if (ageBand === "50to64") return acsSignatureCount >= 1 ? 1 : 0;
+      if (ageBand === "65plus") return acsSignatureCount >= 1 ? 2 : 0;
+      return 0;
+    case "Abdominal aortic aneurysm":
+      if (ageBand === "under30") return aaaSignatureCount >= 2 ? -1 : -4;
+      if (ageBand === "30to49") return aaaSignatureCount >= 2 ? 0 : -2;
+      if (ageBand === "50to64") return aaaSignatureCount >= 1 ? 1 : 0;
+      if (ageBand === "65plus") return aaaSignatureCount >= 1 ? 2 : 0;
+      return 0;
+    case "Acute aortic syndrome":
+      if (ageBand === "under30") return aorticSignatureCount >= 3 ? -1 : -3;
+      if (ageBand === "30to49") return aorticSignatureCount >= 3 ? 0 : -1;
+      if (ageBand === "50to64") return aorticSignatureCount >= 2 ? 1 : 0;
+      if (ageBand === "65plus") return aorticSignatureCount >= 2 ? 2 : 0;
+      return 0;
+    case "Pneumothorax": {
+      if (ageBand !== "under30") {
+        return 0;
+      }
+
+      const matchedYoungSignatureCount = PNEUMOTHORAX_YOUNG_SIGNATURE_FEATURES.filter((feature) =>
+        has(features, feature),
+      ).length;
+
+      if (matchedYoungSignatureCount >= 5) {
+        return 3;
+      }
+
+      if (matchedYoungSignatureCount >= 3) {
+        return 1;
+      }
+
+      return 0;
+    }
+    default:
+      return 0;
+  }
 }
 
 function getSupportiveWeight(rule: DiagnosisRule, feature: string) {
@@ -57,6 +142,7 @@ export function scoreDiagnosis(
   rule: DiagnosisRule,
   features: ExtractedFeatures,
   boosts: DiagnosisBoost[],
+  age?: number,
 ): DifferentialResult {
   let score = 0;
   const reasonsFor: string[] = [];
@@ -83,6 +169,7 @@ export function scoreDiagnosis(
     }
   }
 
+  score += getAgeModifier(rule, features, age);
   score = applySignatureGate(rule, features, score);
 
   return {

@@ -102,7 +102,7 @@ const DIAGNOSIS_BOOST_RULES: DiagnosisBoostRule[] = [
   {
     diagnosis: "Pneumothorax",
     threshold: 3,
-    points: 6,
+    points: 7,
     reason: "pneumothorax pattern",
     features: [
       "sob",

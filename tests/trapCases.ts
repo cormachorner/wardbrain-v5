@@ -77,7 +77,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Acute aortic syndrome",
-          score: 17,
+          score: 19,
           reasonsFor: [
             "chest pain",
             "sudden onset",
@@ -91,7 +91,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Abdominal aortic aneurysm",
-          score: 13,
+          score: 15,
           reasonsFor: [
             "back radiation",
             "collapse / syncope",
@@ -388,7 +388,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Abdominal aortic aneurysm",
-          score: 4,
+          score: 6,
           reasonsFor: ["abdominal pain", "collapse / syncope"],
           reasonsAgainst: [],
         },
@@ -478,7 +478,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Pneumothorax",
-          score: 15,
+          score: 16,
           reasonsFor: [
             "chest pain",
             "shortness of breath",
@@ -491,7 +491,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Acute coronary syndrome",
-          score: 5,
+          score: 6,
           reasonsFor: ["chest pain", "shortness of breath"],
           reasonsAgainst: [],
         },
@@ -652,7 +652,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Pneumothorax",
-          score: 20,
+          score: 23,
           reasonsFor: [
             "chest pain",
             "shortness of breath",
@@ -667,12 +667,6 @@ export const TRAP_CASES: TrapCase[] = [
           name: "Pulmonary embolism",
           score: 12,
           reasonsFor: ["chest pain", "shortness of breath", "sudden onset", "pleuritic pain"],
-          reasonsAgainst: [],
-        },
-        {
-          name: "Acute coronary syndrome",
-          score: 5,
-          reasonsFor: ["chest pain", "shortness of breath"],
           reasonsAgainst: [],
         },
       ],
@@ -750,14 +744,14 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Acute coronary syndrome",
-          score: 5,
+          score: 6,
           reasonsFor: ["chest pain", "shortness of breath"],
           reasonsAgainst: [],
         },
         {
-          name: "Pneumothorax",
+          name: "Acute aortic syndrome",
           score: 5,
-          reasonsFor: ["chest pain", "shortness of breath", "sudden onset"],
+          reasonsFor: ["chest pain", "sudden onset"],
           reasonsAgainst: [],
         },
       ],
@@ -814,7 +808,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Acute coronary syndrome",
-          score: 24,
+          score: 25,
           reasonsFor: [
             "chest pain",
             "jaw pain",
@@ -1187,7 +1181,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Acute coronary syndrome",
-          score: 3,
+          score: 2,
           reasonsFor: ["chest pain"],
           reasonsAgainst: [],
         },

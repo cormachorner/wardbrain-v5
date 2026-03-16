@@ -157,6 +157,50 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     expectedAbsent: ["thunderclap", "abdominalPain"],
   },
   {
+    id: "acs-synonym-wording",
+    description: "detects ACS symptom synonyms from pressure heaviness and radiation wording",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Central chest pressure",
+      history:
+        "Heavy feeling in chest with pain to jaw and pain to left arm, clammy and nauseated.",
+    },
+    expectedPresent: ["chestPain", "jawPain", "armPain", "sweating", "nausea"],
+    expectedAbsent: ["pleuriticPain", "thunderclap"],
+  },
+  {
+    id: "pe-synonym-wording",
+    description: "detects PE symptom synonyms including breathlessness and haemoptysis",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Sudden breathlessness",
+      history: "Sharp chest pain on breathing and coughed up blood. He can't catch breath.",
+    },
+    expectedPresent: ["suddenOnset", "sob", "chestPain", "pleuriticPain", "haemoptysis"],
+    expectedAbsent: ["unilateralReducedAirEntry", "giBleed"],
+  },
+  {
+    id: "pneumothorax-synonym-wording",
+    description: "detects pneumothorax symptom synonyms from one-sided pain and breath sounds",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Sudden sharp chest pain on one side of chest with shortness of breath and one-sided decreased breath sounds.",
+    },
+    expectedPresent: ["chestPain", "suddenOnset", "sob", "unilateralReducedAirEntry"],
+    expectedAbsent: ["haemoptysis", "fever"],
+  },
+  {
+    id: "sah-synonym-wording",
+    description: "detects SAH synonym wording from explosive immediate-onset headache",
+    input: {
+      ...EMPTY_CASE,
+      history: "Worst headache of my life. The headache came on instantly and was explosive.",
+    },
+    expectedPresent: ["headache", "thunderclap"],
+    expectedAbsent: ["focalNeurology", "vomiting"],
+  },
+  {
     id: "gi-bleed-wording-variation",
     description: "detects upper and lower gi bleeding phrases plus unstable observations",
     input: {
@@ -173,6 +217,16 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
       "tachycardia",
       "hypotension",
     ],
+    expectedAbsent: ["diarrhoea", "constipation"],
+  },
+  {
+    id: "gi-bleed-synonym-wording",
+    description: "detects GI bleed synonyms from coffee-ground vomit and rectal blood wording",
+    input: {
+      ...EMPTY_CASE,
+      history: "Coffee-ground vomit with black tarry stools and fresh PR bleeding, now passing blood.",
+    },
+    expectedPresent: ["haematemesis", "melaena", "prBleeding", "giBleed"],
     expectedAbsent: ["diarrhoea", "constipation"],
   },
   {
@@ -219,6 +273,24 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     },
     expectedPresent: ["headache", "photophobia", "recentInfection", "sharedAccommodation"],
     expectedAbsent: ["armPain", "giBleed"],
+  },
+  {
+    id: "meningitis-synonym-wording",
+    description: "detects meningitis encephalitis symptom synonyms from neck stiffness light sensitivity and reduced arousal",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Headache with fever, stiff neck, light hurts eyes, drowsy and difficult to rouse after a recent viral illness.",
+    },
+    expectedPresent: [
+      "headache",
+      "fever",
+      "neckStiffness",
+      "photophobia",
+      "confusion",
+      "recentInfection",
+    ],
+    expectedAbsent: ["armPain", "prBleeding"],
   },
   {
     id: "rr-28",
