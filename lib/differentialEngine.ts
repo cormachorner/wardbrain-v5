@@ -57,6 +57,39 @@ const FIT_CHECK_PRESENTATION_PRIORITY = new Map<string, number>(
   FIT_CHECK_PRESENTATION_ORDER.map((feature, index) => [feature, index]),
 );
 
+function getLeadDiagnosis(input: CaseInput): string {
+  return input.leadDiagnosis?.trim() || input.suspectedDiagnosis?.trim() || "";
+}
+
+function canonicaliseDiagnosisEntry(value: string): string {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return "";
+  }
+
+  const matchedRule = findDiagnosisRule(trimmedValue);
+
+  if (matchedRule) {
+    return matchedRule.name;
+  }
+
+  return normaliseDiagnosisName(trimmedValue);
+}
+
+function parseDiagnosisList(value?: string): string[] {
+  if (!value?.trim()) {
+    return [];
+  }
+
+  const parts = value
+    .split(/[\n,]/)
+    .map((item) => canonicaliseDiagnosisEntry(item))
+    .filter(Boolean);
+
+  return [...new Set(parts)];
+}
+
 function sortFeaturesForCritique(features: string[]): string[] {
   return [...features].sort((left, right) => {
     const leftPriority = FIT_CHECK_PRESENTATION_PRIORITY.get(left) ?? Number.MAX_SAFE_INTEGER;
@@ -118,16 +151,16 @@ function buildProblemRepresentation(input: CaseInput, features: ExtractedFeature
 }
 
 function buildFitCheck(
-  suspectedDiagnosis: string,
+  leadDiagnosis: string,
   differentials: DifferentialResult[],
   features: ExtractedFeatures,
 ): AnalysisResult["fitCheck"] {
-  const canonicalSuspectedDiagnosis = normaliseDiagnosisName(suspectedDiagnosis);
+  const canonicalSuspectedDiagnosis = canonicaliseDiagnosisEntry(leadDiagnosis);
 
-  if (!suspectedDiagnosis.trim()) {
+  if (!leadDiagnosis.trim()) {
     return {
       label: "No diagnosis entered",
-      summary: "Enter a suspected diagnosis to test whether it fits the case pattern.",
+      summary: "Enter a lead diagnosis to test whether it fits the case pattern.",
       supporting: [],
       conflicting: [],
     };
@@ -142,7 +175,7 @@ function buildFitCheck(
     return {
       label: "Weak fit",
       summary:
-        "Your suspected diagnosis is not recognised by the current rule set, so it cannot yet be stress-tested properly.",
+        "Your lead diagnosis is not recognised by the current rule set, so it cannot yet be stress-tested properly.",
       supporting: [],
       conflicting: ["not yet represented in the current diagnosis rules"],
     };
@@ -200,15 +233,15 @@ function buildFitCheck(
 }
 
 function buildAnchorWarning(
-  suspectedDiagnosis: string,
+  leadDiagnosis: string,
   differentials: DifferentialResult[],
   redFlagCount: number,
   fitLabel: AnalysisResult["fitCheck"]["label"],
 ) {
-  const canonicalSuspectedDiagnosis = normaliseDiagnosisName(suspectedDiagnosis);
+  const canonicalSuspectedDiagnosis = canonicaliseDiagnosisEntry(leadDiagnosis);
 
-  if (!suspectedDiagnosis.trim()) {
-    return "No anchor tested yet. Enter a suspected diagnosis to stress-test your reasoning.";
+  if (!leadDiagnosis.trim()) {
+    return "No anchor tested yet. Enter a lead diagnosis to stress-test your reasoning.";
   }
 
   const top = differentials[0];
@@ -233,6 +266,79 @@ function buildAnchorWarning(
   }
 
   return "Your current diagnosis is not obviously undercut by the engine, but keep testing dangerous alternatives before settling.";
+}
+
+function buildReasoningComparison(
+  input: CaseInput,
+  differentials: DifferentialResult[],
+  redFlags: AnalysisResult["redFlags"],
+  fitCheck: AnalysisResult["fitCheck"],
+): AnalysisResult["reasoningComparison"] {
+  const leadDiagnosis = getLeadDiagnosis(input);
+  const otherDifferentials = parseDiagnosisList(input.otherDifferentials);
+  const dangerList = parseDiagnosisList(input.dangerousDiagnoses);
+  const topDifferential = differentials[0]?.name;
+  const plausibleDifferentials = differentials
+    .filter((differential) => differential.score >= PLAUSIBLE_DIFFERENTIAL_THRESHOLD)
+    .slice(0, 3)
+    .map((differential) => differential.name);
+  const keyDangerDiagnoses = [
+    ...new Set(
+      [
+        ...differentials.slice(0, 2).map((differential) => differential.name),
+        ...redFlags
+          .flatMap((flag) => flag.boostDiagnoses)
+          .filter((diagnosis) => plausibleDifferentials.includes(diagnosis)),
+      ].filter(Boolean),
+    ),
+  ].slice(0, 3);
+
+  const missingDifferentials = plausibleDifferentials.filter(
+    (diagnosis) => diagnosis !== topDifferential && !otherDifferentials.includes(diagnosis),
+  );
+  const missingDangerDiagnoses = keyDangerDiagnoses.filter(
+    (diagnosis) => !dangerList.includes(diagnosis),
+  );
+
+  let leadAssessment = leadDiagnosis
+    ? `Your lead diagnosis is ${fitCheck.label.toLowerCase()}: ${fitCheck.summary}`
+    : "You have not entered a lead diagnosis yet, so WardBrain cannot compare your main anchor.";
+
+  if (leadAssessment.endsWith("..")) {
+    leadAssessment = leadAssessment.slice(0, -1);
+  }
+
+  let differentialAssessment = "You have not entered any other differentials yet.";
+
+  if (otherDifferentials.length > 0) {
+    differentialAssessment =
+      missingDifferentials.length > 0
+        ? `Your differential list is a bit narrow. Consider widening it to include ${missingDifferentials
+            .slice(0, 2)
+            .join(", ")}.`
+        : "Your differential list is reasonably broad against the current engine output.";
+  } else if (plausibleDifferentials.length > 1) {
+    differentialAssessment = `Your differential list looks narrow for this pattern. Consider adding ${plausibleDifferentials
+      .slice(1, 3)
+      .join(", ")}.`;
+  }
+
+  let dangerAssessment = "You have not entered any dangerous diagnoses to exclude yet.";
+
+  if (dangerList.length > 0) {
+    dangerAssessment =
+      missingDangerDiagnoses.length > 0
+        ? `Your danger list misses ${missingDangerDiagnoses.slice(0, 2).join(", ")}.`
+        : "Your danger list captures the key dangerous diagnoses raised by this case.";
+  } else if (keyDangerDiagnoses.length > 0) {
+    dangerAssessment = `Think about explicitly excluding ${keyDangerDiagnoses.slice(0, 2).join(", ")}.`;
+  }
+
+  return {
+    leadAssessment,
+    differentialAssessment,
+    dangerAssessment,
+  };
 }
 
 function buildPresentation(
@@ -358,13 +464,15 @@ export function analyzeCase(input: CaseInput): AnalysisResult & { detectedFeatur
 
   const displayedDifferentials = differentials.slice(0, 5);
 
-  const fitCheck = buildFitCheck(input.suspectedDiagnosis, scored, features);
+  const leadDiagnosis = getLeadDiagnosis(input);
+  const fitCheck = buildFitCheck(leadDiagnosis, scored, features);
   const anchorWarning = buildAnchorWarning(
-    input.suspectedDiagnosis,
+    leadDiagnosis,
     scored,
     redFlags.length,
     fitCheck.label,
   );
+  const reasoningComparison = buildReasoningComparison(input, scored, redFlags, fitCheck);
   const problemRepresentation = buildProblemRepresentation(input, features);
   const presentation = buildPresentation(input, displayedDifferentials, features);
   const nextSteps = displayedDifferentials[0]
@@ -377,6 +485,7 @@ export function analyzeCase(input: CaseInput): AnalysisResult & { detectedFeatur
     differentials: displayedDifferentials,
     nextSteps,
     fitCheck,
+    reasoningComparison,
     anchorWarning,
     presentation,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),

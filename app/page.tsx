@@ -16,7 +16,9 @@ const initialCase: CaseInput = {
   keyPositives: "",
   keyNegatives: "",
   observations: "",
-  suspectedDiagnosis: "",
+  leadDiagnosis: "",
+  otherDifferentials: "",
+  dangerousDiagnoses: "",
 };
 
 export default function Home() {
@@ -139,10 +141,24 @@ export default function Home() {
             />
 
             <Field
-              label="Suspected diagnosis"
-              value={caseInput.suspectedDiagnosis}
-              onChange={(v) => updateField("suspectedDiagnosis", v)}
+              label="Lead diagnosis"
+              value={caseInput.leadDiagnosis ?? ""}
+              onChange={(v) => updateField("leadDiagnosis", v)}
               placeholder="GORD"
+            />
+
+            <TextArea
+              label="Other differentials being considered"
+              value={caseInput.otherDifferentials ?? ""}
+              onChange={(v) => updateField("otherDifferentials", v)}
+              placeholder="PE, ACS, pneumonia"
+            />
+
+            <TextArea
+              label="Dangerous diagnoses / worst-case scenarios to exclude"
+              value={caseInput.dangerousDiagnoses ?? ""}
+              onChange={(v) => updateField("dangerousDiagnoses", v)}
+              placeholder="Acute aortic syndrome, PE, GI bleed"
             />
 
             <div className="mt-6 flex gap-3">
@@ -293,7 +309,7 @@ export default function Home() {
                 )}
               </Card>
             )}
-            <Card title="Does your suspected diagnosis fit?">
+            <Card title="Does your lead diagnosis fit?">
               <div className="mb-2 text-lg font-semibold">{result.fitCheck.label}</div>
               <p className="mb-3 text-slate-700">{result.fitCheck.summary}</p>
 
@@ -310,6 +326,14 @@ export default function Home() {
                     ? result.fitCheck.conflicting.join(", ")
                     : "No major conflicts detected"}
                 </div>
+              </div>
+            </Card>
+
+            <Card title="How your current reasoning compares">
+              <div className="space-y-3 text-sm text-slate-700">
+                <p>{result.reasoningComparison.leadAssessment}</p>
+                <p>{result.reasoningComparison.differentialAssessment}</p>
+                <p>{result.reasoningComparison.dangerAssessment}</p>
               </div>
             </Card>
 

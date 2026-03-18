@@ -753,7 +753,6 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
       input.keyPositives,
       input.keyNegatives,
       input.observations,
-      input.suspectedDiagnosis,
     ]
       .join(" ")
       .trim(),

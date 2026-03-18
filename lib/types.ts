@@ -9,7 +9,10 @@ export type CaseInput = {
   keyPositives: string;
   keyNegatives: string;
   observations: string;
-  suspectedDiagnosis: string;
+  leadDiagnosis?: string;
+  otherDifferentials?: string;
+  dangerousDiagnoses?: string;
+  suspectedDiagnosis?: string;
 };
 
 export type ExtractedFeatures = {
@@ -67,6 +70,11 @@ export type AnalysisResult = {
     summary: string;
     supporting: string[];
     conflicting: string[];
+  };
+  reasoningComparison: {
+    leadAssessment: string;
+    differentialAssessment: string;
+    dangerAssessment: string;
   };
   anchorWarning: string;
   presentation: string;

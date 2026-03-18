@@ -44,6 +44,7 @@ run("./node_modules/.bin/tsc", [
   "tests/diagnosisAliases.test.mts",
   "tests/finalCalibration.test.mts",
   "tests/nextSteps.test.mts",
+  "tests/reasoningComparison.test.mts",
   "tests/trapCases.ts",
   "tests/trapCases.test.mts",
 ]);
@@ -55,6 +56,7 @@ run("node", [
   join(buildDir, "tests", "diagnosisAliases.test.mjs"),
   join(buildDir, "tests", "finalCalibration.test.mjs"),
   join(buildDir, "tests", "nextSteps.test.mjs"),
+  join(buildDir, "tests", "reasoningComparison.test.mjs"),
 ]);
 
 rmSync(buildDir, { recursive: true, force: true });
