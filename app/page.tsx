@@ -23,9 +23,8 @@ const initialCase: CaseInput = {
 
 export default function Home() {
   const [caseInput, setCaseInput] = useState<CaseInput>(initialCase);
-  const [submittedCase, setSubmittedCase] = useState<CaseInput>(initialCase);
-
-  const result = analyzeCase(submittedCase);
+  const [submittedCase, setSubmittedCase] = useState<CaseInput | null>(null);
+  const result = submittedCase ? analyzeCase(submittedCase) : null;
 
   function updateField<K extends keyof CaseInput>(field: K, value: CaseInput[K]) {
     setCaseInput((prev) => ({ ...prev, [field]: value }));
@@ -37,7 +36,7 @@ export default function Home() {
 
   function handleClearCase() {
     setCaseInput(initialCase);
-    setSubmittedCase(initialCase);
+    setSubmittedCase(null);
   }
 
   return (
@@ -179,87 +178,88 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="space-y-4">
+          {result && (
+            <section className="space-y-4">
             <Card title="Problem representation">
               <p>{result.problemRepresentation}</p>
             </Card>
-<Card title="Features detected">
-  {result.detectedFeatures.length > 0 ? (
-    <div className="flex flex-wrap gap-2">
-      {result.detectedFeatures.map((feature) => (
-        <span
-          key={feature}
-          className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
-        >
-          {feature}
-        </span>
-      ))}
-    </div>
-  ) : (
-    <p className="text-slate-600">No features detected yet.</p>
-  )}
-</Card>
-          
-<Card title="Red-flag pattern detection">
-  {result.redFlags.length > 0 ? (
-    <ul className="space-y-2">
-      {result.redFlags.map((flag) => (
-        <li key={flag.name} className="rounded-xl border border-red-200 bg-red-50 p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-semibold text-red-900">{flag.name}</div>
+            <Card title="Features detected">
+              {result.detectedFeatures.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {result.detectedFeatures.map((feature) => (
+                    <span
+                      key={feature}
+                      className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-600">No features detected yet.</p>
+              )}
+            </Card>
 
-            {flag.sourceBody && flag.sourceId && (
-              <span className="rounded-full border border-red-300 px-2 py-0.5 text-xs font-medium text-red-900">
-                {flag.sourceBody} {flag.sourceId}
-              </span>
-            )}
+            <Card title="Red-flag pattern detection">
+              {result.redFlags.length > 0 ? (
+                <ul className="space-y-2">
+                  {result.redFlags.map((flag) => (
+                    <li key={flag.name} className="rounded-xl border border-red-200 bg-red-50 p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-semibold text-red-900">{flag.name}</div>
 
-            {flag.sourceCoverage && (
-              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
-                coverage: {flag.sourceCoverage}
-              </span>
-            )}
-          </div>
+                        {flag.sourceBody && flag.sourceId && (
+                          <span className="rounded-full border border-red-300 px-2 py-0.5 text-xs font-medium text-red-900">
+                            {flag.sourceBody} {flag.sourceId}
+                          </span>
+                        )}
 
-          <div className="mt-2 text-sm text-red-800">{flag.explanation}</div>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p className="text-slate-600">No major red-flag override pattern detected yet.</p>
-  )}
+                        {flag.sourceCoverage && (
+                          <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
+                            coverage: {flag.sourceCoverage}
+                          </span>
+                        )}
+                      </div>
 
-<Card title="Ranked differentials">
-  {result.differentials.length > 0 ? (
-    <ol className="space-y-2">
-      {result.differentials.map((dx, index) => (
-        <li key={dx.name} className="rounded-xl border border-slate-200 p-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="font-semibold">
-              {index + 1}. {dx.name}
-            </div>
-            <div className="text-sm text-slate-500">Score {dx.score}</div>
-          </div>
+                      <div className="mt-2 text-sm text-red-800">{flag.explanation}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-slate-600">No major red-flag override pattern detected yet.</p>
+              )}
 
-          <div className="mt-2 text-sm text-slate-700">
-            <span className="font-medium">Why it fits: </span>
-            {dx.reasonsFor.length > 0 ? dx.reasonsFor.join(", ") : "Limited support"}
-          </div>
+              <Card title="Ranked differentials">
+                {result.differentials.length > 0 ? (
+                  <ol className="space-y-2">
+                    {result.differentials.map((dx, index) => (
+                      <li key={dx.name} className="rounded-xl border border-slate-200 p-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="font-semibold">
+                            {index + 1}. {dx.name}
+                          </div>
+                          <div className="text-sm text-slate-500">Score {dx.score}</div>
+                        </div>
 
-          {dx.reasonsAgainst.length > 0 && (
-            <div className="mt-1 text-sm text-slate-700">
-              <span className="font-medium">Why against: </span>
-              {dx.reasonsAgainst.join(", ")}
-            </div>
-          )}
-        </li>
-      ))}
-    </ol>
-  ) : (
-    <p className="text-slate-600">No differential met the current display threshold.</p>
-  )}
-</Card>
-</Card>
+                        <div className="mt-2 text-sm text-slate-700">
+                          <span className="font-medium">Why it fits: </span>
+                          {dx.reasonsFor.length > 0 ? dx.reasonsFor.join(", ") : "Limited support"}
+                        </div>
+
+                        {dx.reasonsAgainst.length > 0 && (
+                          <div className="mt-1 text-sm text-slate-700">
+                            <span className="font-medium">Why against: </span>
+                            {dx.reasonsAgainst.join(", ")}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-slate-600">No differential met the current display threshold.</p>
+                )}
+              </Card>
+            </Card>
             {result.nextSteps && (
               <Card title="Investigations and immediate next steps">
                 <div className="flex flex-wrap items-center gap-2">
@@ -344,7 +344,8 @@ export default function Home() {
             <Card title="Present to the reg">
               <p>{result.presentation}</p>
             </Card>
-          </section>
+            </section>
+          )}
         </div>
       </div>
     </main>
