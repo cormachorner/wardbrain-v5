@@ -15,7 +15,7 @@ const DIAGNOSIS_ALIAS_GROUPS = [
   },
   {
     diagnosis: "Pulmonary embolism",
-    aliases: ["pe", "pulmonary embolism", "pulmonary embolus", "lung clot"],
+    aliases: ["pe", "pulmonary embolism", "pulmonary embolus", "DVT", "lung clot"],
   },
   {
     diagnosis: "Abdominal aortic aneurysm",
@@ -28,6 +28,8 @@ const DIAGNOSIS_ALIAS_GROUPS = [
       "acute aortic syndrome",
       "aortic dissection",
       "dissection",
+      "dissecting aortic aneurysm",
+      "dissecting AAA",
       "thoracic aortic dissection",
     ],
   },
@@ -48,6 +50,8 @@ const DIAGNOSIS_ALIAS_GROUPS = [
       "cva",
       "cerebrovascular accident",
       "ischaemic stroke",
+      "haemorrhagic stroke",
+      "hemorrhagic stroke",
       "ischemic stroke",
       "neurological emergency",
     ],
@@ -61,6 +65,8 @@ const DIAGNOSIS_ALIAS_GROUPS = [
     aliases: [
       "gi bleed",
       "gastrointestinal bleed",
+      "gastrointestinal bleeding",
+      "GI bleeding",
       "upper gi bleed",
       "ugib",
       "lower gi bleed",
