@@ -1,0 +1,617 @@
+export const corePilotBlocks = [
+  {
+    "id": "confusion-delirium",
+    "presentation": "Confusion / delirium",
+    "leadPattern": "Delirium until proved otherwise",
+    "differentials": [
+      "Delirium from infection / sepsis",
+      "Metabolic / toxic delirium",
+      "CNS event or intracranial process",
+      "Dementia syndrome"
+    ],
+    "featuresForLead": [
+      "Acute onset",
+      "fluctuating course",
+      "inattention",
+      "altered level of consciousness",
+      "collateral history showing recent decline"
+    ],
+    "featuresAgainstLead": [
+      "Long slow progression over months",
+      "stable attention",
+      "no fluctuation",
+      "preserved alertness"
+    ],
+    "worstCaseToExclude": [
+      "Sepsis",
+      "hypoglycaemia",
+      "stroke",
+      "meningitis/encephalitis",
+      "drug toxicity"
+    ],
+    "redFlags": [
+      "Focal neurology, meningism, persistent reduced GCS, severe agitation with risk, hypoglycaemia, sepsis physiology"
+    ],
+    "firstLineTests": [
+      "A-E assessment",
+      "capillary glucose",
+      "observations",
+      "ECG",
+      "FBC/U&E/CRP/LFTs",
+      "urine",
+      "CXR if indicated",
+      "medication review"
+    ],
+    "immediateActions": [
+      "Treat reversible trigger first",
+      "fluids/oxygen as needed",
+      "infection screen and antimicrobials when indicated",
+      "keep patient safe and reorientate"
+    ],
+    "escalation": "Senior medical review urgently if sepsis, CNS red flags, severe agitation, or reduced consciousness",
+    "outputStyle": "Lead diagnosis + 2-3 differentials + worst-cases not to miss",
+    "sourceAnchor": "Anki medicine deck + clinician enrichment",
+    "learnMoreKey": "confusion-delirium",
+    "triggers": {
+      "presentationTerms": [
+        "Confusion / delirium"
+      ],
+      "searchTerms": [
+        "Confusion / delirium",
+        "Delirium until proved otherwise",
+        "Delirium from infection / sepsis",
+        "Metabolic / toxic delirium",
+        "CNS event or intracranial process",
+        "Dementia syndrome"
+      ]
+    }
+  },
+  {
+    "id": "hearing-loss",
+    "presentation": "Hearing loss",
+    "leadPattern": "Classify first: sudden SNHL vs conductive vs chronic progressive",
+    "differentials": [
+      "Sudden sensorineural hearing loss",
+      "Conductive hearing loss / otitis media / effusion",
+      "Cholesteatoma",
+      "Otosclerosis"
+    ],
+    "featuresForLead": [
+      "Sudden unilateral loss",
+      "normal ear canal/TM or limited findings",
+      "tinnitus",
+      "tuning forks suggest SNHL"
+    ],
+    "featuresAgainstLead": [
+      "Wax, middle ear effusion, obvious conductive pathology, long gradual progression"
+    ],
+    "worstCaseToExclude": [
+      "Sudden SNHL",
+      "mastoiditis",
+      "intracranial complication of cholesteatoma"
+    ],
+    "redFlags": [
+      "Sudden onset",
+      "focal neurology",
+      "mastoid swelling",
+      "severe otalgia with foul discharge",
+      "systemically unwell patient"
+    ],
+    "firstLineTests": [
+      "Otoscopy",
+      "Weber/Rinne",
+      "focused cranial nerve exam",
+      "audiometry",
+      "CT if cholesteatoma/complication suspected"
+    ],
+    "immediateActions": [
+      "Urgent ENT pathway for sudden SNHL",
+      "treat infective causes promptly",
+      "escalate if neurological features or mastoiditis"
+    ],
+    "escalation": "Same-day/urgent ENT for sudden SNHL or suspected complication",
+    "outputStyle": "Immediate classification + urgent referral prompt if sudden or complicated",
+    "sourceAnchor": "ENT deck + clinician enrichment",
+    "learnMoreKey": "hearing-loss",
+    "triggers": {
+      "presentationTerms": [
+        "Hearing loss"
+      ],
+      "searchTerms": [
+        "Hearing loss",
+        "Classify first: sudden SNHL vs conductive vs chronic progressive",
+        "Sudden sensorineural hearing loss",
+        "Conductive hearing loss / otitis media / effusion",
+        "Cholesteatoma",
+        "Otosclerosis"
+      ]
+    }
+  },
+  {
+    "id": "epistaxis",
+    "presentation": "Epistaxis",
+    "leadPattern": "Anterior epistaxis is most likely unless heavy/ongoing bleed suggests posterior source",
+    "differentials": [
+      "Anterior epistaxis",
+      "Posterior epistaxis",
+      "Bleeding diathesis / anticoagulation-related bleed",
+      "Underlying nasal pathology including tumour"
+    ],
+    "featuresForLead": [
+      "Visible anterior bleeding point",
+      "haemodynamically stable",
+      "stops with pressure",
+      "no major comorbidity trigger"
+    ],
+    "featuresAgainstLead": [
+      "Profuse ongoing bleed",
+      "blood from both nostrils/oropharynx",
+      "recurrent severe episodes",
+      "unstable vitals"
+    ],
+    "worstCaseToExclude": [
+      "Posterior epistaxis with haemodynamic compromise",
+      "nasal malignancy"
+    ],
+    "redFlags": [
+      "Airway compromise",
+      "shock",
+      "persistent heavy bleeding",
+      "anticoagulated patient with instability",
+      "unilateral blood-stained discharge or mass"
+    ],
+    "firstLineTests": [
+      "A-E assessment",
+      "vitals",
+      "inspect nose",
+      "FBC/coag if severe/recurrent/anticoagulated"
+    ],
+    "immediateActions": [
+      "Sit forward",
+      "pinch soft part of nose 10-15 min",
+      "topical vasoconstrictor/cautery if point seen",
+      "pack and escalate if not controlled"
+    ],
+    "escalation": "ENT review if posterior bleed, failed packing/cautery, recurrent severe bleed, or cancer concern",
+    "outputStyle": "Likely source + must-not-miss posterior bleed + escalation trigger",
+    "sourceAnchor": "ENT deck + clinician enrichment",
+    "learnMoreKey": "epistaxis",
+    "triggers": {
+      "presentationTerms": [
+        "Epistaxis"
+      ],
+      "searchTerms": [
+        "Epistaxis",
+        "Anterior epistaxis is most likely unless heavy/ongoing bleed suggests posterior source",
+        "Anterior epistaxis",
+        "Posterior epistaxis",
+        "Bleeding diathesis / anticoagulation-related bleed",
+        "Underlying nasal pathology including tumour"
+      ]
+    }
+  },
+  {
+    "id": "vertigo-dizziness",
+    "presentation": "Vertigo / dizziness",
+    "leadPattern": "Peripheral vertigo is common, but central cause must be excluded first",
+    "differentials": [
+      "Benign paroxysmal positional vertigo",
+      "Vestibular neuronitis",
+      "Meniere disease",
+      "Posterior circulation stroke"
+    ],
+    "featuresForLead": [
+      "Positional brief episodes",
+      "triggered by head movement",
+      "no focal neurology",
+      "classic Dix-Hallpike pattern"
+    ],
+    "featuresAgainstLead": [
+      "Continuous vertigo, inability to walk, new headache, focal neurology, skew deviation, central eye signs"
+    ],
+    "worstCaseToExclude": [
+      "Posterior circulation stroke"
+    ],
+    "redFlags": [
+      "New focal neurology",
+      "severe gait ataxia",
+      "central HINTS pattern",
+      "persistent vomiting with inability to mobilise"
+    ],
+    "firstLineTests": [
+      "Full neuro exam",
+      "otology history",
+      "Dix-Hallpike if appropriate",
+      "HINTS only when examiner is competent and syndrome fits"
+    ],
+    "immediateActions": [
+      "Stroke escalation if central features",
+      "Epley for likely BPPV",
+      "supportive treatment for peripheral causes"
+    ],
+    "escalation": "Urgent stroke/senior review if central signs or diagnostic uncertainty with red flags",
+    "outputStyle": "BPPV vs stroke branch with override logic",
+    "sourceAnchor": "ENT deck + clinician enrichment",
+    "learnMoreKey": "vertigo-dizziness",
+    "triggers": {
+      "presentationTerms": [
+        "Vertigo / dizziness"
+      ],
+      "searchTerms": [
+        "Vertigo / dizziness",
+        "Peripheral vertigo is common, but central cause must be excluded first",
+        "Benign paroxysmal positional vertigo",
+        "Vestibular neuronitis",
+        "Meniere disease",
+        "Posterior circulation stroke"
+      ]
+    }
+  },
+  {
+    "id": "red-painful-eye",
+    "presentation": "Red painful eye",
+    "leadPattern": "Vision-threatening cause until proved otherwise",
+    "differentials": [
+      "Acute angle closure glaucoma",
+      "Anterior uveitis",
+      "Microbial keratitis / corneal pathology",
+      "Scleritis"
+    ],
+    "featuresForLead": [
+      "Severe pain",
+      "red eye",
+      "reduced vision",
+      "haloes",
+      "headache/nausea",
+      "mid-dilated fixed pupil"
+    ],
+    "featuresAgainstLead": [
+      "Mild gritty discomfort only",
+      "normal vision",
+      "no photophobia",
+      "clear benign history"
+    ],
+    "worstCaseToExclude": [
+      "Acute angle closure glaucoma",
+      "endophthalmitis",
+      "microbial keratitis"
+    ],
+    "redFlags": [
+      "Reduced visual acuity",
+      "contact lens wearer",
+      "photophobia",
+      "post-procedure pain",
+      "fixed pupil",
+      "corneal opacity"
+    ],
+    "firstLineTests": [
+      "Visual acuity first",
+      "pupil exam",
+      "fluorescein if indicated",
+      "IOP if appropriate",
+      "urgent slit-lamp/ophthalmology review"
+    ],
+    "immediateActions": [
+      "Urgent ophthalmology escalation",
+      "do not delay treatment if glaucoma strongly suspected",
+      "avoid patching contact-lens keratitis"
+    ],
+    "escalation": "Same-day/emergency ophthalmology for any visual reduction or suspected acute glaucoma/keratitis/endophthalmitis",
+    "outputStyle": "Vision-threatening red-eye pathway with urgent override",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "red-painful-eye",
+    "triggers": {
+      "presentationTerms": [
+        "Red painful eye"
+      ],
+      "searchTerms": [
+        "Red painful eye",
+        "Vision-threatening cause until proved otherwise",
+        "Acute angle closure glaucoma",
+        "Anterior uveitis",
+        "Microbial keratitis / corneal pathology",
+        "Scleritis"
+      ]
+    }
+  },
+  {
+    "id": "sudden-visual-loss",
+    "presentation": "Sudden visual loss",
+    "leadPattern": "Retinal/vascular emergency until proved otherwise",
+    "differentials": [
+      "Central retinal artery occlusion",
+      "Retinal detachment",
+      "Retinal vein occlusion",
+      "Posterior vitreous detachment / retinal tear"
+    ],
+    "featuresForLead": [
+      "Sudden painless marked visual loss",
+      "RAPD",
+      "vascular risk factors",
+      "fundus changes if visible"
+    ],
+    "featuresAgainstLead": [
+      "Gradual blurring",
+      "no acute change",
+      "completely benign exam"
+    ],
+    "worstCaseToExclude": [
+      "CRAO",
+      "macula-threatening retinal detachment"
+    ],
+    "redFlags": [
+      "Curtain over vision",
+      "flashes/floaters",
+      "afferent pupillary defect",
+      "severe sudden loss"
+    ],
+    "firstLineTests": [
+      "Visual acuity",
+      "pupils incl RAPD",
+      "fundoscopy if possible",
+      "urgent ophthalmology assessment"
+    ],
+    "immediateActions": [
+      "Same-day emergency ophthalmology",
+      "consider stroke-style pathway if CRAO suspected"
+    ],
+    "escalation": "Immediate ophthalmology / senior review",
+    "outputStyle": "Emergency visual-loss branch with retinal/vascular emphasis",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "sudden-visual-loss",
+    "triggers": {
+      "presentationTerms": [
+        "Sudden visual loss"
+      ],
+      "searchTerms": [
+        "Sudden visual loss",
+        "Retinal/vascular emergency until proved otherwise",
+        "Central retinal artery occlusion",
+        "Retinal detachment",
+        "Retinal vein occlusion",
+        "Posterior vitreous detachment / retinal tear"
+      ]
+    }
+  },
+  {
+    "id": "cellulitis-soft-tissue-infection",
+    "presentation": "Cellulitis / soft tissue infection",
+    "leadPattern": "Superficial soft tissue infection unless deep/necrotising features present",
+    "differentials": [
+      "Cellulitis",
+      "Abscess",
+      "Orbital / preseptal cellulitis depending site",
+      "Necrotising fasciitis"
+    ],
+    "featuresForLead": [
+      "Local erythema, warmth, tenderness, spreading skin infection, fever possible"
+    ],
+    "featuresAgainstLead": [
+      "Pain out of proportion, crepitus, bullae, ophthalmoplegia, reduced vision, rapidly progressive toxicity"
+    ],
+    "worstCaseToExclude": [
+      "Necrotising fasciitis",
+      "orbital cellulitis",
+      "sepsis"
+    ],
+    "redFlags": [
+      "Crepitus",
+      "pain out of proportion",
+      "ophthalmoplegia",
+      "reduced vision",
+      "hypotension",
+      "rapidly spreading infection"
+    ],
+    "firstLineTests": [
+      "A-E",
+      "observations",
+      "bloods",
+      "cultures if septic",
+      "imaging when abscess or deep infection suspected"
+    ],
+    "immediateActions": [
+      "Start antimicrobials when indicated",
+      "drain abscess if needed",
+      "urgent surgical or ophthalmology review for deep/necrotising infection"
+    ],
+    "escalation": "Immediate senior/surgical review if necrotising features or orbital signs",
+    "outputStyle": "Soft-tissue infection with deep-infection override",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "cellulitis-soft-tissue-infection",
+    "triggers": {
+      "presentationTerms": [
+        "Cellulitis / soft tissue infection"
+      ],
+      "searchTerms": [
+        "Cellulitis / soft tissue infection",
+        "Superficial soft tissue infection unless deep/necrotising features present",
+        "Cellulitis",
+        "Abscess",
+        "Orbital / preseptal cellulitis depending site",
+        "Necrotising fasciitis"
+      ]
+    }
+  },
+  {
+    "id": "ruq-pain-jaundice",
+    "presentation": "RUQ pain / jaundice",
+    "leadPattern": "Obstructive/infective hepatobiliary process until proved otherwise",
+    "differentials": [
+      "Acute cholangitis",
+      "Choledocholithiasis / obstructive jaundice",
+      "Acute cholecystitis",
+      "Budd-Chiari syndrome or other hepatic cause"
+    ],
+    "featuresForLead": [
+      "RUQ pain + jaundice + fever",
+      "septic features",
+      "cholestatic LFT pattern"
+    ],
+    "featuresAgainstLead": [
+      "No jaundice or fever",
+      "stable LFTs",
+      "alternate non-biliary pain source"
+    ],
+    "worstCaseToExclude": [
+      "Ascending cholangitis with sepsis"
+    ],
+    "redFlags": [
+      "Hypotension",
+      "confusion",
+      "fever with jaundice",
+      "rising bilirubin",
+      "septic physiology"
+    ],
+    "firstLineTests": [
+      "A-E",
+      "LFTs",
+      "bilirubin",
+      "blood cultures if febrile",
+      "FBC/U&E/CRP",
+      "ultrasound and further biliary imaging as indicated"
+    ],
+    "immediateActions": [
+      "Sepsis treatment bundle if unwell",
+      "antibiotics when indicated",
+      "urgent senior/HPB/GI escalation for source control"
+    ],
+    "escalation": "Urgent senior medical/surgical review for cholangitis or obstructed septic patient",
+    "outputStyle": "Charcot-triad style high-risk hepatobiliary branch",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "ruq-pain-jaundice",
+    "triggers": {
+      "presentationTerms": [
+        "RUQ pain / jaundice"
+      ],
+      "searchTerms": [
+        "RUQ pain / jaundice",
+        "Obstructive/infective hepatobiliary process until proved otherwise",
+        "Acute cholangitis",
+        "Choledocholithiasis / obstructive jaundice",
+        "Acute cholecystitis",
+        "Budd-Chiari syndrome or other hepatic cause"
+      ]
+    }
+  },
+  {
+    "id": "acute-abdominal-pain",
+    "presentation": "Acute abdominal pain",
+    "leadPattern": "Use site + instability + peritonism to separate medical vs surgical emergency",
+    "differentials": [
+      "Acute pancreatitis",
+      "Perforated viscus",
+      "Post-operative anastomotic leak",
+      "Biliary / hepatobiliary emergency"
+    ],
+    "featuresForLead": [
+      "Severe epigastric pain radiating to back",
+      "vomiting",
+      "raised lipase",
+      "compatible trigger history"
+    ],
+    "featuresAgainstLead": [
+      "Diffuse peritonism, free-air features, immediate postoperative deterioration suggesting surgical catastrophe"
+    ],
+    "worstCaseToExclude": [
+      "GI perforation",
+      "anastomotic leak",
+      "severe pancreatitis with organ failure"
+    ],
+    "redFlags": [
+      "Shock",
+      "rigid abdomen",
+      "peritonism",
+      "lactate rise",
+      "post-op deterioration",
+      "organ failure"
+    ],
+    "firstLineTests": [
+      "A-E",
+      "VBG/ABG incl lactate",
+      "FBC/U&E/LFTs/CRP",
+      "lipase/amylase",
+      "pregnancy test where relevant",
+      "imaging based on suspected source"
+    ],
+    "immediateActions": [
+      "Resuscitate first",
+      "analgesia",
+      "fluids",
+      "early senior review",
+      "urgent surgical escalation if perforation/leak suspected"
+    ],
+    "escalation": "Immediate surgical review if unstable, peritonitic, or postoperative deterioration",
+    "outputStyle": "Unstable abdomen branch with surgical override",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "acute-abdominal-pain",
+    "triggers": {
+      "presentationTerms": [
+        "Acute abdominal pain"
+      ],
+      "searchTerms": [
+        "Acute abdominal pain",
+        "Use site + instability + peritonism to separate medical vs surgical emergency",
+        "Acute pancreatitis",
+        "Perforated viscus",
+        "Post-operative anastomotic leak",
+        "Biliary / hepatobiliary emergency"
+      ]
+    }
+  },
+  {
+    "id": "testicular-pain-scrotal-swelling",
+    "presentation": "Testicular pain / scrotal swelling",
+    "leadPattern": "Torsion until proved otherwise in acute painful testis",
+    "differentials": [
+      "Testicular torsion",
+      "Epididymo-orchitis",
+      "Torsion of testicular appendage",
+      "Incarcerated inguinoscrotal pathology / other acute scrotum"
+    ],
+    "featuresForLead": [
+      "Sudden severe unilateral pain",
+      "high-riding or horizontal testis",
+      "absent cremasteric reflex",
+      "nausea/vomiting"
+    ],
+    "featuresAgainstLead": [
+      "Gradual onset with urinary symptoms, fever, positive STI/infective history, preserved cremasteric reflex"
+    ],
+    "worstCaseToExclude": [
+      "Testicular torsion"
+    ],
+    "redFlags": [
+      "Sudden onset",
+      "severe pain",
+      "abnormal lie",
+      "absent cremasteric reflex",
+      "vomiting"
+    ],
+    "firstLineTests": [
+      "Focused exam immediately",
+      "urine/STI tests only if torsion unlikely",
+      "do not delay theatre for ultrasound if torsion likely"
+    ],
+    "immediateActions": [
+      "Immediate urology/surgical escalation for suspected torsion",
+      "antibiotics/supportive care only when infective picture is stronger"
+    ],
+    "escalation": "Emergency surgical review now if torsion cannot be confidently excluded",
+    "outputStyle": "Acute scrotum with torsion override",
+    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "learnMoreKey": "testicular-pain-scrotal-swelling",
+    "triggers": {
+      "presentationTerms": [
+        "Testicular pain / scrotal swelling"
+      ],
+      "searchTerms": [
+        "Testicular pain / scrotal swelling",
+        "Torsion until proved otherwise in acute painful testis",
+        "Testicular torsion",
+        "Epididymo-orchitis",
+        "Torsion of testicular appendage",
+        "Incarcerated inguinoscrotal pathology / other acute scrotum"
+      ]
+    }
+  }
+] as const;
