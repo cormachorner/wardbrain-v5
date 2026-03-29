@@ -39,7 +39,26 @@ const ALIAS_CASES = [
   ["UGIB", "GI bleed"],
   ["lower gi bleed", "GI bleed"],
   ["LGIB", "GI bleed"],
+  ["pneumothorax", "Pneumothorax"],
+  ["PTX", "Pneumothorax"],
+  ["collapsed lung", "Pneumothorax"],
+  ["septic shock", "Sepsis"],
+  ["GERD", "GORD"],
+  ["acid reflux", "GORD"],
+  ["mesenteric ischemia", "Mesenteric ischaemia"],
+  ["ischemic bowel", "Mesenteric ischaemia"],
+  ["chest infection", "Pneumonia"],
+  ["CAP", "Pneumonia"],
+  ["lower respiratory tract infection", "Pneumonia"],
+  ["gastro", "Gastroenteritis"],
+  ["V&D", "Gastroenteritis"],
+  ["viral syndrome", "Viral illness"],
   ["migraine", "Migraine"],
+  ["costochondritis", "Musculoskeletal chest pain"],
+  ["tension headache", "Tension headache"],
+  ["giant cell arteritis", "Temporal arteritis"],
+  ["acute asthma", "Asthma exacerbation"],
+  ["acute copd exacerbation", "COPD exacerbation"],
 ] as const;
 
 for (const [alias, expected] of ALIAS_CASES) {
@@ -49,5 +68,5 @@ for (const [alias, expected] of ALIAS_CASES) {
 }
 
 test("keeps unknown diagnoses unchanged", () => {
-  assert.equal(normaliseDiagnosisName("GORD"), "GORD");
+  assert.equal(normaliseDiagnosisName("DVT"), "DVT");
 });

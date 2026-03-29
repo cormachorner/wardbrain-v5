@@ -95,6 +95,16 @@ function getAgeModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: 
 
       return 0;
     }
+    case "Temporal arteritis":
+      if (ageBand === "under30") return -4;
+      if (ageBand === "30to49") return -2;
+      if (ageBand === "50to64") return 2;
+      if (ageBand === "65plus") return 3;
+      return 0;
+    case "Delirium secondary to infection":
+      if (ageBand === "65plus" && has(features, "confusion")) return 2;
+      if (ageBand === "50to64" && has(features, "confusion")) return 1;
+      return 0;
     default:
       return 0;
   }

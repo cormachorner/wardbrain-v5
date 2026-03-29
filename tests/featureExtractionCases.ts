@@ -412,4 +412,126 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     expectedPresent: ["hypothermia"],
     expectedAbsent: ["fever"],
   },
+  {
+    id: "gord-language-variation",
+    description: "detects GORD-style symptom language from heartburn reflux and antacid relief",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Retrosternal burning with acidic taste and regurgitation, worse after meals and worse lying flat, improves with antacids.",
+    },
+    expectedPresent: [
+      "heartburn",
+      "acidRegurgitation",
+      "worseAfterMeals",
+      "worseLyingFlat",
+      "antacidRelief",
+    ],
+    expectedAbsent: ["suddenOnset", "collapse"],
+  },
+  {
+    id: "musculoskeletal-chest-wall-language",
+    description: "detects reproducible chest wall tenderness and post-lifting pain",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Localized chest pain after heavy lifting, reproducible on palpation and worse on movement.",
+    },
+    expectedPresent: [
+      "chestPain",
+      "reproducibleChestWallTenderness",
+      "movementRelatedChestPain",
+      "postLiftingOnset",
+    ],
+    expectedAbsent: ["hypoxia", "haemoptysis"],
+  },
+  {
+    id: "migraine-aura-language",
+    description: "detects migraine aura and stereotyped benign primary headache language",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Recurrent unilateral throbbing headaches with flashing lights beforehand, photophobia, nausea, and well intervals between episodes.",
+    },
+    expectedPresent: [
+      "headache",
+      "visualAura",
+      "unilateralHeadache",
+      "throbbingHeadache",
+      "photophobia",
+      "nausea",
+      "recurrentHeadache",
+      "wellIntervals",
+    ],
+    expectedAbsent: ["thunderclap", "focalNeurology"],
+  },
+  {
+    id: "tension-headache-language",
+    description: "detects tension headache language from band-like bilateral gradual pattern",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Gradual bilateral band-like headache after stress and poor sleep, no focal deficit.",
+    },
+    expectedPresent: [
+      "headache",
+      "gradualOnset",
+      "bilateralHeadache",
+      "bandLikeHeadache",
+      "stressTrigger",
+      "poorSleep",
+    ],
+    expectedAbsent: ["focalNeurology", "thunderclap"],
+  },
+  {
+    id: "temporal-arteritis-language",
+    description: "detects temporal arteritis language from jaw claudication scalp tenderness and visual symptoms",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Older patient with temporal headache, scalp tenderness, jaw pain when chewing, blurred vision, and aching shoulders.",
+    },
+    expectedPresent: [
+      "headache",
+      "temporalHeadache",
+      "scalpTenderness",
+      "jawClaudication",
+      "transientVisualSymptoms",
+      "pmrLikeSymptoms",
+    ],
+    expectedAbsent: ["thunderclap", "vomiting"],
+  },
+  {
+    id: "pneumonia-language",
+    description: "detects progressive infectious pneumonia language without false sudden onset",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Progressively worsening shortness of breath over several days with productive cough, green sputum, fever, and rigors.",
+    },
+    expectedPresent: ["sob", "productiveCough", "sputumChange", "progressiveCourse", "fever", "rigors"],
+    expectedAbsent: ["suddenOnset"],
+  },
+  {
+    id: "asthma-language",
+    description: "detects asthma exacerbation language from wheeze inhaler use and speech difficulty",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Known asthma with wheeze, increased inhaler use, and too breathless to speak full sentences.",
+    },
+    expectedPresent: ["knownAsthma", "wheeze", "increasedInhalerUse", "difficultySpeaking"],
+    expectedAbsent: ["productiveCough", "knownCopd"],
+  },
+  {
+    id: "copd-language",
+    description: "detects COPD exacerbation language from baseline worsening and sputum change",
+    input: {
+      ...EMPTY_CASE,
+      history:
+        "Known COPD with worsening baseline breathlessness over days, increased sputum volume, and yellow sputum.",
+    },
+    expectedPresent: ["knownCopd", "sob", "progressiveCourse", "sputumChange"],
+    expectedAbsent: ["knownAsthma", "thunderclap"],
+  },
 ];

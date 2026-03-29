@@ -47,15 +47,6 @@ export const TRAP_CASES: TrapCase[] = [
           sourceCoverage: "full",
         },
         {
-          name: "ACS suspicion pattern",
-          explanation:
-            "Chest pain with associated concerning features such as collapse, breathlessness, or haemodynamic instability should keep acute coronary syndrome high on the differential.",
-          boostDiagnoses: ["Acute coronary syndrome"],
-          sourceBody: "NICE",
-          sourceId: "CG95",
-          sourceCoverage: "full",
-        },
-        {
           name: "PE suspicion pattern",
           explanation:
             "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
@@ -117,7 +108,7 @@ export const TRAP_CASES: TrapCase[] = [
       fitCheck: {
         label: "Weak fit",
         summary:
-          "GORD is a poor fit because it does not explain collapse / syncope, tearing quality, back radiation, sudden onset. GORD would fit better without collapse / syncope, tearing quality, back radiation. Acute aortic syndrome currently provides a better overall explanation.",
+          "GORD is a poor fit because it does not explain collapse / syncope, tearing quality, back radiation, sudden onset. GORD would fit better with indigestion-like chest pain, heartburn / retrosternal burning, acid regurgitation and without collapse / syncope, tearing quality, back radiation. Acute aortic syndrome currently provides a better overall explanation.",
         supporting: ["chest pain"],
         conflicting: [
           "sudden onset",
@@ -198,7 +189,7 @@ export const TRAP_CASES: TrapCase[] = [
       fitCheck: {
         label: "Weak fit",
         summary:
-          "Migraine is a poor fit because it does not explain thunderclap onset. Migraine would fit better with photophobia and without thunderclap onset. Subarachnoid haemorrhage currently provides a better overall explanation.",
+          "Migraine is a poor fit because it does not explain thunderclap onset. Migraine would fit better with photophobia, visual aura and without thunderclap onset. Subarachnoid haemorrhage currently provides a better overall explanation.",
         supporting: ["headache", "vomiting"],
         conflicting: ["thunderclap onset"],
       },
@@ -317,29 +308,29 @@ export const TRAP_CASES: TrapCase[] = [
           reasonsAgainst: [],
         },
         {
+          name: "Delirium secondary to infection",
+          score: 6,
+          reasonsFor: ["confusion", "fever"],
+          reasonsAgainst: ["focal neurology"],
+        },
+        {
           name: "Sepsis",
           score: 6,
           reasonsFor: ["fever", "confusion"],
           reasonsAgainst: [],
         },
-        {
-          name: "Meningitis / encephalitis",
-          score: 5,
-          reasonsFor: ["confusion", "fever"],
-          reasonsAgainst: [],
-        },
       ],
       fitCheck: {
-        label: "Weak fit",
+        label: "Partial fit",
         summary:
-          "Delirium secondary to infection is a poor fit because it does not explain focal neurology. Delirium secondary to infection would fit better without focal neurology. Stroke / neurological emergency currently provides a better overall explanation.",
+          "Delirium secondary to infection explains part of the case, but does not adequately explain focal neurology.",
         supporting: ["confusion", "fever"],
         conflicting: ["focal neurology"],
       },
       anchorWarning:
-        "Your current diagnosis is weakly supported and the case contains red-flag features. Stroke / neurological emergency should currently be prioritised above a benign explanation.",
+        "Keep challenging your anchor. Stroke / neurological emergency currently edges ahead of your chosen diagnosis.",
       presentation:
-        "This is a 79-year-old male presenting with confusion. Key concerning features include focal neurology, confusion. Relevant background factors include fever. My leading differential is Stroke / neurological emergency, with Sepsis also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
+        "This is a 79-year-old male presenting with confusion. Key concerning features include focal neurology, confusion. Relevant background factors include fever. My leading differential is Stroke / neurological emergency, with Delirium secondary to infection also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
       detectedFeatures: ["confusion", "focal neurology", "fever"],
     },
   },
@@ -444,15 +435,6 @@ export const TRAP_CASES: TrapCase[] = [
         "56yo female Chest pain and breathlessness with chest pain, sudden onset, shortness of breath, hypoxia, pleuritic pain",
       redFlags: [
         {
-          name: "ACS suspicion pattern",
-          explanation:
-            "Chest pain with associated concerning features such as collapse, breathlessness, or haemodynamic instability should keep acute coronary syndrome high on the differential.",
-          boostDiagnoses: ["Acute coronary syndrome"],
-          sourceBody: "NICE",
-          sourceId: "CG95",
-          sourceCoverage: "full",
-        },
-        {
           name: "PE suspicion pattern",
           explanation:
             "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
@@ -464,6 +446,19 @@ export const TRAP_CASES: TrapCase[] = [
       ],
       differentials: [
         {
+          name: "Pneumothorax",
+          score: 20,
+          reasonsFor: [
+            "chest pain",
+            "shortness of breath",
+            "pleuritic pain",
+            "hypoxia",
+            "sudden onset",
+            "pneumothorax pattern",
+          ],
+          reasonsAgainst: [],
+        },
+        {
           name: "Pulmonary embolism",
           score: 19,
           reasonsFor: [
@@ -473,19 +468,6 @@ export const TRAP_CASES: TrapCase[] = [
             "pleuritic pain",
             "hypoxia",
             "PE pattern",
-          ],
-          reasonsAgainst: [],
-        },
-        {
-          name: "Pneumothorax",
-          score: 16,
-          reasonsFor: [
-            "chest pain",
-            "shortness of breath",
-            "pleuritic pain",
-            "hypoxia",
-            "sudden onset",
-            "pneumothorax pattern",
           ],
           reasonsAgainst: [],
         },
@@ -503,9 +485,9 @@ export const TRAP_CASES: TrapCase[] = [
         conflicting: ["sudden onset"],
       },
       anchorWarning:
-        "Keep challenging your anchor. Pulmonary embolism currently edges ahead of your chosen diagnosis.",
+        "Keep challenging your anchor. Pneumothorax currently edges ahead of your chosen diagnosis.",
       presentation:
-        "This is a 56-year-old female presenting with chest pain and breathlessness. Key concerning features include sudden onset, shortness of breath, hypoxia. My leading differential is Pulmonary embolism, with Pneumothorax also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
+        "This is a 56-year-old female presenting with chest pain and breathlessness. Key concerning features include sudden onset, shortness of breath, hypoxia. My leading differential is Pneumothorax, with Pulmonary embolism also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
       detectedFeatures: [
         "chest pain",
         "sudden onset",
@@ -556,11 +538,11 @@ export const TRAP_CASES: TrapCase[] = [
         {
           name: "Meningitis / encephalitis suspicion pattern",
           explanation:
-            "Fever with severe headache or neck stiffness should prompt urgent consideration of meningitis or encephalitis rather than reassurance as a simple infective delirium or viral syndrome.",
+            "This feature cluster should raise urgent concern for meningitis or encephalitis, but the current WardBrain rule is an internal educational pattern rather than a fully source-complete NICE-derived trigger.",
           boostDiagnoses: ["Meningitis / encephalitis"],
           sourceBody: "NICE",
-          sourceId: "NG143",
-          sourceCoverage: "partial",
+          sourceId: "coverage-gap",
+          sourceCoverage: "gap",
         },
       ],
       differentials: [
@@ -578,15 +560,15 @@ export const TRAP_CASES: TrapCase[] = [
           reasonsAgainst: [],
         },
         {
-          name: "Sepsis",
+          name: "Delirium secondary to infection",
           score: 6,
-          reasonsFor: ["fever", "confusion"],
+          reasonsFor: ["confusion", "fever"],
           reasonsAgainst: [],
         },
         {
-          name: "Subarachnoid haemorrhage",
-          score: 4,
-          reasonsFor: ["headache", "vomiting", "neck stiffness"],
+          name: "Sepsis",
+          score: 6,
+          reasonsFor: ["fever", "confusion"],
           reasonsAgainst: [],
         },
       ],
@@ -600,7 +582,7 @@ export const TRAP_CASES: TrapCase[] = [
       anchorWarning:
         "Keep challenging your anchor. Meningitis / encephalitis currently edges ahead of your chosen diagnosis.",
       presentation:
-        "This is a 23-year-old female presenting with confusion. Key concerning features include neck stiffness, vomiting, confusion. Relevant background factors include fever. My leading differential is Meningitis / encephalitis, with Sepsis also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
+        "This is a 23-year-old female presenting with confusion. Key concerning features include neck stiffness, vomiting, confusion. Relevant background factors include fever. My leading differential is Meningitis / encephalitis, with Delirium secondary to infection also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
       detectedFeatures: [
         "headache",
         "vomiting",
@@ -631,15 +613,6 @@ export const TRAP_CASES: TrapCase[] = [
         "29yo male Chest pain and shortness of breath with chest pain, sudden onset, unilateral reduced air entry, shortness of breath, pleuritic pain",
       redFlags: [
         {
-          name: "ACS suspicion pattern",
-          explanation:
-            "Chest pain with associated concerning features such as collapse, breathlessness, or haemodynamic instability should keep acute coronary syndrome high on the differential.",
-          boostDiagnoses: ["Acute coronary syndrome"],
-          sourceBody: "NICE",
-          sourceId: "CG95",
-          sourceCoverage: "full",
-        },
-        {
           name: "PE suspicion pattern",
           explanation:
             "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
@@ -652,7 +625,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Pneumothorax",
-          score: 23,
+          score: 28,
           reasonsFor: [
             "chest pain",
             "shortness of breath",
@@ -665,16 +638,16 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Pulmonary embolism",
-          score: 12,
+          score: 10,
           reasonsFor: ["chest pain", "shortness of breath", "sudden onset", "pleuritic pain"],
-          reasonsAgainst: [],
+          reasonsAgainst: ["unilateral reduced air entry"],
         },
       ],
       fitCheck: {
         label: "Strong fit",
         summary: "Pulmonary embolism is well supported by the current feature pattern.",
         supporting: ["chest pain", "shortness of breath", "sudden onset", "pleuritic pain"],
-        conflicting: [],
+        conflicting: ["unilateral reduced air entry"],
       },
       anchorWarning:
         "Keep challenging your anchor. Pneumothorax currently edges ahead of your chosen diagnosis.",
@@ -710,15 +683,6 @@ export const TRAP_CASES: TrapCase[] = [
         "58yo female Chest pain and shortness of breath with chest pain, sudden onset, shortness of breath, tachypnoea, tachycardia",
       redFlags: [
         {
-          name: "ACS suspicion pattern",
-          explanation:
-            "Chest pain with associated concerning features such as collapse, breathlessness, or haemodynamic instability should keep acute coronary syndrome high on the differential.",
-          boostDiagnoses: ["Acute coronary syndrome"],
-          sourceBody: "NICE",
-          sourceId: "CG95",
-          sourceCoverage: "full",
-        },
-        {
           name: "PE suspicion pattern",
           explanation:
             "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
@@ -749,9 +713,9 @@ export const TRAP_CASES: TrapCase[] = [
           reasonsAgainst: [],
         },
         {
-          name: "Acute aortic syndrome",
+          name: "Pneumothorax",
           score: 5,
-          reasonsFor: ["chest pain", "sudden onset"],
+          reasonsFor: ["chest pain", "shortness of breath", "sudden onset"],
           reasonsAgainst: [],
         },
       ],
@@ -798,7 +762,7 @@ export const TRAP_CASES: TrapCase[] = [
         {
           name: "ACS suspicion pattern",
           explanation:
-            "Chest pain with associated concerning features such as collapse, breathlessness, or haemodynamic instability should keep acute coronary syndrome high on the differential.",
+            "Chest pain or a chest-pain-equivalent pattern such as indigestion-like epigastric discomfort, especially with autonomic features or radiation, should keep acute coronary syndrome high on the differential.",
           boostDiagnoses: ["Acute coronary syndrome"],
           sourceBody: "NICE",
           sourceId: "CG95",
@@ -808,7 +772,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Acute coronary syndrome",
-          score: 25,
+          score: 27,
           reasonsFor: [
             "chest pain",
             "jaw pain",
@@ -829,9 +793,9 @@ export const TRAP_CASES: TrapCase[] = [
           reasonsAgainst: [],
         },
         {
-          name: "Abdominal aortic aneurysm",
-          score: 4,
-          reasonsFor: ["smoking history", "hypertension"],
+          name: "Pulmonary embolism",
+          score: 3,
+          reasonsFor: ["chest pain"],
           reasonsAgainst: [],
         },
       ],
@@ -1009,15 +973,15 @@ export const TRAP_CASES: TrapCase[] = [
           reasonsAgainst: [],
         },
         {
-          name: "Meningitis / encephalitis",
-          score: 5,
+          name: "Delirium secondary to infection",
+          score: 8,
           reasonsFor: ["confusion", "fever"],
           reasonsAgainst: [],
         },
         {
-          name: "Delirium secondary to infection",
-          score: 4,
-          reasonsFor: ["confusion", "fever"],
+          name: "Pneumonia",
+          score: 5,
+          reasonsFor: ["shortness of breath", "fever"],
           reasonsAgainst: [],
         },
       ],
@@ -1031,7 +995,7 @@ export const TRAP_CASES: TrapCase[] = [
       anchorWarning:
         "Your current diagnosis is weakly supported and the case contains red-flag features. Sepsis should currently be prioritised above a benign explanation.",
       presentation:
-        "This is a 81-year-old male presenting with fever and confusion. Key concerning features include tachycardia, tachypnoea, shortness of breath, confusion. Relevant background factors include hypotension / shock, fever. My leading differential is Sepsis, with Meningitis / encephalitis also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
+        "This is a 81-year-old male presenting with fever and confusion. Key concerning features include tachycardia, tachypnoea, shortness of breath, confusion. Relevant background factors include hypotension / shock, fever. My leading differential is Sepsis, with Delirium secondary to infection also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
       detectedFeatures: [
         "confusion",
         "shortness of breath",
