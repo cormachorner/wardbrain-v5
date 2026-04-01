@@ -88,3 +88,42 @@ test("seeded next-wave conditions have the expected controlled promotion status"
     "COPD exacerbation": "live-engine",
   });
 });
+
+test("acute abdominal first-wave promoted conditions are live-engine", () => {
+  const promoted = new Map(
+    CONDITION_PROMOTION_REGISTRY
+      .filter((entry) => ["Acute pancreatitis", "Perforated viscus"].includes(entry.canonicalName))
+      .map((entry) => [entry.canonicalName, entry.promotionStatus]),
+  );
+
+  assert.deepEqual(Object.fromEntries(promoted), {
+    "Acute pancreatitis": "live-engine",
+    "Perforated viscus": "live-engine",
+  });
+});
+
+test("RUQ family governance keeps acute cholangitis live and adjacent comparators scaffold-only", () => {
+  const ruqStatuses = new Map(
+    CONDITION_PROMOTION_REGISTRY
+      .filter((entry) =>
+        [
+          "Acute cholangitis",
+          "Acute cholecystitis",
+          "Choledocholithiasis / obstructive jaundice",
+          "Biliary colic / gallstone disease",
+          "Primary sclerosing cholangitis",
+          "Primary biliary cholangitis",
+        ].includes(entry.canonicalName),
+      )
+      .map((entry) => [entry.canonicalName, entry.promotionStatus]),
+  );
+
+  assert.deepEqual(Object.fromEntries(ruqStatuses), {
+    "Acute cholangitis": "live-engine",
+    "Acute cholecystitis": "live-engine",
+    "Choledocholithiasis / obstructive jaundice": "live-engine",
+    "Biliary colic / gallstone disease": "live-engine",
+    "Primary sclerosing cholangitis": "scaffold-only",
+    "Primary biliary cholangitis": "scaffold-only",
+  });
+});

@@ -87,3 +87,97 @@ test("has next steps coverage for abdominal aortic aneurysm", () => {
   assert.equal(rule.diagnosis, "Abdominal aortic aneurysm");
   assert.equal(rule.sourceId, "NG156");
 });
+
+test("shows next steps for acute cholangitis", () => {
+  const result = analyzeCase({
+    age: "69",
+    sex: "female",
+    presentingComplaint: "RUQ pain and jaundice",
+    history:
+      "Right upper quadrant pain with jaundice, fever, rigors, dark urine, pale stools, and known gallstones.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "HR 118 BP 96/60",
+    suspectedDiagnosis: "ascending cholangitis",
+  });
+
+  assert.ok(result.nextSteps);
+  assert.equal(result.nextSteps.diagnosis, "Acute cholangitis");
+  assert.equal(result.nextSteps.sourceId, "CG188");
+
+  const allText = [
+    ...result.nextSteps.investigations,
+    ...result.nextSteps.immediateNextSteps,
+    ...result.nextSteps.notes,
+  ].join(" ");
+
+  for (const expectedText of ["LFTs", "ultrasound", "MRCP", "ERCP", "biliary"]) {
+    assert.match(allText, new RegExp(expectedText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"));
+  }
+});
+
+test("shows next steps for acute cholecystitis", () => {
+  const result = analyzeCase({
+    age: "52",
+    sex: "female",
+    presentingComplaint: "RUQ pain",
+    history:
+      "Persistent RUQ pain with fever, vomiting, localized RUQ tenderness, and a positive Murphy's sign after a fatty meal.",
+    pmh: "known gallstones",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no jaundice",
+    observations: "",
+    suspectedDiagnosis: "acute cholecystitis",
+  });
+
+  assert.ok(result.nextSteps);
+  assert.equal(result.nextSteps.diagnosis, "Acute cholecystitis");
+  assert.equal(result.nextSteps.sourceId, "CG188");
+});
+
+test("shows next steps for choledocholithiasis", () => {
+  const result = analyzeCase({
+    age: "63",
+    sex: "male",
+    presentingComplaint: "Jaundice",
+    history:
+      "Jaundice with dark urine, pale stools, and itching after previous biliary colic, with a suspected bile duct stone.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no fever no rigors",
+    observations: "",
+    suspectedDiagnosis: "CBD stone",
+  });
+
+  assert.ok(result.nextSteps);
+  assert.equal(result.nextSteps.diagnosis, "Choledocholithiasis / obstructive jaundice");
+  assert.equal(result.nextSteps.sourceId, "CG188");
+});
+
+test("shows next steps for biliary colic", () => {
+  const result = analyzeCase({
+    age: "41",
+    sex: "female",
+    presentingComplaint: "Epigastric pain after meals",
+    history:
+      "Recurrent RUQ pain after fatty meals with well intervals and known gallstones.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no fever no jaundice",
+    observations: "",
+    suspectedDiagnosis: "biliary colic",
+  });
+
+  assert.ok(result.nextSteps);
+  assert.equal(result.nextSteps.diagnosis, "Biliary colic / gallstone disease");
+  assert.equal(result.nextSteps.sourceId, "CG188");
+});

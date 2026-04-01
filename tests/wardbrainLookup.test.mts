@@ -268,7 +268,8 @@ test("epigastric ACS-style case prefers chest pain scaffold over abdominal scaff
       age: "64",
       sex: "male",
       presentingComplaint: "Epigastric pain",
-      history: "Epigastric pressure radiating to the jaw with sweating and nausea, thought it was indigestion.",
+      history:
+        "Epigastric discomfort and upper abdominal heaviness radiating to the jaw with sweating and nausea, thought it was indigestion.",
       pmh: "hypertension",
       meds: "",
       social: "smoker",
@@ -285,4 +286,138 @@ test("epigastric ACS-style case prefers chest pain scaffold over abdominal scaff
 
   assert.ok(match);
   assert.equal(match.block.id, "chest-pain");
+});
+
+test("true abdominal pain control case still matches acute abdominal pain scaffold", () => {
+  const match = matchPresentationBlockForCase(
+    {
+      age: "42",
+      sex: "female",
+      presentingComplaint: "Abdominal pain",
+      history: "Central abdominal pain with diarrhoea and vomiting after sick contacts.",
+      pmh: "",
+      meds: "",
+      social: "",
+      keyPositives: "",
+      keyNegatives: "no jaw pain no sweating no chest pain",
+      observations: "",
+      leadDiagnosis: "Gastroenteritis",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
+    },
+    corePilotBlocks,
+    ["Gastroenteritis", "Mesenteric ischaemia"],
+  );
+
+  assert.ok(match);
+  assert.equal(match.block.id, "acute-abdominal-pain");
+});
+
+test("acute cholangitis style case matches the RUQ scaffold with cholangitis emphasis", () => {
+  const match = matchPresentationBlockForCase(
+    {
+      age: "69",
+      sex: "female",
+      presentingComplaint: "RUQ pain and jaundice",
+      history:
+        "Right upper quadrant pain with jaundice, fever, rigors, dark urine, pale stools, and known gallstones.",
+      pmh: "",
+      meds: "",
+      social: "",
+      keyPositives: "",
+      keyNegatives: "",
+      observations: "HR 122 BP 92/58",
+      leadDiagnosis: "",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
+    },
+    corePilotBlocks,
+    ["Acute cholangitis", "Sepsis"],
+  );
+
+  assert.ok(match);
+  assert.equal(match.block.id, "ruq-pain-jaundice");
+  assert.equal(match.emphasis?.id, "cholangitis-oriented");
+  assert.ok(match.emphasis?.highlightedDifferentials.includes("Acute cholangitis"));
+});
+
+test("chronic cholestatic case keeps the RUQ scaffold but switches to chronic cholestatic emphasis", () => {
+  const match = matchPresentationBlockForCase(
+    {
+      age: "48",
+      sex: "male",
+      presentingComplaint: "Jaundice and itch",
+      history:
+        "Months of itching, fatigue, dry eyes and mouth, intermittent jaundice, and ulcerative colitis.",
+      pmh: "",
+      meds: "",
+      social: "",
+      keyPositives: "",
+      keyNegatives: "no fever no rigors",
+      observations: "",
+      leadDiagnosis: "",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
+    },
+    corePilotBlocks,
+    ["Sepsis"],
+  );
+
+  assert.ok(match);
+  assert.equal(match.block.id, "ruq-pain-jaundice");
+  assert.equal(match.emphasis?.id, "chronic-cholestatic-oriented");
+});
+
+test("classic biliary colic case now matches the RUQ scaffold with biliary colic emphasis", () => {
+  const match = matchPresentationBlockForCase(
+    {
+      age: "41",
+      sex: "female",
+      presentingComplaint: "Epigastric pain after meals",
+      history:
+        "Recurrent RUQ and epigastric pain after fatty meals with gallstone history, settling between attacks and well between episodes.",
+      pmh: "",
+      meds: "",
+      social: "",
+      keyPositives: "",
+      keyNegatives: "no fever no jaundice",
+      observations: "",
+      leadDiagnosis: "",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
+    },
+    corePilotBlocks,
+    ["Biliary colic / gallstone disease"],
+  );
+
+  assert.ok(match);
+  assert.equal(match.block.id, "ruq-pain-jaundice");
+  assert.equal(match.emphasis?.id, "biliary-colic-oriented");
+});
+
+test("duct-stone obstructive pattern keeps the RUQ scaffold and switches to obstructive jaundice emphasis", () => {
+  const match = matchPresentationBlockForCase(
+    {
+      age: "63",
+      sex: "male",
+      presentingComplaint: "Jaundice",
+      history:
+        "Dark urine, pale stools, itching, and a suspected bile duct stone after previous biliary colic.",
+      pmh: "",
+      meds: "",
+      social: "",
+      keyPositives: "",
+      keyNegatives: "no fever no rigors",
+      observations: "",
+      leadDiagnosis: "",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
+    },
+    corePilotBlocks,
+    ["Choledocholithiasis / obstructive jaundice"],
+  );
+
+  assert.ok(match);
+  assert.equal(match.block.id, "ruq-pain-jaundice");
+  assert.equal(match.emphasis?.id, "obstructive-jaundice-oriented");
 });

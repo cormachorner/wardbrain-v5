@@ -21,7 +21,10 @@ test("flags a missing key dangerous exclusion when the lead diagnosis is plausib
   });
 
   assert.equal(result.fitCheck.label, "Strong fit");
-  assert.match(result.reasoningComparison.dangerAssessment, /misses Pulmonary embolism/i);
+  assert.match(
+    result.reasoningComparison.dangerAssessment,
+    /misses (Pneumothorax, )?Pulmonary embolism/i,
+  );
 });
 
 test("identifies a benign lead diagnosis with weak and narrow differentials", () => {

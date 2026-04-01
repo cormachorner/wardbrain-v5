@@ -435,49 +435,61 @@
   {
     "id": "ruq-pain-jaundice",
     "presentation": "RUQ pain / jaundice",
-    "leadPattern": "Obstructive/infective hepatobiliary process until proved otherwise",
+    "leadPattern": "Split acute septic-obstructive biliary disease from gallbladder inflammation, duct obstruction, and chronic cholestatic liver disease",
     "differentials": [
       "Acute cholangitis",
-      "Choledocholithiasis / obstructive jaundice",
       "Acute cholecystitis",
-      "Budd-Chiari syndrome or other hepatic cause"
+      "Choledocholithiasis / obstructive jaundice",
+      "Biliary colic / gallstone disease",
+      "Primary sclerosing cholangitis",
+      "Primary biliary cholangitis"
     ],
     "featuresForLead": [
-      "RUQ pain + jaundice + fever",
-      "septic features",
-      "cholestatic LFT pattern"
+      "RUQ pain with jaundice and fever or rigors",
+      "persistent RUQ pain and Murphy-sign tenderness point more toward cholecystitis than simple biliary colic",
+      "obstructive or cholestatic picture, including dark urine or pale stools",
+      "brief recurrent post-prandial attacks with well intervals point more toward biliary colic",
+      "septic physiology or confusion on top of a biliary pattern",
+      "known gallstones, prior biliary colic, or worsening obstructive symptoms"
     ],
     "featuresAgainstLead": [
-      "No jaundice or fever",
-      "stable LFTs",
-      "alternate non-biliary pain source"
+      "isolated post-prandial pain settling between attacks without fever or jaundice",
+      "Murphy-sign dominant RUQ tenderness without jaundice, which may fit cholecystitis better",
+      "chronic itch, fatigue, sicca symptoms, or IBD context without acute sepsis",
+      "clear alternative non-biliary abdominal source"
     ],
     "worstCaseToExclude": [
-      "Ascending cholangitis with sepsis"
+      "Ascending cholangitis with sepsis",
+      "Septic biliary obstruction needing urgent source control",
+      "Gallstone pancreatitis if severe epigastric pain radiates to the back"
     ],
     "redFlags": [
-      "Hypotension",
-      "confusion",
-      "fever with jaundice",
-      "rising bilirubin",
-      "septic physiology"
+      "jaundice with fever or rigors",
+      "hypotension, confusion, or other sepsis physiology",
+      "dark urine or pale stools with worsening jaundice",
+      "persistent RUQ tenderness with vomiting or inability to tolerate intake",
+      "rising cholestatic bloods or concern for obstructed septic patient"
     ],
     "firstLineTests": [
       "A-E",
+      "observations and sepsis screen if unwell",
+      "FBC/U&E/CRP",
       "LFTs",
       "bilirubin",
       "blood cultures if febrile",
-      "FBC/U&E/CRP",
-      "ultrasound and further biliary imaging as indicated"
+      "ultrasound first-line for gallstones / biliary dilation",
+      "MRCP or EUS if duct stone remains suspected after ultrasound",
+      "lipase if pancreatitis overlap is plausible"
     ],
     "immediateActions": [
-      "Sepsis treatment bundle if unwell",
-      "antibiotics when indicated",
-      "urgent senior/HPB/GI escalation for source control"
+      "Treat this as an urgent hepatobiliary problem if septic or jaundiced",
+      "Think about sepsis-pathway escalation, IV access, fluids, and antibiotics in a real clinical pathway when infection is plausible",
+      "Urgent senior medical / surgical / GI input if cholangitis or obstructed jaundice is suspected",
+      "Think about ERCP or biliary drainage pathways for an obstructed septic picture"
     ],
-    "escalation": "Urgent senior medical/surgical review for cholangitis or obstructed septic patient",
-    "outputStyle": "Charcot-triad style high-risk hepatobiliary branch",
-    "sourceAnchor": "Medicine deck + clinician enrichment",
+    "escalation": "Urgent senior escalation for cholangitis, septic obstruction, worsening jaundice, or diagnostic uncertainty with systemic upset",
+    "outputStyle": "High-risk hepatobiliary branch with acute septic, obstructive, gallbladder, and chronic cholestatic comparators",
+    "sourceAnchor": "NICE CG188; NHS Gallstones; NHS Acute cholecystitis; NHS PBC; NHS hepatology PSC content; Anki medicine deck + clinician enrichment",
     "learnMoreKey": "ruq-pain-jaundice",
     "triggers": {
       "presentationTerms": [
@@ -485,11 +497,13 @@
       ],
       "searchTerms": [
         "RUQ pain / jaundice",
-        "Obstructive/infective hepatobiliary process until proved otherwise",
+        "Split acute septic-obstructive biliary disease from gallbladder inflammation, duct obstruction, and chronic cholestatic liver disease",
         "Acute cholangitis",
-        "Choledocholithiasis / obstructive jaundice",
         "Acute cholecystitis",
-        "Budd-Chiari syndrome or other hepatic cause"
+        "Choledocholithiasis / obstructive jaundice",
+        "Biliary colic / gallstone disease",
+        "Primary sclerosing cholangitis",
+        "Primary biliary cholangitis"
       ]
     }
   },
@@ -611,6 +625,205 @@
         "Epididymo-orchitis",
         "Torsion of testicular appendage",
         "Incarcerated inguinoscrotal pathology / other acute scrotum"
+      ]
+    }
+  },
+  {
+    "id": "chest-pain",
+    "presentation": "Chest pain",
+    "leadPattern": "Start with dangerous chest pain first: ACS, PE, aortic pain, and pneumothorax should be actively separated before settling on a benign explanation",
+    "differentials": [
+      "Acute coronary syndrome",
+      "Pulmonary embolism",
+      "Acute aortic syndrome",
+      "Pneumothorax",
+      "Pericarditis",
+      "Musculoskeletal chest pain"
+    ],
+    "featuresForLead": [
+      "Central pressure, heaviness, or tightness",
+      "radiation to jaw, arm, or back",
+      "sweating, nausea, or collapse",
+      "pleuritic pain or sudden onset when PE / pneumothorax is possible",
+      "high-risk physiology or abnormal observations"
+    ],
+    "featuresAgainstLead": [
+      "Pain reproducible on palpation without red flags",
+      "completely normal physiology with a convincing benign explanation",
+      "history that clearly fits a non-cardiothoracic cause"
+    ],
+    "worstCaseToExclude": [
+      "Acute coronary syndrome",
+      "Pulmonary embolism",
+      "Acute aortic syndrome",
+      "Tension pneumothorax"
+    ],
+    "redFlags": [
+      "Haemodynamic instability",
+      "sudden tearing pain",
+      "pleuritic pain with hypoxia",
+      "collapse",
+      "new ischaemic symptoms or radiation to jaw/arm"
+    ],
+    "firstLineTests": [
+      "A-E assessment",
+      "ECG",
+      "observations",
+      "troponin pathway as appropriate",
+      "CXR",
+      "targeted imaging depending on the pattern"
+    ],
+    "immediateActions": [
+      "Escalate early if ACS, PE, aortic pathology, or pneumothorax is plausible",
+      "Keep the dangerous differential deliberately open until the pattern is clarified"
+    ],
+    "escalation": "Urgent senior review if unstable or if dangerous chest pain diagnoses remain plausible",
+    "outputStyle": "High-risk chest pain split with dangerous-cause override",
+    "sourceAnchor": "WardBrain pilot scaffold",
+    "learnMoreKey": "chest-pain",
+    "triggers": {
+      "presentationTerms": [
+        "Chest pain"
+      ],
+      "searchTerms": [
+        "Chest pain",
+        "Acute coronary syndrome",
+        "Pulmonary embolism",
+        "Acute aortic syndrome",
+        "Pneumothorax",
+        "GORD"
+      ]
+    }
+  },
+  {
+    "id": "headache",
+    "presentation": "Headache",
+    "leadPattern": "Separate thunderclap or other secondary headache patterns from primary headache early, then decide whether migraine remains plausible",
+    "differentials": [
+      "Subarachnoid haemorrhage",
+      "Migraine",
+      "Meningitis / encephalitis",
+      "Stroke / neurological emergency",
+      "Tension headache",
+      "Temporal arteritis"
+    ],
+    "featuresForLead": [
+      "Thunderclap or maximal-at-onset pattern",
+      "neck stiffness or photophobia",
+      "vomiting",
+      "focal neurology or reduced consciousness",
+      "fever or systemic upset when infection is possible"
+    ],
+    "featuresAgainstLead": [
+      "Long-standing unchanged primary headache pattern",
+      "fully benign examination and observations",
+      "clear primary headache history without red flags"
+    ],
+    "worstCaseToExclude": [
+      "Subarachnoid haemorrhage",
+      "Meningitis / encephalitis",
+      "Stroke / neurological emergency",
+      "Temporal arteritis"
+    ],
+    "redFlags": [
+      "Sudden severe headache",
+      "neurological deficit",
+      "meningism",
+      "persistent vomiting",
+      "reduced consciousness",
+      "new headache with visual symptoms in an older patient"
+    ],
+    "firstLineTests": [
+      "Focused neurological examination",
+      "observations",
+      "consider acute headache imaging pathway when indicated",
+      "infection workup if meningitis or encephalitis is plausible"
+    ],
+    "immediateActions": [
+      "Escalate early if thunderclap or neurological red flags are present",
+      "Do not reassure as simple migraine until secondary causes are addressed"
+    ],
+    "escalation": "Urgent senior or emergency review if thunderclap, meningitic, or focal neurological features are present",
+    "outputStyle": "Primary vs secondary headache scaffold with emergency override",
+    "sourceAnchor": "WardBrain pilot scaffold",
+    "learnMoreKey": "headache",
+    "triggers": {
+      "presentationTerms": [
+        "Headache"
+      ],
+      "searchTerms": [
+        "Headache",
+        "Subarachnoid haemorrhage",
+        "Migraine",
+        "Meningitis / encephalitis",
+        "Stroke / neurological emergency"
+      ]
+    }
+  },
+  {
+    "id": "breathlessness-pleuritic-chest-pain",
+    "presentation": "Breathlessness / pleuritic chest pain",
+    "leadPattern": "Treat PE, pneumothorax, and pneumonia as the first dangerous split, then use physiology, chest signs, and risk context to narrow further",
+    "differentials": [
+      "Pulmonary embolism",
+      "Pneumothorax",
+      "Pneumonia",
+      "Asthma exacerbation",
+      "COPD exacerbation",
+      "Sepsis"
+    ],
+    "featuresForLead": [
+      "Shortness of breath",
+      "pleuritic pain",
+      "hypoxia or tachypnoea",
+      "VTE risk context",
+      "unilateral reduced air entry or one-sided chest findings"
+    ],
+    "featuresAgainstLead": [
+      "Completely normal physiology",
+      "clear non-respiratory explanation",
+      "absence of both respiratory symptoms and risk context"
+    ],
+    "worstCaseToExclude": [
+      "Pulmonary embolism",
+      "Pneumothorax",
+      "Severe pneumonia with sepsis"
+    ],
+    "redFlags": [
+      "Hypoxia",
+      "tachypnoea",
+      "collapse",
+      "haemoptysis",
+      "unilateral reduced air entry"
+    ],
+    "firstLineTests": [
+      "A-E assessment",
+      "observations",
+      "CXR",
+      "ECG",
+      "PE pathway testing as appropriate",
+      "blood gas and infection workup when physiology is concerning"
+    ],
+    "immediateActions": [
+      "Escalate early if PE or pneumothorax remains plausible",
+      "Treat physiological instability as a high-risk signal rather than a benign respiratory complaint",
+      "Reassess quickly if unilateral chest findings or worsening hypoxia emerge"
+    ],
+    "escalation": "Urgent senior review if hypoxic, tachypnoeic, unstable, or if PE/pneumothorax cannot be safely excluded",
+    "outputStyle": "Pleuro-respiratory emergency split with physiology override",
+    "sourceAnchor": "WardBrain pilot scaffold",
+    "learnMoreKey": "breathlessness-pleuritic-chest-pain",
+    "triggers": {
+      "presentationTerms": [
+        "Breathlessness / pleuritic chest pain"
+      ],
+      "searchTerms": [
+        "Breathlessness / pleuritic chest pain",
+        "Pulmonary embolism",
+        "Pneumothorax",
+        "Pneumonia",
+        "Acute coronary syndrome",
+        "Sepsis"
       ]
     }
   }

@@ -122,6 +122,138 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     expectedAbsent: ["chestPain", "pleuriticPain"],
   },
   {
+    id: "pancreatitis-language",
+    description: "detects classic pancreatitis wording from epigastric back-radiating pain with alcohol or gallstone context",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Epigastric pain",
+      history:
+        "Severe constant upper abdominal pain radiating to the back with vomiting after binge drinking and known gallstones.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "severeConstantUpperAbdominalPain",
+      "backRadiation",
+      "vomiting",
+      "bingeDrinking",
+      "gallstoneContext",
+    ],
+    expectedAbsent: ["diarrhoea", "pleuriticPain"],
+  },
+  {
+    id: "perforation-language",
+    description: "detects perforated viscus wording from sudden abdominal pain with guarding and movement pain",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Abdominal pain",
+      history:
+        "Sudden severe generalized abdominal pain with guarding and rigidity, worse on movement and coughing, with concern for perforation.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "suddenOnset",
+      "guardingRigidity",
+      "abdominalMovementPain",
+      "perforationLanguage",
+    ],
+    expectedAbsent: ["diarrhoea", "chestPain"],
+  },
+  {
+    id: "acute-cholangitis-language",
+    description: "detects acute cholangitis wording from RUQ pain with jaundice rigors and cholestatic clues",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "RUQ pain and jaundice",
+      history:
+        "Right upper quadrant pain with jaundice, rigors, dark urine, pale stools, and known gallstones.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "ruqPain",
+      "jaundice",
+      "rigors",
+      "darkUrine",
+      "paleStools",
+      "gallstoneContext",
+    ],
+    expectedAbsent: ["diarrhoea", "thunderclap"],
+  },
+  {
+    id: "biliary-colic-language",
+    description: "detects recurrent biliary colic wording from fatty-meal episodic RUQ pain",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "RUQ pain",
+      history:
+        "Episodic RUQ pain after fatty meals with recurrent attacks that settle between episodes.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "ruqPain",
+      "postPrandialPain",
+      "recurrentBiliaryPain",
+      "wellBetweenEpisodes",
+    ],
+    expectedAbsent: ["jaundice", "rigors", "hypotension"],
+  },
+  {
+    id: "acute-cholecystitis-language",
+    description: "detects persistent febrile RUQ pain with Murphy-sign and tenderness wording",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "RUQ pain",
+      history:
+        "Persistent RUQ pain with localized RUQ tenderness, positive Murphy's sign, fever, nausea, and vomiting after a fatty meal with known gallstones.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "ruqPain",
+      "persistentRuqPain",
+      "localizedRuqTenderness",
+      "murphysSign",
+      "fever",
+      "nausea",
+      "vomiting",
+      "postPrandialPain",
+      "gallstoneContext",
+    ],
+    expectedAbsent: ["jaundice", "rigors"],
+  },
+  {
+    id: "choledocholithiasis-language",
+    description: "detects obstructive jaundice wording from duct-stone and cholestatic phrases",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Jaundice",
+      history:
+        "Mild RUQ discomfort with jaundice, dark urine, pale stools, itch, and suspected bile duct stone on a cholestatic picture after previous biliary colic.",
+    },
+    expectedPresent: [
+      "abdominalPain",
+      "ruqPain",
+      "jaundice",
+      "darkUrine",
+      "paleStools",
+      "pruritus",
+      "obstructiveJaundiceLanguage",
+      "gallstoneContext",
+      "recurrentBiliaryPain",
+    ],
+    expectedAbsent: ["rigors", "hypotension", "thunderclap"],
+  },
+  {
+    id: "chronic-cholestatic-language",
+    description: "detects chronic cholestatic comparator wording from itch fatigue sicca and IBD context",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Jaundice and itch",
+      history:
+        "Months of pruritus, fatigue, dry eyes and mouth, with ulcerative colitis and intermittent jaundice.",
+    },
+    expectedPresent: ["jaundice", "pruritus", "fatigue", "dryEyesMouth", "ibdContext", "chronicCourse"],
+    expectedAbsent: ["rigors", "hypotension", "thunderclap"],
+  },
+  {
     id: "pleuritic-fever-negations",
     description: "respects no pleuritic pain and no fever negation phrases",
     input: {
@@ -167,6 +299,18 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     },
     expectedPresent: ["chestPain", "jawPain", "armPain", "sweating", "nausea"],
     expectedAbsent: ["pleuriticPain", "thunderclap"],
+  },
+  {
+    id: "epigastric-acs-wording",
+    description: "detects atypical ACS epigastric discomfort and upper abdominal heaviness wording",
+    input: {
+      ...EMPTY_CASE,
+      presentingComplaint: "Epigastric pain",
+      history:
+        "Epigastric discomfort and upper abdominal heaviness radiating to the jaw with sweating and nausea, thought it was indigestion.",
+    },
+    expectedPresent: ["abdominalPain", "indigestionLikeChestPain", "jawPain", "sweating", "nausea"],
+    expectedAbsent: ["pleuriticPain", "productiveCough"],
   },
   {
     id: "pe-synonym-wording",
@@ -518,9 +662,9 @@ export const FEATURE_EXTRACTION_CASES: FeatureExtractionCase[] = [
     input: {
       ...EMPTY_CASE,
       history:
-        "Known asthma with wheeze, increased inhaler use, and too breathless to speak full sentences.",
+        "Known asthma with wheeze, chest tightness after a recent viral cold, increased inhaler use, and too breathless to speak full sentences.",
     },
-    expectedPresent: ["knownAsthma", "wheeze", "increasedInhalerUse", "difficultySpeaking"],
+    expectedPresent: ["knownAsthma", "wheeze", "increasedInhalerUse", "difficultySpeaking", "recentInfection", "chestPain"],
     expectedAbsent: ["productiveCough", "knownCopd"],
   },
   {

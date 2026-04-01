@@ -164,7 +164,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Subarachnoid haemorrhage",
-          score: 15,
+          score: 16,
           reasonsFor: [
             "thunderclap onset",
             "headache",
@@ -232,7 +232,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Subarachnoid haemorrhage",
-          score: 15,
+          score: 16,
           reasonsFor: [
             "thunderclap onset",
             "headache",
@@ -352,7 +352,7 @@ export const TRAP_CASES: TrapCase[] = [
     },
     expected: {
       problemRepresentation:
-        "74yo male Abdominal pain with collapse / syncope, abdominal pain, pain out of proportion, atrial fibrillation, vomiting",
+        "74yo male Abdominal pain with sudden onset, collapse / syncope, abdominal pain, pain out of proportion, atrial fibrillation",
       redFlags: [
         {
           name: "Ruptured AAA suspicion pattern",
@@ -363,30 +363,54 @@ export const TRAP_CASES: TrapCase[] = [
           sourceId: "NG156",
           sourceCoverage: "full",
         },
+        {
+          name: "Mesenteric ischaemia escalation pattern",
+          explanation:
+            "Pain out of proportion, especially with atrial fibrillation, collapse, or shock, should escalate mesenteric ischaemia sharply above benign abdominal fallbacks.",
+          boostDiagnoses: ["Mesenteric ischaemia"],
+          sourceBody: "NICE",
+          sourceId: "coverage-gap",
+          sourceCoverage: "gap",
+        },
       ],
       differentials: [
         {
           name: "Mesenteric ischaemia",
-          score: 15,
+          score: 42,
           reasonsFor: [
             "abdominal pain",
             "pain out of proportion",
+            "sudden onset",
+            "vomiting",
             "atrial fibrillation",
-            "collapse / syncope",
-            "mesenteric ischaemia pattern",
+            "older age",
+            "pain out of proportion is highly discriminating for mesenteric ischaemia",
+            "vascular or embolic context strongly supports mesenteric ischaemia",
+            "pain out of proportion with physiological compromise must escalate mesenteric ischaemia",
+            "high-specificity mesenteric emergency pattern",
+            "red-flag promotion: Mesenteric ischaemia escalation pattern",
           ],
           reasonsAgainst: [],
         },
         {
           name: "Abdominal aortic aneurysm",
-          score: 6,
-          reasonsFor: ["abdominal pain", "collapse / syncope"],
+          score: 27,
+          reasonsFor: [
+            "abdominal pain",
+            "sudden onset",
+            "collapse / syncope",
+            "vomiting",
+            "older age",
+            "sudden abdominal or back pain with instability fits symptomatic or ruptured AAA",
+            "unstable abdominal pain in an older vascular patient must escalate AAA",
+            "red-flag promotion: Ruptured AAA suspicion pattern",
+          ],
           reasonsAgainst: [],
         },
         {
-          name: "Subarachnoid haemorrhage",
-          score: 4,
-          reasonsFor: ["vomiting", "collapse / syncope"],
+          name: "Perforated viscus",
+          score: 3,
+          reasonsFor: ["abdominal pain", "sudden onset", "vomiting"],
           reasonsAgainst: [],
         },
       ],
@@ -404,8 +428,9 @@ export const TRAP_CASES: TrapCase[] = [
       anchorWarning:
         "Your current diagnosis is weakly supported and the case contains red-flag features. Mesenteric ischaemia should currently be prioritised above a benign explanation.",
       presentation:
-        "This is a 74-year-old male presenting with abdominal pain. Key concerning features include collapse / syncope, abdominal pain, pain out of proportion, vomiting. Relevant background factors include atrial fibrillation. My leading differential is Mesenteric ischaemia, with Abdominal aortic aneurysm also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
+        "This is a 74-year-old male presenting with abdominal pain. Key concerning features include sudden onset, collapse / syncope, abdominal pain, pain out of proportion. Relevant background factors include atrial fibrillation. My leading differential is Mesenteric ischaemia, with Abdominal aortic aneurysm also important to exclude. I would not settle on a benign explanation until dangerous alternatives have been addressed.",
       detectedFeatures: [
+        "sudden onset",
         "collapse / syncope",
         "abdominal pain",
         "pain out of proportion",
@@ -447,7 +472,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Pneumothorax",
-          score: 20,
+          score: 24,
           reasonsFor: [
             "chest pain",
             "shortness of breath",
@@ -625,7 +650,7 @@ export const TRAP_CASES: TrapCase[] = [
       differentials: [
         {
           name: "Pneumothorax",
-          score: 28,
+          score: 34,
           reasonsFor: [
             "chest pain",
             "shortness of breath",
@@ -638,7 +663,7 @@ export const TRAP_CASES: TrapCase[] = [
         },
         {
           name: "Pulmonary embolism",
-          score: 10,
+          score: 9,
           reasonsFor: ["chest pain", "shortness of breath", "sudden onset", "pleuritic pain"],
           reasonsAgainst: ["unilateral reduced air entry"],
         },
