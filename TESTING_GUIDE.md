@@ -1,0 +1,87 @@
+# Testing the Auth & API Implementation
+
+## Development Server Status
+✅ **Server is running at `http://localhost:3000`**
+
+The application has been successfully rebuilt with:
+- **Next.js 16.1.6** with TypeScript
+- **NextAuth v5 (beta)** for authentication
+- **Prisma v5.13.0** with SQLite for persistent user storage
+- **API routes** for case analysis
+
+## Testing Login Flow
+
+### 1. Access the Application
+Navigate to: `http://localhost:3000`
+
+### 2. Create User Accounts
+Click "Sign in" and use the credentials form. The system creates users on first login with these test accounts:
+
+**Email conventions:**
+- `admin@example.com` → Admin role (password: `password`)
+- `instructor@example.com` → Instructor role (password: `password`)
+- `student@example.com` → Student role (password: `password`)
+
+**Demo password:** `password` (required for all accounts)
+
+**Example accounts to test:**
+- Email: `admin@wardbrain.local`, Password: `password`
+- Email: `student@wardbrain.local`, Password: `password`
+
+### 3. Verify Session Persistence
+After login, check that:
+- User information is stored in SQLite database (`dev.db`)
+- Session token is issued and stored
+- User can remain logged in across page refreshes
+
+### 4. Test Case Analysis API
+Once logged in, submit a case and verify:
+- Case is analyzed via `/api/analyze-case` endpoint
+- Results are returned and displayed
+- API requires valid NextAuth session token
+
+## Database & Storage
+
+### User Data Stored
+- **Email**: Unique identifier
+- **Name**: Derived from email (prefix before @)
+- **Role**: ADMIN, INSTRUCTOR, or STUDENT (based on email)
+- **Created/Updated**: Timestamps
+
+### Case Data
+Cases can now be stored by authenticated users with:
+- User ID (linked to authenticated user)
+- Case input (JSON)
+- Analysis results (JSON)
+- Creation/update timestamps
+
+## Architecture Summary
+
+### Frontend
+- `app/page.tsx`: Main analysis form (client component)
+- `app/auth/signin/page.tsx`: Login form
+- `components/AuthProvider.tsx`: Session provider wrapper
+
+### Backend
+- `app/api/analyze-case/route.ts`: Case analysis endpoint (protected by auth)
+- `app/api/auth/[...nextauth]/route.ts`: NextAuth handler
+- `auth.ts`: NextAuth configuration with credential provider
+- `lib/prisma.ts`: Prisma client singleton
+
+### Database
+- `prisma/schema.prisma`: User, Case, Account, Session models
+- `dev.db`: SQLite database (auto-created)
+
+## Next Steps (Optional Enhancements)
+
+1. **OAuth Integration**: Add Google/GitHub OAuth providers in `auth.ts`
+2. **Case Storage**: Extend `handleAnalyseCase()` in `app/page.tsx` to save cases to Prisma
+3. **User Dashboard**: Create cases list view showing user's past analyses
+4. **Role-Based Access**: Add RBAC checks in API routes based on `user.role`
+
+## Known Notes
+
+- Demo uses hardcoded password validation (`password === "password"`)
+- Enum types replaced with String for SQLite v5 compatibility
+- TypeScript warnings about cross-origin requests are cosmetic and can be suppressed in production
+- Prisma v5 used (not v7) for stable SQLite support without external adapters
