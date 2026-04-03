@@ -34,8 +34,8 @@ Current block structure:
 
 Notes:
 
-- WardBrain is currently a client-heavy Next.js app.
-- The dynamic reasoning engine is the primary live analysis layer.
+- WardBrain is currently a Next.js app with separated front-end and back-end layers.
+- The dynamic reasoning engine runs server-side and is accessed via API.
 - The presentation teaching scaffold is secondary educational content.
 - The product remains presentation-first.
 - The live app should expose only these curated presentation blocks.

@@ -4,8 +4,8 @@ WardBrain is an educational clinical reasoning tool for medical students. It is 
 
 ## Current architecture
 
-- Next.js app with a client-heavy runtime
-- Dynamic case-specific reasoning engine is the primary live analysis layer
+- Next.js app with separated front-end and back-end layers
+- Server-side dynamic case-specific reasoning engine accessed via API
 - Presentation teaching scaffold is secondary educational content
 - No accessible `v3` or `v4` CSV runtime dependency currently exists in this repo
 
