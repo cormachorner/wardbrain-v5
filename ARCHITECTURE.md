@@ -18,7 +18,7 @@ This document reflects the **current pilot-stage architecture**, not an ideal fu
 
 ## Current one-line summary
 
-WardBrain is currently a **client-heavy monolithic Next.js educational app** whose main live functionality is a **rule-based dynamic reasoning engine**, with **Anki-derived presentation blocks used as a secondary teaching scaffold rather than the primary analysis layer**.
+WardBrain is currently a **Next.js app with separated front-end and back-end layers**, featuring a **server-side rule-based dynamic reasoning engine** accessed via API, with **Anki-derived presentation blocks used as a secondary teaching scaffold rather than the primary analysis layer**.
 
 ---
 
@@ -46,6 +46,63 @@ It is currently used for:
 There is currently **no accessible canonical v3 or v4 CSV runtime dependency**.
 
 Do not assume any `Core_Pilot_v3` or `Core_Pilot_v4` CSV is available or used by the live app.
+
+---
+
+## Architecture Layers
+
+### Front-End (Client-Side)
+- **Technology**: Next.js React components
+- **Location**: `app/` directory (e.g., `app/page.tsx`, components in `app/components/`)
+- **Responsibilities**:
+  - User interface and interactions
+  - Form handling and state management
+  - Displaying analysis results
+  - Making API calls to the back-end
+- **Runtime**: Runs in the browser
+
+### Back-End (Server-Side)
+- **Technology**: Next.js API routes
+- **Location**: `app/api/` directory (e.g., `app/api/analyze-case/route.ts`)
+- **Responsibilities**:
+  - Receiving case input via HTTP POST
+  - Running the clinical reasoning engine
+  - Returning analysis results as JSON
+  - Input validation and error handling
+- **Runtime**: Runs on the Next.js server
+
+### Analysis Logic
+- **Location**: `lib/application/analyzeCase.ts` and related modules in `lib/domain/`
+- **Responsibilities**:
+  - Feature extraction from case input
+  - Differential diagnosis scoring and ranking
+  - Red flag detection
+  - Next steps and guideline application
+- **Runtime**: Executed server-side via API calls
+
+### Content Layer
+- **Location**: `content/wardbrain_core_pilot_app_ready.ts`
+- **Purpose**: Provides the rule-based knowledge base for the reasoning engine
+- **Usage**: Primary source for diagnosis rules, red flags, and presentation patterns
+
+---
+
+## Data Flow
+
+1. User enters case details in the front-end form
+2. Front-end sends case data to `/api/analyze-case` via POST request
+3. Back-end validates input and runs `analyzeCase` logic
+4. Analysis results are returned as JSON to the front-end
+5. Front-end displays the results to the user
+
+---
+
+## Deployment and Scaling Notes
+
+- Currently deployed as a single Next.js application
+- API routes run on the same server as the front-end
+- For future scaling, the back-end logic could be extracted to a separate service
+- No database integration yet; all logic is rule-based and stateless
 
 ---
 
@@ -99,15 +156,15 @@ It is responsible for:
 - educational next-step card generation
 
 ### Representative files
-- `lib/differentialEngine.ts`
-- `lib/featureExtractor.ts`
-- `lib/diagnosisRules.ts`
-- `lib/diagnosisScoring.ts`
-- `lib/diagnosisBoosts.ts`
-- `lib/diagnosisAliases.ts`
-- `lib/redFlagRules.ts`
-- `lib/guidelineRules.ts`
-- `lib/nextStepsRules.ts`
+- `lib/application/analyzeCase.ts`
+- `lib/domain/featureExtractor.ts`
+- `lib/domain/diagnosisRules.ts`
+- `lib/domain/diagnosisScoring.ts`
+- `lib/domain/diagnosisBoosts.ts`
+- `lib/domain/diagnosisAliases.ts`
+- `lib/domain/redFlagRules.ts`
+- `lib/domain/guidelineRules.ts`
+- `lib/domain/nextStepsRules.ts`
 
 ### Notes
 This is the main engine that drives the case-specific output shown to users.
@@ -174,7 +231,7 @@ The following are not currently live as primary user-facing features:
 
 - broader condition-library browsing
 - a mature `Learn More` experience
-- server-side reasoning API
+- server-side reasoning API (now implemented)
 - server-side content lookup layer
 
 ### Not runtime-active
@@ -189,11 +246,14 @@ The following are not currently runtime-active:
 ## Client-side versus server-side
 
 ### Client-side
-At present, most important WardBrain logic runs client-side.
+The front-end UI runs client-side, handling user interactions and displaying results.
+
+### Server-side
+The analysis logic now runs server-side via API routes.
 
 This includes:
 
-- reasoning engine imports
+- reasoning engine execution
 - diagnosis scoring
 - feature extraction
 - alias handling
@@ -202,44 +262,31 @@ This includes:
 - presentation-block matching
 - app-ready content import
 
-### Server-side
-There is currently **no meaningful API/server boundary** for the reasoning/content system.
-
-There are currently no dedicated runtime API routes or server actions serving as a reasoning boundary.
-
 ### Implication
-Because core logic and content are imported into a client-rendered page, a meaningful amount of the following is likely inspectable in browser bundles:
+Core logic and content are now executed server-side, improving security and separation of concerns. Client bundles no longer expose the reasoning logic directly.
 
-- diagnosis rules
-- scoring heuristics
-- trigger phrases
-- alias maps
-- next-step cards
-- red-flag rules
-- presentation teaching scaffold content
-
-This is acceptable for the current pilot-stage educational prototype, but is not the desired long-term architecture.
+This is an improvement over the previous monolithic client-heavy architecture.
 
 ---
 
 ## Current architecture status
 
 ### Current state
-WardBrain is currently best described as:
+WardBrain is currently:
 
-- a monolithic Next.js app
+- a Next.js app with front-end/back-end separation
 - with modular internal code organization
-- but no meaningful frontend/backend runtime separation
+- and operational separation via API routes
 
 ### What this means
-There is some **logical separation in code**, but not yet **operational separation in deployment/runtime**.
+There is **logical and operational separation** in deployment/runtime.
 
 ---
 
 ## Source-of-truth policy
 
 ### Current policy
-Until runtime architecture changes, treat:
+Treat:
 
 - `content/wardbrain_core_pilot_app_ready.ts`
 
@@ -265,8 +312,7 @@ For the current pilot stage, priority is:
 - stable outputs
 - educational usefulness
 - measurable reasoning capture
-
-Priority is **not yet** full backend/API separation.
+- improved separation of concerns
 
 ---
 
@@ -288,7 +334,7 @@ A likely future architecture would separate:
 - content retrieval
 - future Learn More retrieval
 
-That future split is desirable, but it is **not yet the current architecture**.
+That future split is now partially implemented, but could be further refined.
 
 ---
 
@@ -296,7 +342,7 @@ That future split is desirable, but it is **not yet the current architecture**.
 
 When discussing WardBrain, describe it as:
 
-> A rule-based educational clinical reasoning app with a dynamic reasoning engine as the primary live layer, and Anki-derived presentation blocks as a secondary teaching scaffold.
+> A rule-based educational clinical reasoning app with a server-side dynamic reasoning engine as the primary live layer, accessed via API, and Anki-derived presentation blocks as a secondary teaching scaffold.
 
 Do **not** describe the app as:
 - already API-backed
