@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react"
 import { AnalysisResults } from "../components/AnalysisResults";
 import { CaseForm } from "../components/CaseForm";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
@@ -22,11 +23,42 @@ const initialCase: CaseInput = {
 };
 
 export default function Home() {
+  const { data: session, status } = useSession()
   const [caseInput, setCaseInput] = useState<CaseInput>(initialCase);
   const [submittedCase, setSubmittedCase] = useState<CaseInput | null>(null);
   const [result, setResult] = useState<AnalyzeCaseResponse | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect to sign-in if not authenticated
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">WardBrain v5</h1>
+          <p className="text-xl text-slate-600 mb-8">A clinical reasoning coach for medical students</p>
+          <p className="text-slate-600 mb-6">Please sign in to access the application.</p>
+          <a
+            href="/auth/signin"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Sign In
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   function updateField<K extends keyof CaseInput>(field: K, value: CaseInput[K]) {
     setCaseInput((prev) => ({ ...prev, [field]: value }));

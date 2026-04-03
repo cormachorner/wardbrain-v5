@@ -202,25 +202,31 @@ export function applyPresentationFamilyRanking(
       return scoredDifferentials;
     }
 
+    const primaryFamily = familyRoute.primaryFamily;
+    const secondaryFamily = familyRoute.secondaryFamily;
+
     return [...scoredDifferentials].sort((left, right) => {
       if (right.score !== left.score) {
         return right.score - left.score;
       }
 
       return (
-        getFamilyTieBreakWeight(right, familyRoute.primaryFamily, familyRoute.secondaryFamily) -
-        getFamilyTieBreakWeight(left, familyRoute.primaryFamily, familyRoute.secondaryFamily)
+        getFamilyTieBreakWeight(right, primaryFamily, secondaryFamily) -
+        getFamilyTieBreakWeight(left, primaryFamily, secondaryFamily)
       );
     });
   }
+
+  const primaryFamily = familyRoute.primaryFamily!;
+  const secondaryFamily = familyRoute.secondaryFamily;
 
   return scoredDifferentials
     .map((differential) => ({
       differential,
       adjustedScore: getFamilyAdjustedScore(
         differential,
-        familyRoute.primaryFamily,
-        familyRoute.secondaryFamily,
+        primaryFamily,
+        secondaryFamily,
       ),
     }))
     .sort((left, right) => {
