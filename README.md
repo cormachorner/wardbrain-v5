@@ -6,22 +6,26 @@ WardBrain is an educational clinical reasoning tool for medical students. It is 
 
 - **Next.js 16** app with separated front-end and back-end layers
 - **Server-side reasoning engine** accessed via `/api/analyze-case` endpoint
-- **Authentication**: NextAuth v5 with Prisma SQLite for user session persistence
+- **Authentication**: NextAuth v5 with bcrypt password hashing and Prisma SQLite
+- **Security**: Zod input validation, security headers, HTTPS-ready configuration
 - **Database**: SQLite for user accounts and case storage
 - Presentation teaching scaffold is secondary educational content
 - No accessible `v3` or `v4` CSV runtime dependency currently exists in this repo
 
 ## Authentication & User Management
 
-The app now includes:
-- User signup/login via email credentials (`email` + `password`)
+The app includes secure user authentication:
+- User signup via `/api/auth/signup` with password hashing
+- Login via NextAuth credentials provider
 - Role-based user classification (ADMIN, INSTRUCTOR, STUDENT) based on email
 - Session persistence with NextAuth JWT
 - User data storage in SQLite via Prisma
 
-**Demo credentials format:**
-- Email: `{role}@example.com` where role is `admin`, `instructor`, or `student`
-- Password: `password` (fixed for demo; change in production)
+**Security features:**
+- Bcrypt password hashing (12 rounds)
+- Zod input validation for all APIs
+- Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- Environment variables for secrets (not committed to git)
 
 ## Runtime content source of truth
 
@@ -47,3 +51,4 @@ For testing authentication and case analysis, see [TESTING_GUIDE.md](TESTING_GUI
 npm test
 npm run lint
 ```
+
