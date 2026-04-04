@@ -121,6 +121,30 @@ Cases can now be stored by authenticated users with:
 7. **CSRF Protection**: Enable CSRF tokens
 8. **Monitoring**: Add error tracking and logging
 
+## Admin Features
+
+### Admin User Management
+Administrators have access to a comprehensive user management system:
+
+- **Access**: Admin users see an "Admin" link in the top-right header
+- **User List**: View all users in a table with email, name, role, and creation date
+- **Create Users**: Add new users with email, password, name, and role assignment
+- **Edit Users**: Update user details including password changes
+- **Delete Users**: Remove users (admins cannot delete themselves)
+- **Role Management**: Assign STUDENT, INSTRUCTOR, or ADMIN roles
+
+### Admin API Endpoints
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/users` - Create new user (admin only)
+- `PUT /api/admin/users/[id]` - Update user (admin only)
+- `DELETE /api/admin/users/[id]` - Delete user (admin only)
+
+### Security Features
+- **Role-based Access**: Only ADMIN role users can access admin features
+- **Authorization Checks**: All admin endpoints verify user role via JWT
+- **Self-protection**: Admins cannot delete their own accounts
+- **Input Validation**: All forms use Zod validation with detailed error messages
+
 ### Case Data
 Cases can now be stored by authenticated users with:
 - User ID (linked to authenticated user)
