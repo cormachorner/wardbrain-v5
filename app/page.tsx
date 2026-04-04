@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { AnalysisResults } from "../components/AnalysisResults";
 import { CaseForm } from "../components/CaseForm";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
@@ -110,8 +110,16 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-7xl px-6 py-10">
         <header className="mb-8">
-          <div className="mb-3 inline-flex rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-            Educational use only • De-identified cases only
+          <div className="flex justify-between items-start mb-3">
+            <div className="inline-flex rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+              Educational use only • De-identified cases only
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Sign Out
+            </button>
           </div>
           <h1 className="text-4xl font-bold tracking-tight">WardBrain v5</h1>
           <p className="mt-3 max-w-3xl text-slate-600">
