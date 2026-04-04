@@ -114,12 +114,20 @@ export default function Home() {
             <div className="inline-flex rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
               Educational use only • De-identified cases only
             </div>
-            <button
-              onClick={() => signOut()}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Sign Out
-            </button>
+            <div className="flex gap-2">
+              <a
+                href="/profile"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Profile
+              </a>
+              <button
+                onClick={() => signOut()}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
           <h1 className="text-4xl font-bold tracking-tight">WardBrain v5</h1>
           <p className="mt-3 max-w-3xl text-slate-600">
