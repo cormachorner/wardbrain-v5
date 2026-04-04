@@ -4,10 +4,39 @@
 ✅ **Server is running at `http://localhost:3000`**
 
 The application has been successfully rebuilt with:
-- **Next.js 16.1.6** with TypeScript
-- **NextAuth v5 (beta)** for authentication
-- **Prisma v5.13.0** with SQLite for persistent user storage
-- **API routes** for case analysis
+- **Next.js 16** with TypeScript and security hardening
+- **NextAuth v5 (beta)** for authentication with bcrypt password hashing
+- **Prisma v5** with SQLite for persistent user storage
+- **Zod validation** for API inputs
+- **Security headers** configured
+
+## Authentication System
+
+### Password Security
+- Passwords are now hashed using bcrypt (12 rounds)
+- No more hardcoded "password" demo
+- Secure storage in database
+
+### User Registration
+Use the signup API to create accounts:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "student@example.com",
+    "password": "securepassword123",
+    "name": "Test Student"
+  }'
+```
+
+**Role assignment:**
+- `admin@*` → ADMIN
+- `instructor@*` → INSTRUCTOR
+- Other emails → STUDENT
+
+### Login
+After signup, login via the signin form at `/auth/signin` with your email/password.
 
 ## Testing Login Flow
 
@@ -15,38 +44,82 @@ The application has been successfully rebuilt with:
 Navigate to: `http://localhost:3000`
 
 ### 2. Create User Accounts
-Click "Sign in" and use the credentials form. The system creates users on first login with these test accounts:
-
-**Email conventions:**
-- `admin@example.com` → Admin role (password: `password`)
-- `instructor@example.com` → Instructor role (password: `password`)
-- `student@example.com` → Student role (password: `password`)
-
-**Demo password:** `password` (required for all accounts)
-
-**Example accounts to test:**
-- Email: `admin@wardbrain.local`, Password: `password`
-- Email: `student@wardbrain.local`, Password: `password`
+First, register via API (see above), then sign in.
 
 ### 3. Verify Session Persistence
 After login, check that:
 - User information is stored in SQLite database (`dev.db`)
+- Password is hashed (not plain text)
 - Session token is issued and stored
 - User can remain logged in across page refreshes
 
 ### 4. Test Case Analysis API
 Once logged in, submit a case and verify:
 - Case is analyzed via `/api/analyze-case` endpoint
-- Results are returned and displayed
 - API requires valid NextAuth session token
+- Input validation rejects invalid data
 
 ## Database & Storage
 
 ### User Data Stored
 - **Email**: Unique identifier
-- **Name**: Derived from email (prefix before @)
-- **Role**: ADMIN, INSTRUCTOR, or STUDENT (based on email)
+- **Password**: Bcrypt hashed
+- **Name**: User name
+- **Role**: ADMIN, INSTRUCTOR, or STUDENT
 - **Created/Updated**: Timestamps
+
+### Case Data
+Cases can now be stored by authenticated users with:
+- User ID (linked to authenticated user)
+- Case input (JSON)
+- Analysis results (JSON)
+- Creation/update timestamps
+
+## Security Features
+
+### Input Validation
+- **Zod schemas** validate all API inputs
+- **Type-safe** request parsing
+- **Detailed error messages** for invalid data
+
+### Security Headers
+- `X-Frame-Options: DENY` - Prevents clickjacking
+- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
+- `Referrer-Policy: origin-when-cross-origin` - Controls referrer info
+- `Permissions-Policy` - Restricts browser features
+
+### HTTPS Ready
+- Headers configured for SSL enforcement (deploy with SSL certificate)
+- Environment variables properly secured
+
+## Architecture Summary
+
+### Frontend
+- `app/page.tsx`: Main analysis form (client component)
+- `app/auth/signin/page.tsx`: Login form
+- `components/AuthProvider.tsx`: Session provider wrapper
+
+### Backend
+- `app/api/analyze-case/route.ts`: Case analysis endpoint (protected, validated)
+- `app/api/auth/[...nextauth]/route.ts`: NextAuth handler
+- `app/api/auth/signup/route.ts`: User registration endpoint
+- `auth.ts`: NextAuth configuration with bcrypt
+- `lib/prisma.ts`: Database client for user operations
+
+### Database
+- `prisma/schema.prisma`: User, Case, Account, Session models
+- `dev.db`: SQLite database (auto-created)
+
+## Next Steps (Optional Enhancements)
+
+1. **Database Migration**: Switch to PostgreSQL for production
+2. **OAuth Providers**: Add Google/GitHub login
+3. **Email Verification**: Implement email confirmation
+4. **Password Reset**: Add forgot password functionality
+5. **Case Storage**: Save/retrieve user cases
+6. **Rate Limiting**: Add request throttling
+7. **CSRF Protection**: Enable CSRF tokens
+8. **Monitoring**: Add error tracking and logging
 
 ### Case Data
 Cases can now be stored by authenticated users with:

@@ -15,6 +15,7 @@ model User {
   email     String   @unique
   name      String?
   image     String?
+  password  String?  // Hashed password for secure storage
   role      String   @default("STUDENT")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
