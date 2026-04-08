@@ -4,6 +4,17 @@ import type { DiagnosisRule } from "./diagnosisRules";
 
 const DEFAULT_SUPPORTIVE_WEIGHT = 2;
 const DEFAULT_CONFLICT_WEIGHT = -2;
+const GENERIC_SUPPORTIVE_FEATURE_WEIGHTS = new Map<string, number>([
+  ["abdominalPain", 1],
+  ["chestPain", 2],
+  ["headache", 2],
+  ["sob", 2],
+  ["fever", 1],
+  ["vomiting", 0],
+  ["nausea", 0],
+  ["diarrhoea", 0],
+]);
+const SOFT_NEGATIVE_FEATURES = new Set(["vomiting", "nausea", "diarrhoea", "fever"]);
 const GENERIC_INSTABILITY_FEATURES = new Set([
   "hypotension",
   "tachycardia",
@@ -112,6 +123,32 @@ function getAgeModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: 
 }
 
 function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: number) {
+  const hasStrongAbdominalLocalization =
+    has(features, "painOutOfProportion") ||
+    has(features, "migrationToRIF") ||
+    has(features, "rifTenderness") ||
+    has(features, "guardingRigidity") ||
+    has(features, "abdominalMovementPain") ||
+    has(features, "lyingStill") ||
+    has(features, "flankPain") ||
+    has(features, "loinToGroinPain") ||
+    has(features, "pelvicPain") ||
+    has(features, "testicularPain") ||
+    has(features, "unilateralTesticularPain");
+  const hasStrongChestSignature =
+    has(features, "chestPain") ||
+    has(features, "indigestionLikeChestPain") ||
+    has(features, "jawPain") ||
+    has(features, "armPain") ||
+    has(features, "pleuriticPain") ||
+    has(features, "unilateralReducedAirEntry");
+  const hasStrongHeadacheSignature =
+    has(features, "headache") ||
+    has(features, "thunderclap") ||
+    has(features, "jawClaudication") ||
+    has(features, "scalpTenderness") ||
+    has(features, "visualSymptoms");
+
   if (rule.name === "Acute cholangitis") {
     const hasAcuteBiliaryInfectivePattern =
       has(features, "ruqPain") &&
@@ -364,13 +401,26 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       has(features, feature),
     ).length;
     const hasVteContext = PE_VTE_CONTEXT_FEATURES.some((feature) => has(features, feature));
+    const hasStrongInfectivePulmonaryPattern =
+      has(features, "productiveCough") &&
+      has(features, "progressiveCourse") &&
+      (has(features, "sputumChange") || has(features, "rigors") || has(features, "infectionSource"));
     const hasStrongObstructivePattern =
       has(features, "wheeze") &&
       (has(features, "knownAsthma") || has(features, "knownCopd")) &&
       (has(features, "increasedInhalerUse") || has(features, "difficultySpeaking"));
 
     if (ageBand === "under30" && pneumothoraxSignatureCount >= 4 && !hasVteContext) {
-      return -1;
+      return 0;
+    }
+
+    if (
+      hasStrongInfectivePulmonaryPattern &&
+      !hasVteContext &&
+      !has(features, "haemoptysis") &&
+      !has(features, "collapse")
+    ) {
+      return -3;
     }
 
     if (
@@ -384,10 +434,97 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
   }
 
+  if (rule.name === "Gastroenteritis") {
+    if (
+      hasStrongAbdominalLocalization ||
+      has(features, "jaundice") ||
+      has(features, "vaginalBleeding")
+    ) {
+      return -4;
+    }
+  }
+
+  if (rule.name === "Viral illness") {
+    if (
+      hasStrongAbdominalLocalization ||
+      hasStrongChestSignature ||
+      hasStrongHeadacheSignature ||
+      has(features, "hypotension") ||
+      has(features, "collapse") ||
+      has(features, "focalNeurology")
+    ) {
+      return -4;
+    }
+  }
+
+  if (rule.name === "Diabetic ketoacidosis") {
+    if (
+      !has(features, "diabeticContext") &&
+      !has(features, "polyuria") &&
+      !has(features, "polydipsia") &&
+      !has(features, "ketosisBreath")
+    ) {
+      return -5;
+    }
+  }
+
+  if (rule.name === "Temporal arteritis") {
+    if (!hasStrongHeadacheSignature && (hasStrongAbdominalLocalization || hasStrongChestSignature)) {
+      return -5;
+    }
+  }
+
+  if (rule.name === "Pneumothorax") {
+    if (!hasStrongChestSignature && hasStrongAbdominalLocalization) {
+      return -5;
+    }
+  }
+
+  if (rule.name === "Panic / anxiety") {
+    if (
+      hasStrongAbdominalLocalization ||
+      has(features, "focalNeurology") ||
+      has(features, "thunderclap") ||
+      has(features, "hypotension") ||
+      has(features, "collapse")
+    ) {
+      return -4;
+    }
+  }
+
+  if (rule.name === "Sepsis") {
+    const hasStrongLocalizedPulmonarySource =
+      has(features, "productiveCough") &&
+      has(features, "progressiveCourse") &&
+      (has(features, "sputumChange") || has(features, "rigors"));
+    const hasStrongLocalizedUrinarySource =
+      has(features, "urinarySymptoms") &&
+      (has(features, "flankPain") || has(features, "cvaTenderness"));
+    const hasStrongLocalizedBiliarySource =
+      has(features, "ruqPain") && has(features, "jaundice");
+
+    if (
+      (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&
+      !has(features, "collapse")
+    ) {
+      return -2;
+    }
+  }
+
   return 0;
 }
 
 function getSupportiveWeight(rule: DiagnosisRule, feature: string) {
+  const genericWeight = GENERIC_SUPPORTIVE_FEATURE_WEIGHTS.get(feature);
+
+  if (genericWeight !== undefined) {
+    const configuredWeight = rule.supportiveWeights?.[feature];
+
+    return configuredWeight !== undefined
+      ? Math.min(configuredWeight, genericWeight)
+      : genericWeight;
+  }
+
   if (GENERIC_INSTABILITY_FEATURES.has(feature)) {
     return rule.supportiveWeights?.[feature] ?? 1;
   }
@@ -416,6 +553,10 @@ function applySignatureGate(
 }
 
 function getConflictWeight(rule: DiagnosisRule, feature: string) {
+  if (SOFT_NEGATIVE_FEATURES.has(feature)) {
+    return -1;
+  }
+
   const configuredWeight = rule.conflictingWeights?.[feature];
 
   if (configuredWeight !== undefined) {

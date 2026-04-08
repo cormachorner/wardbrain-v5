@@ -88,6 +88,139 @@ test("high-specificity ectopic red flags promote ectopic into the top tier of ra
   assert.ok(result.redFlags.some((flag) => flag.name === "Ectopic pregnancy pattern"));
 });
 
+test("ectopic pregnancy gets extra top-tier promotion from dizziness and pallor", () => {
+  const result = analyzeCase({
+    age: "30",
+    sex: "female",
+    presentingComplaint: "Lower abdominal pain",
+    history: "Pelvic pain with vaginal bleeding, missed period, dizziness, and she looks pale.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.equal(result.differentials[0]?.name, "Ectopic pregnancy");
+});
+
+test("ectopic pregnancy is strongly penalized in male patients", () => {
+  const result = analyzeCase({
+    age: "30",
+    sex: "male",
+    presentingComplaint: "Lower abdominal pain",
+    history: "Pelvic pain with vaginal bleeding and a missed period.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.notEqual(result.differentials[0]?.name, "Ectopic pregnancy");
+});
+
+test("mesenteric ischaemia is top-tier in classic vascular abdominal pain despite loose stool noise", () => {
+  const result = analyzeCase({
+    age: "79",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history:
+      "Severe unexplained abdominal pain out of proportion with atrial fibrillation and vascular disease.",
+    pmh: "vascular disease",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "one loose stool but no persistent diarrhoea",
+    observations: "BP 88/54",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.equal(result.differentials[0]?.name, "Mesenteric ischaemia");
+  assert.ok(result.redFlags.some((flag) => flag.name === "Mesenteric ischaemia escalation pattern"));
+});
+
+test("pain out of proportion variant wording is extracted and promotes mesenteric ischaemia", () => {
+  const result = analyzeCase({
+    age: "76",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history: "Pain far worse than expected with severe pain and minimal tenderness in a patient with atrial fibrillation.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(result.detectedFeatures.includes("pain out of proportion"));
+  assert.equal(result.differentials[0]?.name, "Mesenteric ischaemia");
+});
+
+test("mild-exam mismatch wording is extracted and promotes mesenteric ischaemia", () => {
+  const result = analyzeCase({
+    age: "80",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history: "Severe pain but mild tenderness, with minimal abdominal findings, in a patient with vascular disease.",
+    pmh: "vascular disease",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "one loose stool",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(result.detectedFeatures.includes("severe pain with mild abdominal findings"));
+  assert.equal(result.differentials[0]?.name, "Mesenteric ischaemia");
+  assert.ok(result.redFlags.some((flag) => flag.name === "Mesenteric ischaemia escalation pattern"));
+});
+
+test("exact live mesenteric vignette uses the acute abdominal evaluator path and detects the missing features", () => {
+  const input = {
+    age: "78",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history:
+      "Severe abdominal pain with vomiting and loose stool. The pain is far worse than expected. He cannot get comfortable. The abdomen is only mildly tender. Known atrial fibrillation and peripheral vascular disease.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  };
+
+  const result = analyzeCase(input);
+
+  assert.ok(result.detectedFeatures.includes("pain out of proportion"));
+  assert.ok(result.detectedFeatures.includes("severe pain with mild abdominal findings"));
+  assert.ok(result.detectedFeatures.includes("severe pain"));
+  assert.ok(result.detectedFeatures.includes("vascular disease"));
+  assert.equal(result.differentials[0]?.name, "Mesenteric ischaemia");
+  assert.ok(result.redFlags.some((flag) => flag.name === "Mesenteric ischaemia escalation pattern"));
+});
+
 test("appendicitis localization outranks diverticulitis despite mild diarrhoea noise", () => {
   const result = analyzeCase({
     age: "22",
@@ -113,6 +246,27 @@ test("appendicitis localization outranks diverticulitis despite mild diarrhoea n
   }
 });
 
+test("appendicitis remains top-tier when bumps-in-road style movement pain is present", () => {
+  const result = analyzeCase({
+    age: "24",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history:
+      "Pain started centrally then moved to the right iliac fossa with focal tenderness, anorexia, and pain worse over bumps in the road.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "mild loose stool only",
+    observations: "",
+    leadDiagnosis: "appendicitis",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.equal(result.differentials[0]?.name, "Appendicitis");
+});
+
 test("peritonitic upper abdominal pain outranks pancreatitis when guarding and lying-still features are present", () => {
   const result = analyzeCase({
     age: "61",
@@ -132,6 +286,48 @@ test("peritonitic upper abdominal pain outranks pancreatitis when guarding and l
   });
 
   assert.equal(result.differentials[0]?.name, "Perforated viscus");
+});
+
+test("perforation outranks pancreatitis even with alcohol history when true peritonitic behaviour is present", () => {
+  const result = analyzeCase({
+    age: "54",
+    sex: "male",
+    presentingComplaint: "Upper abdominal pain",
+    history:
+      "Sudden severe upper abdominal pain with guarding, pain worse on movement and coughing, and he is lying still.",
+    pmh: "peptic ulcer disease",
+    meds: "",
+    social: "heavy alcohol intake",
+    keyPositives: "",
+    keyNegatives: "no back radiation",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.equal(result.differentials[0]?.name, "Perforated viscus");
+});
+
+test("renal colic is strongly promoted by flank-to-groin pain with restlessness", () => {
+  const result = analyzeCase({
+    age: "37",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history:
+      "Severe colicky flank pain radiating to the groin and he cannot get comfortable, pacing with pain.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no dysuria no fever",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.equal(result.differentials[0]?.name, "Renal colic / ureteric stone");
 });
 
 test("non-migrated blocks still use the legacy rule engine path", () => {

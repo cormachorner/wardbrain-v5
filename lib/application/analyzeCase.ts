@@ -531,7 +531,7 @@ export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
       })();
   const scored = usesAcuteAbdominalDefinitionScoring
     ? rawScored
-    : applyPresentationFamilyRanking(validatedInput, features, rawScored);
+    : applyPresentationFamilyRanking(validatedInput, features, rawScored, redFlags);
 
   const filteredDifferentials = scored.filter(
     (dx, index) =>

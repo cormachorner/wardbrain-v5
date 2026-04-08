@@ -1,6 +1,6 @@
 import { CONDITION_PROMOTION_REGISTRY_BY_NAME } from "./conditionPromotionRegistry";
 import { routePresentationFamilies } from "./presentationFamilies";
-import type { DifferentialResult, CaseInput, ExtractedFeatures } from "../types";
+import type { DifferentialResult, CaseInput, ExtractedFeatures, RedFlag } from "../types";
 import type { PresentationFamily } from "../../types/wardbrain";
 
 const FAMILY_INTEGRATION_TARGETS = new Set<PresentationFamily>([
@@ -29,6 +29,8 @@ const GLOBALLY_DANGEROUS_DIAGNOSES = new Set([
 ]);
 
 const MIN_CONFIDENT_FAMILY_ROUTE = 6;
+const RED_FLAG_PROMOTION_SCORE = 5;
+const MIN_RED_FLAG_ELIGIBLE_SCORE = 6;
 
 function buildCaseSearchText(input: CaseInput): string {
   return [
@@ -49,11 +51,13 @@ function getFamilyAdjustedScore(
   differential: DifferentialResult,
   primaryFamily: PresentationFamily,
   secondaryFamily?: PresentationFamily,
+  hasRedFlagPromotion = false,
 ): number {
   const registryEntry = CONDITION_PROMOTION_REGISTRY_BY_NAME[differential.name];
+  const redFlagPromotion = hasRedFlagPromotion ? RED_FLAG_PROMOTION_SCORE : 0;
 
   if (!registryEntry || registryEntry.promotionStatus !== "live-engine") {
-    return differential.score;
+    return differential.score + redFlagPromotion;
   }
 
   const inPrimaryFamily = registryEntry.presentationFamilies.includes(primaryFamily);
@@ -62,26 +66,38 @@ function getFamilyAdjustedScore(
     : false;
 
   if (inPrimaryFamily) {
-    return differential.score + 2;
+    return differential.score + 2 + redFlagPromotion;
   }
 
   if (inSecondaryFamily) {
-    return differential.score + 1;
+    return differential.score + 1 + redFlagPromotion;
+  }
+
+  if (hasRedFlagPromotion) {
+    return differential.score + redFlagPromotion - 1;
   }
 
   if (primaryFamily === "acute-abdominal-pain") {
-    if (GLOBALLY_DANGEROUS_DIAGNOSES.has(differential.name) && differential.score >= 6) {
-      return differential.score - 2;
+    if (GLOBALLY_DANGEROUS_DIAGNOSES.has(differential.name) && differential.score >= 8) {
+      return differential.score - 3;
     }
 
-    return differential.score - 5;
+    if (GLOBALLY_DANGEROUS_DIAGNOSES.has(differential.name) && differential.score >= 5) {
+      return differential.score - 4;
+    }
+
+    return differential.score - 6;
+  }
+
+  if (GLOBALLY_DANGEROUS_DIAGNOSES.has(differential.name) && differential.score >= 7) {
+    return differential.score - 2;
   }
 
   if (GLOBALLY_DANGEROUS_DIAGNOSES.has(differential.name) && differential.score >= 4) {
-    return differential.score - 1;
+    return differential.score - 3;
   }
 
-  return differential.score - 3;
+  return differential.score - 5;
 }
 
 function getFamilyTieBreakWeight(
@@ -176,10 +192,22 @@ function hasFamilyAnchor(
   }
 }
 
+function hasEligibleRedFlagPromotion(
+  differential: DifferentialResult,
+  redFlags: RedFlag[],
+): boolean {
+  if (differential.score < MIN_RED_FLAG_ELIGIBLE_SCORE) {
+    return false;
+  }
+
+  return redFlags.some((flag) => flag.boostDiagnoses.includes(differential.name));
+}
+
 export function applyPresentationFamilyRanking(
   input: CaseInput,
   features: ExtractedFeatures,
   scoredDifferentials: DifferentialResult[],
+  redFlags: RedFlag[] = [],
 ): DifferentialResult[] {
   const caseSearchText = buildCaseSearchText(input);
   const seededDiagnoses = scoredDifferentials.slice(0, 6).map((differential) => differential.name);
@@ -205,16 +233,29 @@ export function applyPresentationFamilyRanking(
     const primaryFamily = familyRoute.primaryFamily;
     const secondaryFamily = familyRoute.secondaryFamily;
 
-    return [...scoredDifferentials].sort((left, right) => {
-      if (right.score !== left.score) {
-        return right.score - left.score;
-      }
+    return [...scoredDifferentials]
+      .map((differential) => ({
+        ...differential,
+        score: differential.score + (hasEligibleRedFlagPromotion(differential, redFlags) ? RED_FLAG_PROMOTION_SCORE : 0),
+        reasonsFor: hasEligibleRedFlagPromotion(differential, redFlags)
+          ? [
+              ...differential.reasonsFor,
+              ...redFlags
+                .filter((flag) => flag.boostDiagnoses.includes(differential.name))
+                .map((flag) => `red-flag promotion: ${flag.name}`),
+            ]
+          : differential.reasonsFor,
+      }))
+      .sort((left, right) => {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
 
-      return (
-        getFamilyTieBreakWeight(right, primaryFamily, secondaryFamily) -
-        getFamilyTieBreakWeight(left, primaryFamily, secondaryFamily)
-      );
-    });
+        return (
+          getFamilyTieBreakWeight(right, primaryFamily, secondaryFamily) -
+          getFamilyTieBreakWeight(left, primaryFamily, secondaryFamily)
+        );
+      });
   }
 
   const primaryFamily = familyRoute.primaryFamily!;
@@ -222,11 +263,22 @@ export function applyPresentationFamilyRanking(
 
   return scoredDifferentials
     .map((differential) => ({
-      differential,
+      differential: hasEligibleRedFlagPromotion(differential, redFlags)
+        ? {
+            ...differential,
+            reasonsFor: [
+              ...differential.reasonsFor,
+              ...redFlags
+                .filter((flag) => flag.boostDiagnoses.includes(differential.name))
+                .map((flag) => `red-flag promotion: ${flag.name}`),
+            ],
+          }
+        : differential,
       adjustedScore: getFamilyAdjustedScore(
         differential,
         primaryFamily,
         secondaryFamily,
+        hasEligibleRedFlagPromotion(differential, redFlags),
       ),
     }))
     .sort((left, right) => {
@@ -236,5 +288,8 @@ export function applyPresentationFamilyRanking(
 
       return right.differential.score - left.differential.score;
     })
-    .map(({ differential }) => differential);
+    .map(({ differential, adjustedScore }) => ({
+      ...differential,
+      score: adjustedScore,
+    }));
 }

@@ -97,10 +97,19 @@ export const GUIDELINE_RULES: GuidelineRule[] = [
     sourceId: "coverage-gap",
     sourceCoverage: "gap",
     rationale:
-      "Pain out of proportion, especially with atrial fibrillation, collapse, or shock, should escalate mesenteric ischaemia sharply above benign abdominal fallbacks.",
-    triggers: ["abdominalPain", "painOutOfProportion", "af", "collapse", "hypotension"],
+      "Pain out of proportion or severe pain with a mild abdominal examination, especially with atrial fibrillation, vascular disease, or older age, should escalate mesenteric ischaemia sharply above benign abdominal fallbacks.",
+    triggers: [
+      "abdominalPain",
+      "painOutOfProportion",
+      "painSevereButExamMild",
+      "af",
+      "vascularDisease",
+      "olderAge",
+      "collapse",
+      "hypotension",
+    ],
     boostDiagnoses: ["Mesenteric ischaemia"],
-    requiredAnyFeatures: ["painOutOfProportion"],
+    requiredAnyFeatures: ["painOutOfProportion", "painSevereButExamMild"],
   },
   {
     id: "wardbrain-gap-perforation-001",
@@ -109,7 +118,7 @@ export const GUIDELINE_RULES: GuidelineRule[] = [
     sourceId: "coverage-gap",
     sourceCoverage: "gap",
     rationale:
-      "Sudden abdominal pain with guarding, rigidity, or pain worsened by movement should escalate perforated viscus or peritonitis above softer upper abdominal diagnoses.",
+      "Sudden abdominal pain with guarding, rigidity, or lying still because of pain should escalate perforated viscus or peritonitis above softer upper abdominal diagnoses.",
     triggers: [
       "abdominalPain",
       "suddenOnset",
@@ -119,7 +128,7 @@ export const GUIDELINE_RULES: GuidelineRule[] = [
       "hypotension",
     ],
     boostDiagnoses: ["Perforated viscus"],
-    requiredAnyFeatures: ["guardingRigidity", "lyingStill", "perforationLanguage"],
+    requiredAnyFeatures: ["guardingRigidity", "lyingStill"],
   },
   {
     id: "wardbrain-gap-tia-001",

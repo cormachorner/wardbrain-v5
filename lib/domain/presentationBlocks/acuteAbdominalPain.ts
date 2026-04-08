@@ -28,10 +28,12 @@ export const acuteAbdominalPainFeatureVocabulary = {
     "severePain",
     "colickyPain",
     "painOutOfProportion",
+    "painSevereButExamMild",
     "painRadiatesToBack",
     "painWorseOnMovement",
     "painWorseWithCough",
     "lyingStill",
+    "restless",
     "postPrandialPain",
   ],
   abdominalExam: [
@@ -76,6 +78,8 @@ export const acuteAbdominalPainFeatureVocabulary = {
     "sepsisPattern",
     "dehydration",
     "confusion",
+    "dizziness",
+    "pallor",
   ],
   urinary: [
     "urinarySymptoms",
@@ -183,9 +187,9 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     summary: "Severe abdominal pain out of proportion, especially with AF or vascular risk.",
     features: {
       core: ["abdominalPain", "severePain"],
-      discriminating: ["painOutOfProportion", "suddenOnset"],
+      discriminating: ["painOutOfProportion", "painSevereButExamMild", "suddenOnset"],
       weak: ["vomiting", "bowelHabitChange"],
-      against: ["painMigrationToRIF", "painSettlesBetweenEpisodes"],
+      against: ["painMigrationToRIF", "painSettlesBetweenEpisodes", "diarrhoea"],
       riskFactors: ["atrialFibrillation", "vascularDisease", "olderAge"],
     },
     logic: {
@@ -196,10 +200,27 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           reason: "pain out of proportion is highly discriminating for mesenteric ischaemia",
         },
         {
+          ifAll: ["abdominalPain", "painSevereButExamMild"],
+          add: 6,
+          reason: "severe pain with mild abdominal findings supports mesenteric ischaemia",
+        },
+        {
           ifAll: ["abdominalPain", "painOutOfProportion"],
           ifAny: ["atrialFibrillation", "vascularDisease"],
           add: 4,
           reason: "vascular or embolic context strongly supports mesenteric ischaemia",
+        },
+        {
+          ifAll: ["abdominalPain", "painSevereButExamMild"],
+          ifAny: ["atrialFibrillation", "vascularDisease", "olderAge"],
+          add: 5,
+          reason: "vascular-risk severe-pain exam mismatch strongly supports mesenteric ischaemia",
+        },
+        {
+          ifAll: ["abdominalPain"],
+          ifAny: ["painOutOfProportion", "painSevereButExamMild", "severePain"],
+          add: 4,
+          reason: "severe unexplained abdominal pain pattern supports mesenteric ischaemia",
         },
       ],
       escalationRules: [
@@ -208,6 +229,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAny: ["collapse", "hypotension", "shock"],
           add: 7,
           reason: "pain out of proportion with physiological compromise must escalate mesenteric ischaemia",
+        },
+        {
+          ifAll: ["abdominalPain", "painSevereButExamMild"],
+          ifAny: ["collapse", "hypotension", "shock"],
+          add: 7,
+          reason: "severe pain with mild abdominal findings and physiological compromise must escalate mesenteric ischaemia",
         },
       ],
       penalties: [
@@ -392,7 +419,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     features: {
       core: ["pelvicPain"],
       discriminating: ["pregnancyPossible", "missedPeriod", "vaginalBleeding"],
-      weak: ["collapse"],
+      weak: ["collapse", "dizziness", "pallor"],
       against: ["painSettlesBetweenEpisodes", "urinarySymptoms"],
       riskFactors: ["femaleOfChildbearingAge"],
     },
@@ -408,6 +435,18 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAll: ["pelvicPain", "vaginalBleeding"],
           add: 4,
           reason: "pelvic pain with bleeding is a classic ectopic pattern",
+        },
+        {
+          ifAll: ["pelvicPain", "vaginalBleeding"],
+          ifAny: ["pregnancyPossible", "positivePregnancyTest", "missedPeriod"],
+          add: 8,
+          reason: "classic ectopic pregnancy composite pattern",
+        },
+        {
+          ifAll: ["pelvicPain", "vaginalBleeding"],
+          ifAny: ["dizziness", "pallor", "collapse", "hypotension"],
+          add: 6,
+          reason: "unstable ectopic pregnancy warning pattern",
         },
       ],
       escalationRules: [
@@ -444,7 +483,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     features: {
       core: ["abdominalPain", "rifPain"],
       discriminating: ["painMigrationToRIF", "rifTenderness"],
-      weak: ["nausea", "vomiting", "fever", "localizedTenderness"],
+      weak: ["nausea", "vomiting", "fever", "localizedTenderness", "anorexia", "painWorseOnMovement"],
       against: ["diarrhoea", "painSettlesBetweenEpisodes", "jaundice"],
       riskFactors: [],
     },
@@ -455,6 +494,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAny: ["painMigrationToRIF", "rifTenderness"],
           add: 5,
           reason: "migratory pain with RIF localization strongly supports appendicitis",
+        },
+        {
+          ifAll: ["rifTenderness"],
+          ifAny: ["painWorseOnMovement", "painWorseWithCough"],
+          add: 4,
+          reason: "localized peritoneal irritation supports appendicitis",
         },
       ],
       escalationRules: [
@@ -748,7 +793,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       core: ["abdominalPain", "vomiting", "diarrhoea"],
       discriminating: ["generalizedAbdominalPain"],
       weak: ["fever", "dehydration"],
-      against: ["peritonism", "painOutOfProportion", "painMigrationToRIF", "jaundice"],
+      against: ["peritonism", "painOutOfProportion", "painSevereButExamMild", "painMigrationToRIF", "jaundice"],
       riskFactors: [],
     },
     logic: {
@@ -761,9 +806,15 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["peritonism", "painOutOfProportion", "painMigrationToRIF", "jaundice", "testicularPain"],
+          ifAny: ["peritonism", "painOutOfProportion", "painSevereButExamMild", "painMigrationToRIF", "jaundice", "testicularPain"],
           subtract: 5,
           reason: "focal or dangerous localizing features argue strongly against gastroenteritis",
+        },
+        {
+          ifAll: ["abdominalPain", "severePain"],
+          ifAny: ["atrialFibrillation", "vascularDisease", "olderAge"],
+          subtract: 2,
+          reason: "vascular-risk severe abdominal pain should only modestly fit gastroenteritis",
         },
       ],
     },
@@ -1193,7 +1244,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     summary: "Severe colicky flank-to-groin pain, often with haematuria.",
     features: {
       core: ["flankPain", "colickyPain"],
-      discriminating: ["loinToGroinPain", "haematuria"],
+      discriminating: ["loinToGroinPain", "haematuria", "restless"],
       weak: ["vomiting"],
       against: ["peritonism", "fever", "painMigrationToRIF"],
       riskFactors: [],
@@ -1205,6 +1256,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAny: ["loinToGroinPain", "haematuria", "colickyPain"],
           add: 5,
           reason: "flank-to-groin colicky pattern strongly supports ureteric stone",
+        },
+        {
+          ifAll: ["flankPain", "loinToGroinPain"],
+          ifAny: ["colickyPain", "restless", "haematuria"],
+          add: 8,
+          reason: "classic renal colic composite pattern",
         },
       ],
       penalties: [
@@ -1235,7 +1292,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       core: ["flankPain", "fever"],
       discriminating: ["urinarySymptoms", "cvaTenderness"],
       weak: ["vomiting"],
-      against: ["painOutOfProportion", "peritonism", "painSettlesBetweenEpisodes"],
+      against: ["painOutOfProportion", "peritonism", "painSettlesBetweenEpisodes", "restless"],
       riskFactors: [],
     },
     logic: {
@@ -1253,6 +1310,14 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAny: ["hypotension", "sepsisPattern"],
           add: 5,
           reason: "urosepsis physiology should escalate",
+        },
+      ],
+      penalties: [
+        {
+          ifAll: ["flankPain", "fever"],
+          ifAny: ["loinToGroinPain", "restless"],
+          subtract: 3,
+          reason: "restless loin-to-groin pain without a urinary infective source fits renal colic better than pyelonephritis",
         },
       ],
     },

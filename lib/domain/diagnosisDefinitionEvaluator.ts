@@ -53,6 +53,10 @@ function buildAugmentedFeatureSet(features: ExtractedFeatures, input: CaseInput)
   const augmented = new Set(features.matchedFeatures);
   const parsedAge = Number.parseInt(input.age, 10);
 
+  if (input.sex === "male" || input.sex === "female") {
+    augmented.add(input.sex);
+  }
+
   if (augmented.has("guardingRigidity")) {
     augmented.add("guarding");
     augmented.add("rigidity");
@@ -134,7 +138,9 @@ function hasClearSurgicalAbdominalPattern(featureSet: Set<string>): boolean {
     (hasFeature(featureSet, "painMigrationToRIF") && (hasFeature(featureSet, "rifPain") || hasFeature(featureSet, "rifTenderness"))) ||
     (hasFeature(featureSet, "peritonism") &&
       (hasFeature(featureSet, "painWorseOnMovement") || hasFeature(featureSet, "lyingStill"))) ||
-    (hasFeature(featureSet, "flankPain") && hasFeature(featureSet, "loinToGroinPain"))
+    (hasFeature(featureSet, "flankPain") &&
+      hasFeature(featureSet, "loinToGroinPain") &&
+      (hasFeature(featureSet, "restless") || hasFeature(featureSet, "colickyPain")))
   );
 }
 
@@ -149,16 +155,24 @@ function getDefinitionPolicyModifier(
   switch (definition.id) {
     case "mesenteric_ischaemia":
       if (
-        hasFeature(featureSet, "painOutOfProportion") &&
+        hasFeature(featureSet, "abdominalPain") &&
+        (hasFeature(featureSet, "painOutOfProportion") ||
+          hasFeature(featureSet, "painSevereButExamMild") ||
+          hasFeature(featureSet, "severePain")) &&
         (hasFeature(featureSet, "atrialFibrillation") ||
           hasFeature(featureSet, "vascularDisease") ||
           hasFeature(featureSet, "olderAge"))
       ) {
-        scoreDelta += 8;
+        scoreDelta += 12;
         reasonsFor.push("high-specificity mesenteric emergency pattern");
       }
       break;
     case "ectopic_pregnancy":
+      if (hasFeature(featureSet, "male")) {
+        scoreDelta -= 30;
+        reasonsAgainst.push("male sex strongly argues against ectopic pregnancy");
+      }
+
       if (
         hasFeature(featureSet, "pelvicPain") &&
         hasFeature(featureSet, "vaginalBleeding") &&
@@ -166,8 +180,20 @@ function getDefinitionPolicyModifier(
           hasFeature(featureSet, "missedPeriod") ||
           hasFeature(featureSet, "positivePregnancyTest"))
       ) {
-        scoreDelta += 8;
+        scoreDelta += 9;
         reasonsFor.push("high-specificity ectopic pregnancy pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "pelvicPain") &&
+        hasFeature(featureSet, "vaginalBleeding") &&
+        (hasFeature(featureSet, "dizziness") ||
+          hasFeature(featureSet, "pallor") ||
+          hasFeature(featureSet, "collapse") ||
+          hasFeature(featureSet, "hypotension"))
+      ) {
+        scoreDelta += 5;
+        reasonsFor.push("ectopic instability warning pattern");
       }
       break;
     case "appendicitis":
@@ -175,8 +201,17 @@ function getDefinitionPolicyModifier(
         hasFeature(featureSet, "painMigrationToRIF") &&
         (hasFeature(featureSet, "rifPain") || hasFeature(featureSet, "rifTenderness"))
       ) {
-        scoreDelta += 7;
+        scoreDelta += 10;
         reasonsFor.push("high-specificity appendicitis localization pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "painMigrationToRIF") &&
+        hasFeature(featureSet, "rifTenderness") &&
+        (hasFeature(featureSet, "anorexia") || hasFeature(featureSet, "painWorseOnMovement"))
+      ) {
+        scoreDelta += 6;
+        reasonsFor.push("appendicitis composite pattern");
       }
       break;
     case "perforated_viscus_peritonitis":
@@ -184,18 +219,50 @@ function getDefinitionPolicyModifier(
         (hasFeature(featureSet, "peritonism") || hasFeature(featureSet, "guarding") || hasFeature(featureSet, "rigidity")) &&
         (hasFeature(featureSet, "painWorseOnMovement") || hasFeature(featureSet, "lyingStill"))
       ) {
-        scoreDelta += 8;
+        scoreDelta += 10;
         reasonsFor.push("high-specificity peritonitic emergency pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "painWorseOnMovement") &&
+        !hasFeature(featureSet, "suddenOnset") &&
+        !hasFeature(featureSet, "peritonism") &&
+        !hasFeature(featureSet, "guarding") &&
+        !hasFeature(featureSet, "rigidity") &&
+        !hasFeature(featureSet, "lyingStill")
+      ) {
+        scoreDelta -= 5;
+        reasonsAgainst.push("movement pain alone without a true peritonitic pattern is weak support for perforation");
       }
       break;
     case "renal_colic":
       if (
         hasFeature(featureSet, "flankPain") &&
         hasFeature(featureSet, "loinToGroinPain") &&
+        hasFeature(featureSet, "restless")
+      ) {
+        scoreDelta += 12;
+        reasonsFor.push("high-specificity renal colic pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "flankPain") &&
+        hasFeature(featureSet, "loinToGroinPain") &&
         (hasFeature(featureSet, "colickyPain") || hasFeature(featureSet, "haematuria"))
       ) {
-        scoreDelta += 8;
-        reasonsFor.push("high-specificity renal colic pattern");
+        scoreDelta += 5;
+        reasonsFor.push("renal colic flank-to-groin composite pattern");
+      }
+      break;
+    case "pyelonephritis":
+      if (
+        hasFeature(featureSet, "flankPain") &&
+        !hasFeature(featureSet, "urinarySymptoms") &&
+        !hasFeature(featureSet, "cvaTenderness") &&
+        (hasFeature(featureSet, "loinToGroinPain") || hasFeature(featureSet, "restless"))
+      ) {
+        scoreDelta -= 5;
+        reasonsAgainst.push("weak infective urinary signature in a renal-colic-like pattern");
       }
       break;
     case "dka":
@@ -211,6 +278,18 @@ function getDefinitionPolicyModifier(
       break;
     case "acs_epigastric_presentation":
       if (
+        hasFeature(featureSet, "flankPain") &&
+        hasFeature(featureSet, "loinToGroinPain") &&
+        hasFeature(featureSet, "restless") &&
+        !hasFeature(featureSet, "acsEquivalentPain") &&
+        !hasFeature(featureSet, "chestPain") &&
+        !hasFeature(featureSet, "sob")
+      ) {
+        scoreDelta -= 8;
+        reasonsAgainst.push("no cardiac signature in a classic renal-colic pattern");
+      }
+
+      if (
         !hasFeature(featureSet, "acsEquivalentPain") &&
         !hasFeature(featureSet, "chestPain") &&
         !hasFeature(featureSet, "sob") &&
@@ -218,6 +297,18 @@ function getDefinitionPolicyModifier(
       ) {
         scoreDelta -= 6;
         reasonsAgainst.push("weak cardiac signature in a clearly abdominal pattern");
+      }
+      break;
+    case "gastroenteritis":
+      if (
+        hasFeature(featureSet, "abdominalPain") &&
+        hasFeature(featureSet, "severePain") &&
+        (hasFeature(featureSet, "atrialFibrillation") ||
+          hasFeature(featureSet, "vascularDisease") ||
+          hasFeature(featureSet, "olderAge"))
+      ) {
+        scoreDelta -= 3;
+        reasonsAgainst.push("vascular-risk severe abdominal pain only modestly fits gastroenteritis");
       }
       break;
     case "ruptured_or_symptomatic_aaa":
@@ -242,9 +333,14 @@ function getDefinitionPolicyModifier(
 function getRedFlagPromotionScore(
   differentialName: string,
   redFlags: RedFlag[],
+  featureSet?: Set<string>,
 ): { scoreDelta: number; reasonsFor: string[] } {
   let scoreDelta = 0;
   const reasonsFor: string[] = [];
+
+  if (differentialName === "Ectopic pregnancy" && featureSet?.has("male")) {
+    return { scoreDelta: 0, reasonsFor };
+  }
 
   for (const redFlag of redFlags) {
     if (redFlag.boostDiagnoses.includes(differentialName)) {
@@ -387,7 +483,7 @@ export function scoreDiagnosisDefinitions(
   return definitions
     .map((definition) => {
       const scored = scoreDiagnosisDefinition(definition, features, input);
-      const redFlagPromotion = getRedFlagPromotionScore(scored.name, redFlags);
+      const redFlagPromotion = getRedFlagPromotionScore(scored.name, redFlags, buildAugmentedFeatureSet(features, input));
 
       return {
         ...scored,

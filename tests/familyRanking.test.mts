@@ -72,6 +72,11 @@ test("thunderclap headache routes to headache and prioritizes headache diagnoses
   assert.equal(route.primaryFamily, "headache");
   assert.equal(result.differentials[0]?.name, "Subarachnoid haemorrhage");
   assert.ok(
+    result.differentials[0]?.reasonsFor.some((reason) =>
+      reason.includes("red-flag promotion: Headache urgent evaluation pattern"),
+    ),
+  );
+  assert.ok(
     result.differentials.slice(0, 4).every((differential) =>
       [
         "Subarachnoid haemorrhage",
@@ -109,6 +114,11 @@ test("pleuritic sob routes to breathlessness family and prioritizes pleuro-respi
 
   assert.equal(route.primaryFamily, "breathlessness-pleuritic-chest-pain");
   assert.equal(result.differentials[0]?.name, "Pulmonary embolism");
+  assert.ok(
+    result.differentials[0]?.reasonsFor.some((reason) =>
+      reason.includes("red-flag promotion: PE suspicion pattern"),
+    ),
+  );
   assert.ok(
     result.differentials.slice(0, 3).every((differential) =>
       ["Pulmonary embolism", "Pneumothorax", "Pneumonia", "Sepsis", "Acute coronary syndrome"].includes(
@@ -159,6 +169,27 @@ test("acute abdominal pain routes to acute-abdominal-pain and can prioritize pan
       ].includes(differential.name),
     ),
   );
+});
+
+test("clear abdominal presentation suppresses implausible cross-domain legacy leakage", () => {
+  const result = analyzeCase({
+    age: "72",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history: "Severe right iliac fossa pain after central migration with focal tenderness and anorexia.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no chest pain no headache no breathlessness",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(!result.differentials.slice(0, 5).some((d) => d.name === "Temporal arteritis"));
+  assert.ok(!result.differentials.slice(0, 5).some((d) => d.name === "Pneumothorax"));
 });
 
 test("RUQ pain and jaundice routes to ruq-pain-jaundice and keeps live ranking focused on cholangitis", () => {
