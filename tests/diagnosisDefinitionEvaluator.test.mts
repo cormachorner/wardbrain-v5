@@ -330,6 +330,32 @@ test("renal colic is strongly promoted by flank-to-groin pain with restlessness"
   assert.equal(result.differentials[0]?.name, "Renal colic / ureteric stone");
 });
 
+test("exact live flank-pain vignette detects the renal colic composite end-to-end", () => {
+  const result = analyzeCase({
+    age: "64",
+    sex: "male",
+    presentingComplaint: "Flank pain",
+    history:
+      "Sudden severe left flank pain radiating toward the groin. He keeps moving around trying to get comfortable.",
+    pmh: "hypertension and smoking history",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "no chest pain no shortness of breath no dysuria no fever",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(result.detectedFeatures.includes("sudden onset"));
+  assert.ok(result.detectedFeatures.includes("severe pain"));
+  assert.ok(result.detectedFeatures.includes("flank pain"));
+  assert.ok(result.detectedFeatures.includes("loin-to-groin pain"));
+  assert.ok(result.detectedFeatures.includes("restless / cannot get comfortable"));
+  assert.equal(result.differentials[0]?.name, "Renal colic / ureteric stone");
+});
+
 test("non-migrated blocks still use the legacy rule engine path", () => {
   const result = analyzeCase({
     age: "64",

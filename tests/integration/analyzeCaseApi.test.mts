@@ -1,30 +1,49 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { encode } from "next-auth/jwt";
 
 import { POST } from "../../app/api/analyze-case/route.js";
 
+async function createTestRequest(body: unknown) {
+  const secret = "test-secret";
+  process.env.NEXTAUTH_SECRET = secret;
+
+  const token = await encode({
+    token: {
+      sub: "test-user",
+      role: "ADMIN",
+      email: "admin@example.com",
+    },
+    secret,
+    salt: "authjs.session-token",
+  });
+
+  return new Request("http://localhost/api/analyze-case", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      cookie: `authjs.session-token=${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 test("analyze-case API returns structured analysis JSON", async () => {
   const response = await POST(
-    new Request("http://localhost/api/analyze-case", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        age: "64",
-        sex: "male",
-        presentingComplaint: "Chest pain",
-        history: "Central chest pressure radiating to the jaw with sweating and nausea.",
-        pmh: "hypertension",
-        meds: "",
-        social: "smoker",
-        keyPositives: "",
-        keyNegatives: "",
-        observations: "",
-        leadDiagnosis: "ACS",
-        otherDifferentials: "",
-        dangerousDiagnoses: "",
-      }),
+    await createTestRequest({
+      age: "64",
+      sex: "male",
+      presentingComplaint: "Chest pain",
+      history: "Central chest pressure radiating to the jaw with sweating and nausea.",
+      pmh: "hypertension",
+      meds: "",
+      social: "smoker",
+      keyPositives: "",
+      keyNegatives: "",
+      observations: "",
+      leadDiagnosis: "ACS",
+      otherDifferentials: "",
+      dangerousDiagnoses: "",
     }),
   );
 

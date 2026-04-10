@@ -115,9 +115,9 @@ export default function Home() {
               Educational use only • De-identified cases only
             </div>
             <div className="flex gap-2">
-              {(session.user as any)?.role === "ADMIN" && (
+              {session.user.role === "ADMIN" && (
                 <a
-                  href="/admin/users"
+                  href="/admin"
                   className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Admin

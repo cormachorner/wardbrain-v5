@@ -1,4 +1,5 @@
 import type { CaseInput, ExtractedFeatures } from "../types";
+import { prisma } from "../prisma";
 
 const FEATURE_PATTERNS: Record<string, string[]> = {
   chestPain: [
@@ -21,6 +22,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   suddenOnset: [
     "sudden onset",
+    "sudden",
+    "suddenly",
     "sudden pleuritic chest pain",
     "sudden sharp chest pain",
     "sudden abdominal pain",
@@ -496,6 +499,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "excruciating pain",
     "severe abdominal pain",
     "very severe abdominal pain",
+    "severe flank pain",
+    "severe left flank pain",
+    "severe right flank pain",
   ],
   colickyPain: [
     "colicky pain",
@@ -764,6 +770,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "unable to get comfortable",
     "writhing in pain",
     "pacing because of pain",
+    "keeps moving around trying to get comfortable",
+    "moving around trying to get comfortable",
+    "trying to get comfortable",
   ],
   localizedTenderness: [
     "localized tenderness",
@@ -1224,6 +1233,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "loin to groin pain",
     "pain radiating to groin",
     "radiates to the groin",
+    "radiating toward the groin",
+    "radiates toward the groin",
+    "radiating towards the groin",
+    "radiates towards the groin",
     "pain from loin to groin",
   ],
   sob: [
@@ -1556,6 +1569,12 @@ const LOW_SYSTOLIC_BP_THRESHOLD = 90;
 const LOW_SATS_THRESHOLD = 92;
 const HIGH_TEMPERATURE_THRESHOLD = 38;
 const LOW_TEMPERATURE_THRESHOLD = 36;
+const FEATURE_PHRASE_CACHE_TTL_MS = 30_000;
+
+let dbPhraseToFeatureSlug = new Map<string, string>();
+let dbFeaturePhraseLoadPromise: Promise<void> | null = null;
+let dbFeaturePhraseLastLoadedAt = 0;
+let dbFeaturePhraseLoadFailed = false;
 
 function normaliseText(text: string): string {
   return text
@@ -1563,6 +1582,9 @@ function normaliseText(text: string): string {
     .replace(/[.,/#!$%^&*;:{}=\-_`~()%]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+function toEngineFeature(slug: string): string {
+  return slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 }
 
 function escapeRegExp(value: string): string {
@@ -1577,6 +1599,67 @@ function buildPatternRegex(pattern: string): RegExp {
 
 function hasPattern(text: string, patterns: string[]): boolean {
   return patterns.some((pattern) => buildPatternRegex(pattern).test(text));
+}
+
+async function loadDbFeaturePatterns() {
+  try {
+    const featurePhrases = await prisma.featurePhrase.findMany({
+      where: {
+        status: "PUBLISHED",
+        featureLabel: {
+          status: "PUBLISHED",
+        },
+      },
+      include: {
+        featureLabel: {
+          select: {
+            slug: true,
+          },
+        }
+      },
+      orderBy: [{ featureLabelId: "asc" }, { phrase: "asc" }],
+    });
+    console.log("PHRASES:", featurePhrases);
+
+    const phraseToFeatureSlug = new Map<string, string>();
+    for (const featurePhrase of featurePhrases) {
+      const normalizedPhrase = normaliseText(featurePhrase.phrase);
+
+      if (!normalizedPhrase) {
+        continue;
+      }
+
+      phraseToFeatureSlug.set(
+  normalizedPhrase,
+  toEngineFeature(featurePhrase.featureLabel.slug)
+);
+    }
+
+    dbPhraseToFeatureSlug = phraseToFeatureSlug;
+    dbFeaturePhraseLastLoadedAt = Date.now();
+    dbFeaturePhraseLoadFailed = false;
+  } catch (error) {
+    dbFeaturePhraseLoadFailed = true;
+    console.error("Failed to load DB feature phrases for extraction:", error);
+  } finally {
+    dbFeaturePhraseLoadPromise = null;
+  }
+}
+
+function ensureDbFeaturePatternsLoaded() {
+  const cacheIsFresh =
+    dbFeaturePhraseLastLoadedAt > 0 &&
+    Date.now() - dbFeaturePhraseLastLoadedAt < FEATURE_PHRASE_CACHE_TTL_MS;
+
+  if (cacheIsFresh || dbFeaturePhraseLoadPromise) {
+    return;
+  }
+
+  if (dbFeaturePhraseLoadFailed && dbFeaturePhraseLastLoadedAt === 0) {
+    return;
+  }
+
+  dbFeaturePhraseLoadPromise = loadDbFeaturePatterns();
 }
 
 function hasNegatedPattern(text: string, feature: string, patterns: string[]): boolean {
@@ -1696,6 +1779,8 @@ function getObservationFeatures(observations: string): string[] {
 }
 
 export function extractFeatures(input: CaseInput): ExtractedFeatures {
+  ensureDbFeaturePatternsLoaded();
+
   const allText = normaliseText(
     [
       input.presentingComplaint,
@@ -1713,11 +1798,20 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
 
   const matchedFeatures: string[] = [];
 
+  for (const [phrase, feature] of dbPhraseToFeatureSlug.entries()) {
+    const present = buildPatternRegex(phrase).test(allText);
+    const negated = hasNegatedPattern(allText, feature, [phrase]);
+
+    if (present && !negated && !matchedFeatures.includes(feature)) {
+      matchedFeatures.push(feature);
+    }
+  }
+
   for (const [feature, patterns] of Object.entries(FEATURE_PATTERNS)) {
     const present = hasPattern(allText, patterns);
     const negated = hasNegatedPattern(allText, feature, patterns);
 
-    if (present && !negated) {
+    if (present && !negated && !matchedFeatures.includes(feature)) {
       matchedFeatures.push(feature);
     }
   }

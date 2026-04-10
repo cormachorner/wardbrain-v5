@@ -31,13 +31,13 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else if (status === "authenticated" && (session.user as any)?.role !== "ADMIN") {
+    } else if (status === "authenticated" && session?.user.role !== "ADMIN") {
       router.push("/");
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (status === "authenticated" && (session.user as any)?.role === "ADMIN") {
+    if (status === "authenticated" && session?.user.role === "ADMIN") {
       fetchUsers();
     }
   }, [status, session]);
@@ -75,7 +75,7 @@ export default function AdminUsersPage() {
         const data = await response.json();
         setError(data.error || "Failed to create user");
       }
-    } catch (error) {
+    } catch {
       setError("Network error");
     }
   };
@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
     setError("");
 
     try {
-      const updateData: any = { ...formData };
+      const updateData: Partial<typeof formData> = { ...formData };
       if (!updateData.password) delete updateData.password; // Don't update password if empty
 
       const response = await fetch(`/api/admin/users/${editingUser.id}`, {
@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
         const data = await response.json();
         setError(data.error || "Failed to update user");
       }
-    } catch (error) {
+    } catch {
       setError("Network error");
     }
   };
@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
         const data = await response.json();
         setError(data.error || "Failed to delete user");
       }
-    } catch (error) {
+    } catch {
       setError("Network error");
     }
   };
@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
     );
   }
 
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return null; // Will redirect
   }
 
@@ -219,7 +219,12 @@ export default function AdminUsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                   <select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        role: e.target.value as "STUDENT" | "INSTRUCTOR" | "ADMIN",
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
                     <option value="STUDENT">Student</option>
@@ -275,7 +280,12 @@ export default function AdminUsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                   <select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        role: e.target.value as "STUDENT" | "INSTRUCTOR" | "ADMIN",
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
                     <option value="STUDENT">Student</option>

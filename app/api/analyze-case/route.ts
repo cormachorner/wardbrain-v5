@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { analyzeCase } from '../../../lib/application/analyzeCase';
 import type { CaseInput } from '../../../lib/types';
 import { getToken } from "next-auth/jwt"
@@ -21,7 +21,7 @@ const caseInputSchema = z.object({
   suspectedDiagnosis: z.string().optional(),
 })
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   // Check for JWT token - optional for MVP
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 

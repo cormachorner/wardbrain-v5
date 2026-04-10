@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
 import { prisma } from "../../../../lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { requireAdminRoute } from "../../../../lib/adminAuth"
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -11,20 +11,9 @@ const createUserSchema = z.object({
   role: z.enum(["STUDENT", "INSTRUCTOR", "ADMIN"]).optional().default("STUDENT"),
 })
 
-// Middleware to check admin access
-async function requireAdmin(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-
-  if (!token || (token as any).role !== "ADMIN") {
-    return NextResponse.json({ error: "Admin access required" }, { status: 403 })
-  }
-
-  return null // Admin access granted
-}
-
 export async function GET(request: NextRequest) {
-  const authError = await requireAdmin(request)
-  if (authError) return authError
+  const authResult = await requireAdminRoute(request)
+  if (!authResult.ok) return authResult.response
 
   try {
     const users = await prisma.user.findMany({
@@ -47,8 +36,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdmin(request)
-  if (authError) return authError
+  const authResult = await requireAdminRoute(request)
+  if (!authResult.ok) return authResult.response
 
   try {
     const body = await request.json()
