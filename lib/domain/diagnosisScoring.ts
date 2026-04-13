@@ -5,8 +5,8 @@ import type { DiagnosisRule } from "./diagnosisRules";
 const DEFAULT_SUPPORTIVE_WEIGHT = 2;
 const DEFAULT_CONFLICT_WEIGHT = -2;
 const GENERIC_SUPPORTIVE_FEATURE_WEIGHTS = new Map<string, number>([
-  ["abdominalPain", 1],
-  ["chestPain", 2],
+  ["abdominal_pain", 1],
+  ["chest_pain", 2],
   ["headache", 2],
   ["sob", 2],
   ["fever", 1],
@@ -22,14 +22,14 @@ const GENERIC_INSTABILITY_FEATURES = new Set([
   "tachypnoea",
 ]);
 const PNEUMOTHORAX_YOUNG_SIGNATURE_FEATURES = [
-  "tallThinHabitus",
-  "suddenOnset",
-  "pleuriticPain",
-  "unilateralReducedAirEntry",
+  "tall_thin_habitus",
+  "sudden_onset",
+  "pleuritic_pain",
+  "unilateral_reduced_air_entry",
   "sob",
   "smoker",
 ] as const;
-const PE_VTE_CONTEXT_FEATURES = ["recentSurgery", "immobility", "longHaulTravel", "haemoptysis"] as const;
+const PE_VTE_CONTEXT_FEATURES = ["recent_surgery", "immobility", "long_haul_travel", "haemoptysis"] as const;
 
 type AgeBand = "under30" | "30to49" | "50to64" | "65plus" | "unknown";
 
@@ -59,13 +59,13 @@ function getAgeBand(age?: number): AgeBand {
 
 function getAgeModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: number) {
   const ageBand = getAgeBand(age);
-  const acsSignatureCount = ["chestPain", "jawPain", "armPain", "sweating", "indigestionLikeChestPain"].filter(
+  const acsSignatureCount = ["chest_pain", "jaw_pain", "arm_pain", "sweating", "indigestion_like_chest_pain"].filter(
     (feature) => has(features, feature),
   ).length;
-  const aaaSignatureCount = ["abdominalPain", "backRadiation", "pulsatileAbdomen"].filter(
+  const aaaSignatureCount = ["abdominal_pain", "back_radiation", "pulsatile_abdomen"].filter(
     (feature) => has(features, feature),
   ).length;
-  const aorticSignatureCount = ["chestPain", "suddenOnset", "tearingPain", "backRadiation"].filter(
+  const aorticSignatureCount = ["chest_pain", "sudden_onset", "tearing_pain", "back_radiation"].filter(
     (feature) => has(features, feature),
   ).length;
 
@@ -124,39 +124,39 @@ function getAgeModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: 
 
 function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, age?: number) {
   const hasStrongAbdominalLocalization =
-    has(features, "painOutOfProportion") ||
-    has(features, "migrationToRIF") ||
-    has(features, "rifTenderness") ||
-    has(features, "guardingRigidity") ||
-    has(features, "abdominalMovementPain") ||
-    has(features, "lyingStill") ||
-    has(features, "flankPain") ||
-    has(features, "loinToGroinPain") ||
-    has(features, "pelvicPain") ||
-    has(features, "testicularPain") ||
-    has(features, "unilateralTesticularPain");
+    has(features, "pain_out_of_proportion") ||
+    has(features, "migration_to_rif") ||
+    has(features, "rif_tenderness") ||
+    has(features, "guarding_rigidity") ||
+    has(features, "abdominal_movement_pain") ||
+    has(features, "lying_still") ||
+    has(features, "flank_pain") ||
+    has(features, "loin_to_groin_pain") ||
+    has(features, "pelvic_pain") ||
+    has(features, "testicular_pain") ||
+    has(features, "unilateral_testicular_pain");
   const hasStrongChestSignature =
-    has(features, "chestPain") ||
-    has(features, "indigestionLikeChestPain") ||
-    has(features, "jawPain") ||
-    has(features, "armPain") ||
-    has(features, "pleuriticPain") ||
-    has(features, "unilateralReducedAirEntry");
+    has(features, "chest_pain") ||
+    has(features, "indigestion_like_chest_pain") ||
+    has(features, "jaw_pain") ||
+    has(features, "arm_pain") ||
+    has(features, "pleuritic_pain") ||
+    has(features, "unilateral_reduced_air_entry");
   const hasStrongHeadacheSignature =
     has(features, "headache") ||
     has(features, "thunderclap") ||
-    has(features, "jawClaudication") ||
-    has(features, "scalpTenderness") ||
-    has(features, "visualSymptoms");
+    has(features, "jaw_claudication") ||
+    has(features, "scalp_tenderness") ||
+    has(features, "transient_visual_symptoms");
 
   if (rule.name === "Acute cholangitis") {
     const hasAcuteBiliaryInfectivePattern =
-      has(features, "ruqPain") &&
+      has(features, "ruq_pain") &&
       has(features, "jaundice") &&
       (has(features, "fever") || has(features, "rigors"));
     const hasChronicCholestaticPattern =
-      has(features, "chronicCourse") &&
-      (has(features, "pruritus") || has(features, "fatigue") || has(features, "dryEyesMouth") || has(features, "ibdContext"));
+      has(features, "chronic_course") &&
+      (has(features, "pruritus") || has(features, "fatigue") || has(features, "dry_eyes_mouth") || has(features, "ibd_context"));
 
     if (!hasAcuteBiliaryInfectivePattern && hasChronicCholestaticPattern) {
       return -4;
@@ -165,13 +165,13 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Acute cholecystitis") {
     const hasClassicLocalizedInflammatoryRuqPattern =
-      has(features, "ruqPain") &&
-      (has(features, "persistentRuqPain") || has(features, "localizedRuqTenderness") || has(features, "murphysSign")) &&
+      has(features, "ruq_pain") &&
+      (has(features, "persistent_ruq_pain") || has(features, "localized_ruq_tenderness") || has(features, "murphys_sign")) &&
       (has(features, "fever") || has(features, "nausea") || has(features, "vomiting"));
     const hasObstructiveOrSepticDominance =
       has(features, "jaundice") ||
-      has(features, "darkUrine") ||
-      has(features, "paleStools") ||
+      has(features, "dark_urine") ||
+      has(features, "pale_stools") ||
       has(features, "rigors") ||
       has(features, "hypotension") ||
       has(features, "confusion");
@@ -180,14 +180,14 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       return 3;
     }
 
-    if (hasObstructiveOrSepticDominance && !has(features, "murphysSign")) {
+    if (hasObstructiveOrSepticDominance && !has(features, "murphys_sign")) {
       return -2;
     }
   }
 
   if (rule.name === "Abdominal aortic aneurysm") {
     const hasUnstableAaaPattern =
-      (has(features, "abdominalPain") || has(features, "flankPain")) &&
+      (has(features, "abdominal_pain") || has(features, "flank_pain")) &&
       (has(features, "collapse") || has(features, "hypotension"));
 
     if (hasUnstableAaaPattern) {
@@ -195,45 +195,45 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
 
     if (
-      has(features, "painOutOfProportion") &&
+      has(features, "pain_out_of_proportion") &&
       has(features, "af") &&
-      !has(features, "flankPain") &&
-      !has(features, "backRadiation") &&
-      !has(features, "pulsatileAbdomen")
+      !has(features, "flank_pain") &&
+      !has(features, "back_radiation") &&
+      !has(features, "pulsatile_abdomen")
     ) {
       return -2;
     }
 
-    if (has(features, "loinToGroinPain") && has(features, "haematuria") && !has(features, "collapse")) {
+    if (has(features, "loin_to_groin_pain") && has(features, "haematuria") && !has(features, "collapse")) {
       return -3;
     }
   }
 
   if (rule.name === "Acute pancreatitis") {
     const hasClassicLocalizedInflammatoryRuqPattern =
-      has(features, "ruqPain") &&
-      (has(features, "persistentRuqPain") || has(features, "localizedRuqTenderness") || has(features, "murphysSign")) &&
+      has(features, "ruq_pain") &&
+      (has(features, "persistent_ruq_pain") || has(features, "localized_ruq_tenderness") || has(features, "murphys_sign")) &&
       has(features, "fever") &&
       (has(features, "nausea") || has(features, "vomiting"));
     const hasStrongerPancreatitisSignature =
-      has(features, "backRadiation") ||
-      has(features, "alcoholExcess") ||
-      has(features, "bingeDrinking") ||
-      has(features, "severeConstantUpperAbdominalPain");
+      has(features, "back_radiation") ||
+      has(features, "alcohol_excess") ||
+      has(features, "binge_drinking") ||
+      has(features, "severe_constant_upper_abdominal_pain");
 
     if (hasClassicLocalizedInflammatoryRuqPattern && !hasStrongerPancreatitisSignature) {
       return -3;
     }
 
     if (
-      has(features, "migrationToRIF") ||
-      has(features, "rifTenderness") ||
-      has(features, "rifPain") ||
-      ((has(features, "pregnancyPossible") || has(features, "missedPeriod")) && has(features, "vaginalBleeding")) ||
-      has(features, "unilateralTesticularPain") ||
-      has(features, "guardingRigidity") ||
-      has(features, "abdominalMovementPain") ||
-      has(features, "lyingStill")
+      has(features, "migration_to_rif") ||
+      has(features, "rif_tenderness") ||
+      has(features, "rif_pain") ||
+      ((has(features, "pregnancy_possible") || has(features, "missed_period")) && has(features, "vaginal_bleeding")) ||
+      has(features, "unilateral_testicular_pain") ||
+      has(features, "guarding_rigidity") ||
+      has(features, "abdominal_movement_pain") ||
+      has(features, "lying_still")
     ) {
       return -3;
     }
@@ -241,20 +241,20 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Perforated viscus") {
     if (
-      has(features, "abdominalPain") &&
-      (has(features, "guardingRigidity") || has(features, "abdominalMovementPain") || has(features, "lyingStill"))
+      has(features, "abdominal_pain") &&
+      (has(features, "guarding_rigidity") || has(features, "abdominal_movement_pain") || has(features, "lying_still"))
     ) {
       return 4;
     }
 
     if (
-      !has(features, "abdominalPain") ||
+      !has(features, "abdominal_pain") ||
       !(
-        has(features, "guardingRigidity") ||
-        has(features, "abdominalMovementPain") ||
-        has(features, "lyingStill") ||
-        has(features, "perforationLanguage") ||
-        has(features, "suddenOnset")
+        has(features, "guarding_rigidity") ||
+        has(features, "abdominal_movement_pain") ||
+        has(features, "lying_still") ||
+        has(features, "perforation_language") ||
+        has(features, "sudden_onset")
       )
     ) {
       return -4;
@@ -262,35 +262,35 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   }
 
   if (rule.name === "Mesenteric ischaemia") {
-    if (!has(features, "abdominalPain")) {
+    if (!has(features, "abdominal_pain")) {
       return -6;
     }
 
     if (
-      has(features, "abdominalPain") &&
-      has(features, "painOutOfProportion") &&
+      has(features, "abdominal_pain") &&
+      has(features, "pain_out_of_proportion") &&
       (has(features, "af") || has(features, "collapse") || has(features, "hypotension"))
     ) {
       return 6;
     }
 
-    if (!has(features, "painOutOfProportion")) {
+    if (!has(features, "pain_out_of_proportion")) {
       return -6;
     }
   }
 
   if (rule.name === "Appendicitis") {
     if (
-      (has(features, "rifPain") || has(features, "migrationToRIF") || has(features, "rifTenderness")) &&
-      (has(features, "fever") || has(features, "anorexia") || has(features, "abdominalMovementPain"))
+      (has(features, "rif_pain") || has(features, "migration_to_rif") || has(features, "rif_tenderness")) &&
+      (has(features, "fever") || has(features, "anorexia") || has(features, "abdominal_movement_pain"))
     ) {
       return 5;
     }
 
     if (
-      (has(features, "rifPain") || has(features, "migrationToRIF")) &&
+      (has(features, "rif_pain") || has(features, "migration_to_rif")) &&
       has(features, "diarrhoea") &&
-      !has(features, "vaginalBleeding")
+      !has(features, "vaginal_bleeding")
     ) {
       return 2;
     }
@@ -298,45 +298,45 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Ectopic pregnancy") {
     if (
-      (has(features, "pregnancyPossible") || has(features, "missedPeriod")) &&
-      has(features, "vaginalBleeding") &&
-      (has(features, "abdominalPain") || has(features, "pelvicPain"))
+      (has(features, "pregnancy_possible") || has(features, "missed_period")) &&
+      has(features, "vaginal_bleeding") &&
+      (has(features, "abdominal_pain") || has(features, "pelvic_pain"))
     ) {
       return 4;
     }
   }
 
   if (rule.name === "Ovarian / acute pelvic pathology") {
-    if (!has(features, "pelvicPain") && !has(features, "vaginalBleeding")) {
+    if (!has(features, "pelvic_pain") && !has(features, "vaginal_bleeding")) {
       return -3;
     }
   }
 
   if (rule.name === "Testicular torsion") {
-    if ((has(features, "unilateralTesticularPain") || has(features, "testicularPain")) && has(features, "suddenOnset")) {
+    if ((has(features, "unilateral_testicular_pain") || has(features, "testicular_pain")) && has(features, "sudden_onset")) {
       return 5;
     }
   }
 
   if (rule.name === "Cauda equina syndrome") {
     if (
-      has(features, "backPain") &&
-      (has(features, "urinaryRetention") || has(features, "saddleNumbness")) &&
-      has(features, "bilateralLegSymptoms")
+      has(features, "back_pain") &&
+      (has(features, "urinary_retention") || has(features, "saddle_numbness")) &&
+      has(features, "bilateral_leg_symptoms")
     ) {
       return 5;
     }
   }
 
   if (rule.name === "TIA") {
-    if (has(features, "focalNeurology") && has(features, "transientFocalDeficit")) {
+    if (has(features, "focal_neurology") && has(features, "transient_focal_deficit")) {
       return 4;
     }
   }
 
   if (rule.name === "Hypoglycaemia") {
     if (
-      (has(features, "diabeticContext") || has(features, "hypoglycaemiaCue")) &&
+      (has(features, "diabetic_context") || has(features, "hypoglycaemia_cue")) &&
       (has(features, "confusion") || has(features, "collapse") || has(features, "sweating"))
     ) {
       return 4;
@@ -344,21 +344,21 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   }
 
   if (rule.name === "Heart failure") {
-    if (has(features, "sob") && has(features, "orthopnoea") && has(features, "ankleSwelling")) {
+    if (has(features, "sob") && has(features, "orthopnoea") && has(features, "ankle_swelling")) {
       return 4;
     }
   }
 
   if (rule.name === "UTI / urosepsis") {
     if (
-      has(features, "urinarySymptoms") &&
+      has(features, "urinary_symptoms") &&
       (has(features, "fever") || has(features, "rigors")) &&
-      (has(features, "confusion") || has(features, "hypotension") || has(features, "flankPain"))
+      (has(features, "confusion") || has(features, "hypotension") || has(features, "flank_pain"))
     ) {
       return 4;
     }
 
-    if (!has(features, "urinarySymptoms") && !has(features, "flankPain")) {
+    if (!has(features, "urinary_symptoms") && !has(features, "flank_pain")) {
       return -3;
     }
   }
@@ -368,8 +368,8 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       has(features, "fever") &&
       (has(features, "rigors") || has(features, "hypotension") || has(features, "confusion"));
     const hasChronicCholestaticPattern =
-      has(features, "chronicCourse") &&
-      (has(features, "pruritus") || has(features, "dryEyesMouth") || has(features, "ibdContext"));
+      has(features, "chronic_course") &&
+      (has(features, "pruritus") || has(features, "dry_eyes_mouth") || has(features, "ibd_context"));
 
     if (hasStrongSepticPattern) {
       return -2;
@@ -387,8 +387,8 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       has(features, "rigors") ||
       has(features, "hypotension") ||
       has(features, "confusion") ||
-      has(features, "persistentRuqPain") ||
-      has(features, "murphysSign");
+      has(features, "persistent_ruq_pain") ||
+      has(features, "murphys_sign");
 
     if (hasComplicatedBiliaryPattern) {
       return -3;
@@ -402,13 +402,13 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     ).length;
     const hasVteContext = PE_VTE_CONTEXT_FEATURES.some((feature) => has(features, feature));
     const hasStrongInfectivePulmonaryPattern =
-      has(features, "productiveCough") &&
-      has(features, "progressiveCourse") &&
-      (has(features, "sputumChange") || has(features, "rigors") || has(features, "infectionSource"));
+      has(features, "productive_cough") &&
+      has(features, "progressive_course") &&
+      (has(features, "sputum_change") || has(features, "rigors") || has(features, "infection_source"));
     const hasStrongObstructivePattern =
       has(features, "wheeze") &&
-      (has(features, "knownAsthma") || has(features, "knownCopd")) &&
-      (has(features, "increasedInhalerUse") || has(features, "difficultySpeaking"));
+      (has(features, "known_asthma") || has(features, "known_copd")) &&
+      (has(features, "increased_inhaler_use") || has(features, "difficulty_speaking"));
 
     if (ageBand === "under30" && pneumothoraxSignatureCount >= 4 && !hasVteContext) {
       return 0;
@@ -426,9 +426,9 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     if (
       hasStrongObstructivePattern &&
       !hasVteContext &&
-      !has(features, "pleuriticPain") &&
+      !has(features, "pleuritic_pain") &&
       !has(features, "haemoptysis") &&
-      !has(features, "unilateralReducedAirEntry")
+      !has(features, "unilateral_reduced_air_entry")
     ) {
       return -2;
     }
@@ -438,7 +438,7 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     if (
       hasStrongAbdominalLocalization ||
       has(features, "jaundice") ||
-      has(features, "vaginalBleeding")
+      has(features, "vaginal_bleeding")
     ) {
       return -4;
     }
@@ -451,7 +451,7 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       hasStrongHeadacheSignature ||
       has(features, "hypotension") ||
       has(features, "collapse") ||
-      has(features, "focalNeurology")
+      has(features, "focal_neurology")
     ) {
       return -4;
     }
@@ -459,10 +459,10 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Diabetic ketoacidosis") {
     if (
-      !has(features, "diabeticContext") &&
+      !has(features, "diabetic_context") &&
       !has(features, "polyuria") &&
       !has(features, "polydipsia") &&
-      !has(features, "ketosisBreath")
+      !has(features, "ketosis_breath")
     ) {
       return -5;
     }
@@ -483,7 +483,7 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   if (rule.name === "Panic / anxiety") {
     if (
       hasStrongAbdominalLocalization ||
-      has(features, "focalNeurology") ||
+      has(features, "focal_neurology") ||
       has(features, "thunderclap") ||
       has(features, "hypotension") ||
       has(features, "collapse")
@@ -494,14 +494,14 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Sepsis") {
     const hasStrongLocalizedPulmonarySource =
-      has(features, "productiveCough") &&
-      has(features, "progressiveCourse") &&
-      (has(features, "sputumChange") || has(features, "rigors"));
+      has(features, "productive_cough") &&
+      has(features, "progressive_course") &&
+      (has(features, "sputum_change") || has(features, "rigors"));
     const hasStrongLocalizedUrinarySource =
-      has(features, "urinarySymptoms") &&
-      (has(features, "flankPain") || has(features, "cvaTenderness"));
+      has(features, "urinary_symptoms") &&
+      (has(features, "flank_pain") || has(features, "cva_tenderness"));
     const hasStrongLocalizedBiliarySource =
-      has(features, "ruqPain") && has(features, "jaundice");
+      has(features, "ruq_pain") && has(features, "jaundice");
 
     if (
       (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&

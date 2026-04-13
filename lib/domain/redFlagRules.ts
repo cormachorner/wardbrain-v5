@@ -39,10 +39,10 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
 
   // Internal non-source-complete rule: acute aortic syndrome
   const aorticCount = [
-    has(features, "chestPain"),
-    has(features, "suddenOnset"),
-    has(features, "tearingPain"),
-    has(features, "backRadiation"),
+    has(features, "chest_pain"),
+    has(features, "sudden_onset"),
+    has(features, "tearing_pain"),
+    has(features, "back_radiation"),
     has(features, "collapse"),
     has(features, "hypertension"),
   ].filter(Boolean).length;

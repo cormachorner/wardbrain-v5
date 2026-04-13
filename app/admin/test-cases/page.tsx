@@ -15,9 +15,15 @@ type ClinicalTestCase = {
   presentationBlock: string
   vignette: string
   expectedLeadDiagnosis: string | null
+  expectedLeadDiagnosisSlug: string | null
+  expectedFeatureSlugsJson: string | null
+  expectedRedFlagSlugsJson: string | null
   expectedPresentationBlock: string | null
   notes: string | null
   status: "DRAFT" | "PUBLISHED"
+  lastRunAt: string | null
+  lastRunStatus: "PASS" | "PARTIAL" | "FAIL" | null
+  lastRunResultJson: string | null
   expectedFeatures: Array<{
     id: string
     featureLabel: FeatureLabelOption
@@ -30,7 +36,9 @@ type TestCaseFormState = {
   presentationBlock: string
   vignette: string
   expectedLeadDiagnosis: string
+  expectedLeadDiagnosisSlug: string
   expectedPresentationBlock: string
+  expectedRedFlagSlugs: string
   notes: string
   status: "DRAFT" | "PUBLISHED"
   expectedFeatureSlugs: string
@@ -42,7 +50,9 @@ const initialFormState: TestCaseFormState = {
   presentationBlock: "acute_abdominal_pain",
   vignette: "",
   expectedLeadDiagnosis: "",
+  expectedLeadDiagnosisSlug: "",
   expectedPresentationBlock: "acute_abdominal_pain",
+  expectedRedFlagSlugs: "",
   notes: "",
   status: "DRAFT",
   expectedFeatureSlugs: "",
@@ -53,6 +63,7 @@ export default function AdminTestCasesPage() {
   const [featureLabels, setFeatureLabels] = useState<FeatureLabelOption[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [runningId, setRunningId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(initialFormState)
   const [error, setError] = useState<string | null>(null)
@@ -103,6 +114,7 @@ export default function AdminTestCasesPage() {
         body: JSON.stringify({
           ...form,
           expectedFeatureSlugs: form.expectedFeatureSlugs,
+          expectedRedFlagSlugs: form.expectedRedFlagSlugs,
         }),
       })
       const payload = await response.json()
@@ -117,6 +129,28 @@ export default function AdminTestCasesPage() {
       setError(caughtError instanceof Error ? caughtError.message : "Failed to save test case.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleRunNow(id: string) {
+    setRunningId(id)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/admin/test-cases/${id}/run`, {
+        method: "POST",
+      })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to run test case.")
+      }
+
+      await loadData()
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Failed to run test case.")
+    } finally {
+      setRunningId(null)
     }
   }
 
@@ -151,11 +185,52 @@ export default function AdminTestCasesPage() {
       presentationBlock: testCase.presentationBlock,
       vignette: testCase.vignette,
       expectedLeadDiagnosis: testCase.expectedLeadDiagnosis ?? "",
+      expectedLeadDiagnosisSlug: testCase.expectedLeadDiagnosisSlug ?? "",
       expectedPresentationBlock: testCase.expectedPresentationBlock ?? "",
+      expectedRedFlagSlugs: safeParseSlugList(testCase.expectedRedFlagSlugsJson).join(", "),
       notes: testCase.notes ?? "",
       status: testCase.status,
-      expectedFeatureSlugs: testCase.expectedFeatures.map((feature) => feature.featureLabel.slug).join(", "),
+      expectedFeatureSlugs:
+        safeParseSlugList(testCase.expectedFeatureSlugsJson).join(", ") ||
+        testCase.expectedFeatures.map((feature) => feature.featureLabel.slug).join(", "),
     })
+  }
+
+  function safeParseSlugList(value: string | null) {
+    if (!value) {
+      return []
+    }
+
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed.map((item) => String(item)) : []
+    } catch {
+      return []
+    }
+  }
+
+  function formatRunTime(value: string | null) {
+    if (!value) {
+      return "Never"
+    }
+
+    return new Date(value).toLocaleString()
+  }
+
+  function getRunBadgeClasses(status: ClinicalTestCase["lastRunStatus"]) {
+    if (status === "PASS") {
+      return "bg-emerald-50 text-emerald-800"
+    }
+
+    if (status === "PARTIAL") {
+      return "bg-amber-50 text-amber-800"
+    }
+
+    if (status === "FAIL") {
+      return "bg-red-50 text-red-800"
+    }
+
+    return "bg-slate-100 text-slate-700"
   }
 
   return (
@@ -231,6 +306,15 @@ export default function AdminTestCasesPage() {
           </label>
 
           <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Expected lead diagnosis slug</span>
+            <input
+              value={form.expectedLeadDiagnosisSlug}
+              onChange={(event) => setForm((prev) => ({ ...prev, expectedLeadDiagnosisSlug: event.target.value }))}
+              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            />
+          </label>
+
+          <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Expected presentation block</span>
             <input
               value={form.expectedPresentationBlock}
@@ -250,6 +334,16 @@ export default function AdminTestCasesPage() {
             <span className="mt-1 block text-xs text-slate-500">
               Comma or newline separated. Existing labels: {featureLabels.map((item) => item.slug).slice(0, 12).join(", ")}
             </span>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-700">Expected red flag slugs</span>
+            <textarea
+              rows={3}
+              value={form.expectedRedFlagSlugs}
+              onChange={(event) => setForm((prev) => ({ ...prev, expectedRedFlagSlugs: event.target.value }))}
+              className="w-full rounded-md border border-slate-300 px-3 py-2"
+            />
           </label>
 
           <label className="block">
@@ -304,6 +398,9 @@ export default function AdminTestCasesPage() {
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       <span className="rounded-full bg-slate-100 px-2 py-1">{testCase.presentationBlock}</span>
                       <span className="rounded-full bg-slate-100 px-2 py-1">{testCase.status}</span>
+                      <span className={`rounded-full px-2 py-1 ${getRunBadgeClasses(testCase.lastRunStatus)}`}>
+                        Last run: {testCase.lastRunStatus ?? "Not run"}
+                      </span>
                       {testCase.expectedLeadDiagnosis ? (
                         <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-800">
                           Lead: {testCase.expectedLeadDiagnosis}
@@ -313,6 +410,14 @@ export default function AdminTestCasesPage() {
                   </div>
 
                   <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleRunNow(testCase.id)}
+                      disabled={runningId === testCase.id}
+                      className="rounded-md border border-blue-200 px-3 py-2 text-xs text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                    >
+                      {runningId === testCase.id ? "Running..." : "Run now"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => startEdit(testCase)}
@@ -332,6 +437,8 @@ export default function AdminTestCasesPage() {
 
                 <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">{testCase.vignette}</p>
 
+                <p className="mt-3 text-xs text-slate-500">Last run at: {formatRunTime(testCase.lastRunAt)}</p>
+
                 {testCase.expectedFeatures.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {testCase.expectedFeatures.map((feature) => (
@@ -342,6 +449,36 @@ export default function AdminTestCasesPage() {
                         {feature.featureLabel.slug}
                       </span>
                     ))}
+                  </div>
+                ) : null}
+
+                {testCase.lastRunResultJson ? (
+                  <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+                    {(() => {
+                      const result = JSON.parse(testCase.lastRunResultJson) as {
+                        actualLeadDiagnosis: string | null
+                        actualTop3: string[]
+                        detectedFeatures: string[]
+                        detectedRedFlags: string[]
+                        missingExpectedFeatures: string[]
+                        missingExpectedRedFlags: string[]
+                      }
+
+                      return (
+                        <div className="space-y-2">
+                          <div>Actual lead: {result.actualLeadDiagnosis ?? "None"}</div>
+                          <div>Actual top 3: {result.actualTop3.join(", ") || "None"}</div>
+                          <div>Detected features: {result.detectedFeatures.join(", ") || "None"}</div>
+                          <div>Detected red flags: {result.detectedRedFlags.join(", ") || "None"}</div>
+                          <div>
+                            Missing expected features: {result.missingExpectedFeatures.join(", ") || "None"}
+                          </div>
+                          <div>
+                            Missing expected red flags: {result.missingExpectedRedFlags.join(", ") || "None"}
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 ) : null}
 

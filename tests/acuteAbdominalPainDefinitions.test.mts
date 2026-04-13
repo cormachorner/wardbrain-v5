@@ -77,17 +77,17 @@ test("acute abdominal pain high-value extractor hooks are present", () => {
   });
 
   for (const feature of [
-    "painOutOfProportion",
-    "painMigrationToRIF",
-    "painWorseOnMovement",
-    "painSettlesBetweenEpisodes",
-    "postPrandialPain",
-    "pregnancyPossible",
-    "positivePregnancyTest",
-    "missedPeriod",
-    "vaginalBleeding",
-    "darkUrine",
-    "paleStools",
+    "pain_out_of_proportion",
+    "pain_migration_to_rif",
+    "pain_worse_on_movement",
+    "pain_settles_between_episodes",
+    "post_prandial_pain",
+    "pregnancy_possible",
+    "positive_pregnancy_test",
+    "missed_period",
+    "vaginal_bleeding",
+    "dark_urine",
+    "pale_stools",
   ]) {
     assert.ok(features.matchedFeatures.includes(feature), `Expected feature ${feature} to be extracted`);
   }
@@ -110,6 +110,6 @@ test("acute abdominal pain testicular and urinary retention hooks are present", 
     dangerousDiagnoses: "",
   });
 
-  assert.ok(features.matchedFeatures.includes("testicularPain"));
-  assert.ok(features.matchedFeatures.includes("urinaryRetention"));
+  assert.ok(features.matchedFeatures.includes("testicular_pain"));
+  assert.ok(features.matchedFeatures.includes("urinary_retention"));
 });

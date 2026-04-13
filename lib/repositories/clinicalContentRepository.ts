@@ -25,10 +25,25 @@ type TestCaseInput = {
   presentationBlock: string
   vignette: string
   expectedLeadDiagnosis?: string
+  expectedLeadDiagnosisSlug?: string
   expectedPresentationBlock?: string
+  expectedRedFlagSlugs: string[]
   notes?: string
   status: ContentStatus
   expectedFeatureSlugs: string[]
+}
+
+type ClinicalTestCaseRunStatus = "PASS" | "PARTIAL" | "FAIL"
+
+type ClinicalTestCaseRunResult = {
+  status: ClinicalTestCaseRunStatus
+  actualLeadDiagnosis: string | null
+  actualTop3: string[]
+  detectedFeatures: string[]
+  detectedRedFlags: string[]
+  missingExpectedFeatures: string[]
+  missingExpectedRedFlags: string[]
+  leadDiagnosisMatched: boolean
 }
 
 type RepositoryValidationError = Error & {
@@ -49,6 +64,16 @@ function normalizeSlug(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+function normalizeFeatureToken(value: string) {
+  return value
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toLowerCase()
 }
 
 function normalizeOptionalText(value?: string | null) {
@@ -117,6 +142,10 @@ async function resolveExpectedFeatures(expectedFeatureSlugs: string[]) {
   }
 
   return labels
+}
+
+function normalizeSlugList(values: string[]) {
+  return Array.from(new Set(values.map((value) => normalizeSlug(value)).filter(Boolean)))
 }
 
 const featureLabelInclude = {
@@ -263,7 +292,14 @@ export async function createClinicalTestCase(input: TestCaseInput) {
       presentationBlock: input.presentationBlock.trim(),
       vignette: input.vignette.trim(),
       expectedLeadDiagnosis: normalizeOptionalText(input.expectedLeadDiagnosis),
+      expectedLeadDiagnosisSlug: normalizeOptionalText(input.expectedLeadDiagnosisSlug)
+        ? normalizeSlug(input.expectedLeadDiagnosisSlug as string)
+        : undefined,
       expectedPresentationBlock: normalizeOptionalText(input.expectedPresentationBlock),
+      expectedFeatureSlugsJson: JSON.stringify(
+        Array.from(new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean))),
+      ),
+      expectedRedFlagSlugsJson: JSON.stringify(normalizeSlugList(input.expectedRedFlagSlugs)),
       notes: normalizeOptionalText(input.notes),
       status: normalizeStatus(input.status),
       expectedFeatures: {
@@ -289,7 +325,14 @@ export async function updateClinicalTestCase(id: string, input: TestCaseInput) {
       presentationBlock: input.presentationBlock.trim(),
       vignette: input.vignette.trim(),
       expectedLeadDiagnosis: normalizeOptionalText(input.expectedLeadDiagnosis),
+      expectedLeadDiagnosisSlug: normalizeOptionalText(input.expectedLeadDiagnosisSlug)
+        ? normalizeSlug(input.expectedLeadDiagnosisSlug as string)
+        : undefined,
       expectedPresentationBlock: normalizeOptionalText(input.expectedPresentationBlock),
+      expectedFeatureSlugsJson: JSON.stringify(
+        Array.from(new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean))),
+      ),
+      expectedRedFlagSlugsJson: JSON.stringify(normalizeSlugList(input.expectedRedFlagSlugs)),
       notes: normalizeOptionalText(input.notes),
       status: normalizeStatus(input.status),
       expectedFeatures: {
@@ -305,6 +348,28 @@ export async function updateClinicalTestCase(id: string, input: TestCaseInput) {
 
 export async function deleteClinicalTestCase(id: string) {
   return prisma.clinicalTestCase.delete({ where: { id } })
+}
+
+export async function getClinicalTestCaseForRun(id: string) {
+  return prisma.clinicalTestCase.findUnique({
+    where: { id },
+    include: testCaseInclude,
+  })
+}
+
+export async function saveClinicalTestCaseRunResult(
+  id: string,
+  runResult: ClinicalTestCaseRunResult,
+) {
+  return prisma.clinicalTestCase.update({
+    where: { id },
+    data: {
+      lastRunAt: new Date(),
+      lastRunStatus: runResult.status,
+      lastRunResultJson: JSON.stringify(runResult),
+    },
+    include: testCaseInclude,
+  })
 }
 
 export function getRepositoryErrorPayload(error: unknown) {

@@ -24,10 +24,28 @@ export const clinicalTestCaseSchema = z.object({
   presentationBlock: z.string().min(1),
   vignette: z.string().min(1),
   expectedLeadDiagnosis: z.string().optional(),
+  expectedLeadDiagnosisSlug: z.string().optional(),
   expectedPresentationBlock: z.string().optional(),
   notes: z.string().optional(),
   status: contentStatusSchema.default("DRAFT"),
   expectedFeatureSlugs: z
+    .union([z.array(z.string()), z.string()])
+    .optional()
+    .transform((value) => {
+      if (Array.isArray(value)) {
+        return value
+      }
+
+      if (!value) {
+        return []
+      }
+
+      return value
+        .split(/[\n,]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    }),
+  expectedRedFlagSlugs: z
     .union([z.array(z.string()), z.string()])
     .optional()
     .transform((value) => {

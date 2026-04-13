@@ -133,11 +133,11 @@ function hasFamilyAnchor(
   switch (primaryFamily) {
     case "chest-pain":
       return (
-        features.matchedFeatures.includes("chestPain") ||
+        features.matchedFeatures.includes("chest_pain") ||
         headlineText.includes("chest pain") ||
         (
-          features.matchedFeatures.includes("indigestionLikeChestPain") &&
-          ["jawPain", "armPain", "sweating", "nausea", "sob"].some((feature) =>
+          features.matchedFeatures.includes("indigestion_like_chest_pain") &&
+          ["jaw_pain", "arm_pain", "sweating", "nausea", "sob"].some((feature) =>
             features.matchedFeatures.includes(feature),
           )
         )
@@ -151,36 +151,36 @@ function hasFamilyAnchor(
     case "breathlessness-pleuritic-chest-pain":
       return (
         features.matchedFeatures.includes("sob") ||
-        features.matchedFeatures.includes("pleuriticPain") ||
+        features.matchedFeatures.includes("pleuritic_pain") ||
         features.matchedFeatures.includes("haemoptysis") ||
-        features.matchedFeatures.includes("unilateralReducedAirEntry") ||
+        features.matchedFeatures.includes("unilateral_reduced_air_entry") ||
         headlineText.includes("breathlessness") ||
         headlineText.includes("shortness of breath") ||
         headlineText.includes("pleuritic")
       );
     case "acute-abdominal-pain":
       return (
-        features.matchedFeatures.includes("abdominalPain") ||
-        features.matchedFeatures.includes("painOutOfProportion") ||
-        features.matchedFeatures.includes("guardingRigidity") ||
-        features.matchedFeatures.includes("flankPain") ||
-        features.matchedFeatures.includes("testicularPain") ||
-        features.matchedFeatures.includes("pelvicPain") ||
+        features.matchedFeatures.includes("abdominal_pain") ||
+        features.matchedFeatures.includes("pain_out_of_proportion") ||
+        features.matchedFeatures.includes("guarding_rigidity") ||
+        features.matchedFeatures.includes("flank_pain") ||
+        features.matchedFeatures.includes("testicular_pain") ||
+        features.matchedFeatures.includes("pelvic_pain") ||
         headlineText.includes("abdominal pain") ||
         headlineText.includes("epigastric pain")
       );
     case "ruq-pain-jaundice":
       return (
-        features.matchedFeatures.includes("ruqPain") ||
+        features.matchedFeatures.includes("ruq_pain") ||
         features.matchedFeatures.includes("jaundice") ||
-        features.matchedFeatures.includes("darkUrine") ||
-        features.matchedFeatures.includes("paleStools") ||
+        features.matchedFeatures.includes("dark_urine") ||
+        features.matchedFeatures.includes("pale_stools") ||
         (
-          features.matchedFeatures.includes("postPrandialPain") &&
+          features.matchedFeatures.includes("post_prandial_pain") &&
           (
-            features.matchedFeatures.includes("recurrentBiliaryPain") ||
-            features.matchedFeatures.includes("wellBetweenEpisodes") ||
-            features.matchedFeatures.includes("gallstoneContext")
+            features.matchedFeatures.includes("recurrent_biliary_pain") ||
+            features.matchedFeatures.includes("well_between_episodes") ||
+            features.matchedFeatures.includes("gallstone_context")
           )
         ) ||
         headlineText.includes("ruq pain") ||

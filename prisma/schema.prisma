@@ -74,9 +74,15 @@ model ClinicalTestCase {
   presentationBlock         String
   vignette                  String
   expectedLeadDiagnosis     String?
+  expectedLeadDiagnosisSlug String?
   expectedPresentationBlock String?
+  expectedFeatureSlugsJson  String?
+  expectedRedFlagSlugsJson  String?
   notes                     String?
   status                    String                    @default("DRAFT")
+  lastRunAt                 DateTime?
+  lastRunStatus             String?
+  lastRunResultJson         String?
   createdAt                 DateTime                  @default(now())
   updatedAt                 DateTime                  @updatedAt
 

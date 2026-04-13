@@ -2,7 +2,7 @@ import type { CaseInput, ExtractedFeatures } from "../types";
 import { prisma } from "../prisma";
 
 const FEATURE_PATTERNS: Record<string, string[]> = {
-  chestPain: [
+  chest_pain: [
     "chest pain",
     "central chest pain",
     "central chest pressure",
@@ -20,7 +20,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "unilateral chest pain",
     "sudden sharp chest pain",
   ],
-  suddenOnset: [
+  sudden_onset: [
     "sudden onset",
     "sudden",
     "suddenly",
@@ -37,13 +37,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "came on suddenly",
     "started suddenly",
   ],
-  tearingPain: [
+  tearing_pain: [
     "tearing",
     "ripping",
     "tearing pain",
     "ripping pain",
   ],
-  backRadiation: [
+  back_radiation: [
     "radiating to the back",
     "radiates to the back",
     "back radiation",
@@ -76,7 +76,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "briefly unconscious",
     "unresponsive episode",
   ],
-  pulsatileAbdomen: [
+  pulsatile_abdomen: [
     "pulsatile abdomen",
     "pulsating abdomen",
     "pulsatile mass",
@@ -95,7 +95,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "high blood pressure",
     "known hypertension",
   ],
-  jawPain: [
+  jaw_pain: [
     "jaw pain",
     "pain to jaw",
     "pain to the jaw",
@@ -105,7 +105,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "radiates to the jaw",
     "jaw discomfort",
   ],
-  armPain: [
+  arm_pain: [
     "arm pain",
     "left arm pain",
     "right arm pain",
@@ -137,7 +137,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "nauseated",
     "feeling sick",
   ],
-  indigestionLikeChestPain: [
+  indigestion_like_chest_pain: [
     "indigestion like chest pain",
     "indigestion-like chest pain",
     "indigestion-like chest discomfort",
@@ -156,7 +156,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "upper abdominal heaviness",
     "upper abdominal discomfort",
   ],
-  acsEquivalentPain: [
+  acs_equivalent_pain: [
     "epigastric discomfort",
     "upper abdominal pressure",
     "upper abdominal heaviness",
@@ -170,12 +170,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "burning behind sternum",
     "burning behind the sternum",
   ],
-  burningPain: [
+  burning_pain: [
     "burning pain",
     "burning discomfort",
     "burning upper abdominal pain",
   ],
-  worseAfterMeals: [
+  worse_after_meals: [
     "worse after meals",
     "worse after eating",
     "after meals",
@@ -183,14 +183,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "post prandial",
     "post-prandial",
   ],
-  worseLyingFlat: [
+  worse_lying_flat: [
     "worse lying flat",
     "worse when lying flat",
     "worse on lying flat",
     "worse when lying down",
     "worse on lying down",
   ],
-  acidRegurgitation: [
+  acid_regurgitation: [
     "acidic taste",
     "acid taste",
     "acid in mouth",
@@ -199,14 +199,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "regurgitating acid",
     "brash",
   ],
-  antacidRelief: [
+  antacid_relief: [
     "improves with antacids",
     "improved with antacids",
     "better with antacids",
     "relieved by antacids",
     "settled with antacids",
   ],
-  abdominalPain: [
+  abdominal_pain: [
     "abdominal pain",
     "abd pain",
     "epigastric pain",
@@ -233,24 +233,24 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "upper abdominal heaviness",
     "upper abdominal pressure",
   ],
-  upperAbdominalPain: [
+  upper_abdominal_pain: [
     "upper abdominal pain",
     "upper abdominal discomfort",
     "upper abdomen pain",
   ],
-  epigastricPain: [
+  epigastric_pain: [
     "epigastric pain",
     "epigastric discomfort",
     "pain in the epigastrium",
     "epigastric tenderness",
   ],
-  generalizedAbdominalPain: [
+  generalized_abdominal_pain: [
     "generalised abdominal pain",
     "generalized abdominal pain",
     "diffuse abdominal pain",
     "whole abdomen pain",
   ],
-  rifPain: [
+  rif_pain: [
     "rif pain",
     "right iliac fossa pain",
     "pain in the right iliac fossa",
@@ -260,7 +260,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain moved to the right iliac fossa",
     "moved to the right iliac fossa",
   ],
-  rifTenderness: [
+  rif_tenderness: [
     "rif tenderness",
     "right iliac fossa tenderness",
     "right lower quadrant tenderness",
@@ -268,7 +268,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "focal tenderness in the right iliac fossa",
     "tender in the right iliac fossa",
   ],
-  migrationToRIF: [
+  migration_to_rif: [
     "migrated to the right iliac fossa",
     "migrated to right iliac fossa",
     "migrated to the right lower quadrant",
@@ -279,7 +279,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain moved to the right iliac fossa",
     "moved to the right iliac fossa",
   ],
-  painMigrationToRIF: [
+  pain_migration_to_rif: [
     "migrated to the right iliac fossa",
     "migrated to right iliac fossa",
     "migrated to the right lower quadrant",
@@ -290,26 +290,26 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain moved to the right iliac fossa",
     "moved to the right iliac fossa",
   ],
-  pelvicPain: [
+  pelvic_pain: [
     "pelvic pain",
     "adnexal pain",
     "suprapubic pain",
     "lower pelvic pain",
   ],
-  suprapubicPain: [
+  suprapubic_pain: [
     "suprapubic pain",
     "pain over the bladder",
     "pain in the suprapubic area",
     "lower central abdominal pain",
   ],
-  vaginalBleeding: [
+  vaginal_bleeding: [
     "vaginal bleeding",
     "pv bleeding",
     "per vaginal bleeding",
     "bleeding per vaginam",
     "spotting in pregnancy",
   ],
-  pregnancyPossible: [
+  pregnancy_possible: [
     "pregnant",
     "pregnancy possible",
     "could be pregnant",
@@ -317,12 +317,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pregnancy test positive",
     "possible pregnancy",
   ],
-  positivePregnancyTest: [
+  positive_pregnancy_test: [
     "positive pregnancy test",
     "pregnancy test positive",
     "positive urine pregnancy test",
   ],
-  missedPeriod: [
+  missed_period: [
     "missed period",
     "late period",
     "amenorrhoea",
@@ -334,12 +334,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "recent delivery",
     "recent childbirth",
   ],
-  recentMiscarriage: [
+  recent_miscarriage: [
     "recent miscarriage",
     "after miscarriage",
     "following miscarriage",
   ],
-  ruqPain: [
+  ruq_pain: [
     "ruq pain",
     "ruq discomfort",
     "right upper quadrant pain",
@@ -351,7 +351,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain under the right ribs",
     "right upper abdominal discomfort",
   ],
-  ruqTenderness: [
+  ruq_tenderness: [
     "ruq tenderness",
     "right upper quadrant tenderness",
     "tender right upper quadrant",
@@ -365,7 +365,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "yellowing of the eyes",
     "yellowing of the whites of the eyes",
   ],
-  darkUrine: [
+  dark_urine: [
     "dark urine",
     "dark pee",
     "tea coloured urine",
@@ -373,7 +373,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "cola coloured urine",
     "cola-colored urine",
   ],
-  paleStools: [
+  pale_stools: [
     "pale stools",
     "pale stool",
     "paler poo",
@@ -390,7 +390,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "itchy skin",
     "itch",
   ],
-  murphysSign: [
+  murphys_sign: [
     "murphy's sign",
     "murphys sign",
     "positive murphy's sign",
@@ -398,7 +398,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "inspiratory arrest on ruq palpation",
     "inspiratory arrest on right upper quadrant palpation",
   ],
-  localizedRuqTenderness: [
+  localized_ruq_tenderness: [
     "ruq tenderness",
     "right upper quadrant tenderness",
     "localised ruq tenderness",
@@ -408,7 +408,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "right costal margin tenderness",
     "tender under the right costal margin",
   ],
-  persistentRuqPain: [
+  persistent_ruq_pain: [
     "persistent ruq pain",
     "persistent right upper quadrant pain",
     "constant ruq pain",
@@ -418,13 +418,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain has not settled",
     "persistent upper right abdominal pain",
   ],
-  constantPain: [
+  constant_pain: [
     "constant pain",
     "constant abdominal pain",
     "pain has not settled",
     "ongoing constant pain",
   ],
-  postPrandialPain: [
+  post_prandial_pain: [
     "post prandial pain",
     "post-prandial pain",
     "after fatty meals",
@@ -439,19 +439,19 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "post-prandial ruq pain",
     "fatty-food ruq pain",
   ],
-  episodicPain: [
+  episodic_pain: [
     "episodic pain",
     "comes in episodes",
     "comes and goes",
     "intermittent pain",
   ],
-  recurrentAttacks: [
+  recurrent_attacks: [
     "recurrent attacks",
     "recurrent episodes",
     "similar attacks before",
     "recurrent pain episodes",
   ],
-  recurrentBiliaryPain: [
+  recurrent_biliary_pain: [
     "episodic ruq pain",
     "episodic epigastric pain",
     "recurrent attacks",
@@ -464,7 +464,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "biliary colic history",
     "recurrent biliary pain",
   ],
-  painSettlesBetweenEpisodes: [
+  pain_settles_between_episodes: [
     "pain settling between episodes",
     "pain settles between episodes",
     "settles between episodes",
@@ -472,7 +472,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain free between attacks",
     "pain free between episodes",
   ],
-  unilateralTesticularPain: [
+  unilateral_testicular_pain: [
     "testicular pain",
     "unilateral testicular pain",
     "left testicular pain",
@@ -481,19 +481,19 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "one sided testicular pain",
     "one-sided testicular pain",
   ],
-  testicularPain: [
+  testicular_pain: [
     "testicular pain",
     "left testicular pain",
     "right testicular pain",
     "acute scrotal pain",
   ],
-  backPain: [
+  back_pain: [
     "back pain",
     "lower back pain",
     "severe back pain",
     "lumbar pain",
   ],
-  severePain: [
+  severe_pain: [
     "severe pain",
     "very severe pain",
     "excruciating pain",
@@ -503,28 +503,28 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "severe left flank pain",
     "severe right flank pain",
   ],
-  colickyPain: [
+  colicky_pain: [
     "colicky pain",
     "colic",
     "comes in waves",
     "wave like pain",
     "wave-like pain",
   ],
-  urinaryRetention: [
+  urinary_retention: [
     "urinary retention",
     "unable to pass urine",
     "cannot pass urine",
     "can't pass urine",
     "difficulty passing urine",
   ],
-  saddleNumbness: [
+  saddle_numbness: [
     "saddle numbness",
     "saddle anaesthesia",
     "saddle anesthesia",
     "numb around the groin",
     "numbness around the groin",
   ],
-  bilateralLegSymptoms: [
+  bilateral_leg_symptoms: [
     "bilateral leg weakness",
     "both legs weak",
     "bilateral leg pain",
@@ -532,7 +532,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "both legs numb",
     "bilateral leg numbness",
   ],
-  wellBetweenEpisodes: [
+  well_between_episodes: [
     "well between episodes",
     "well between attacks",
     "pain free between episodes",
@@ -545,7 +545,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "settling between episodes",
     "settles between episodes",
   ],
-  obstructiveJaundiceLanguage: [
+  obstructive_jaundice_language: [
     "obstructive jaundice",
     "cholestatic picture",
     "cholestatic lfts",
@@ -575,7 +575,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened bowels",
     "hard stools",
   ],
-  bowelHabitChange: [
+  bowel_habit_change: [
     "change in bowel habit",
     "bowel habit change",
     "bowels changed",
@@ -585,7 +585,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened bowels or passed flatus",
     "no bowel motion and no flatus",
   ],
-  unableToPassFlatus: [
+  unable_to_pass_flatus: [
     "unable to pass flatus",
     "not passing flatus",
     "no flatus",
@@ -598,7 +598,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "poor appetite",
     "off food",
   ],
-  prBleeding: [
+  pr_bleeding: [
     "pr bleeding",
     "blood per rectum",
     "bright red blood per rectum",
@@ -652,7 +652,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "shaking chills",
     "fever with chills",
   ],
-  infectionSource: [
+  infection_source: [
     "cough",
     "productive cough",
     "sputum",
@@ -666,7 +666,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "infected wound",
     "line infection",
   ],
-  alcoholExcess: [
+  alcohol_excess: [
     "alcohol excess",
     "heavy alcohol use",
     "heavy alcohol intake",
@@ -675,27 +675,27 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "excess alcohol",
     "alcohol dependence",
   ],
-  gallstoneContext: [
+  gallstone_context: [
     "gallstones",
     "known gallstones",
     "gallstone pancreatitis",
     "biliary colic",
     "gallstone history",
   ],
-  bingeDrinking: [
+  binge_drinking: [
     "binge drinking",
     "binge drank",
     "drank heavily last night",
     "alcohol binge",
   ],
-  pepticUlcerDisease: [
+  peptic_ulcer_disease: [
     "peptic ulcer disease",
     "peptic ulcer",
     "gastric ulcer",
     "duodenal ulcer",
     "pud",
   ],
-  nsaidUse: [
+  nsaid_use: [
     "nsaid use",
     "taking nsaids",
     "regular ibuprofen",
@@ -703,7 +703,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "naproxen use",
     "diclofenac use",
   ],
-  severeConstantUpperAbdominalPain: [
+  severe_constant_upper_abdominal_pain: [
     "severe constant upper abdominal pain",
     "severe constant epigastric pain",
     "constant epigastric pain",
@@ -711,7 +711,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "severe epigastric pain",
     "severe upper abdominal pain",
   ],
-  guardingRigidity: [
+  guarding_rigidity: [
     "guarding",
     "guarded abdomen",
     "abdominal guarding",
@@ -722,7 +722,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "peritonism",
     "peritonitic",
   ],
-  abdominalMovementPain: [
+  abdominal_movement_pain: [
     "pain worse on movement",
     "pain worse with movement",
     "pain worse on coughing",
@@ -733,7 +733,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "worse on coughing",
     "worse with coughing",
   ],
-  painWorseOnMovement: [
+  pain_worse_on_movement: [
     "pain worse on movement",
     "pain worse with movement",
     "worse on movement",
@@ -746,7 +746,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "worse with bumps in the road",
     "pain worse with jolts",
   ],
-  painWorseWithCough: [
+  pain_worse_with_cough: [
     "pain worse on coughing",
     "pain worse with coughing",
     "worse on coughing",
@@ -754,7 +754,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain worse with cough",
     "pain worse on cough",
   ],
-  lyingStill: [
+  lying_still: [
     "lying still",
     "lies still",
     "keeping still because of pain",
@@ -774,7 +774,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "moving around trying to get comfortable",
     "trying to get comfortable",
   ],
-  localizedTenderness: [
+  localized_tenderness: [
     "localized tenderness",
     "localised tenderness",
     "focal tenderness",
@@ -785,26 +785,26 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "distended abdomen",
     "bloated abdomen",
   ],
-  herniaPresent: [
+  hernia_present: [
     "hernia",
     "inguinal hernia",
     "femoral hernia",
     "umbilical hernia",
   ],
-  knownHernia: [
+  known_hernia: [
     "known hernia",
     "history of hernia",
     "inguinal hernia",
     "femoral hernia",
     "umbilical hernia",
   ],
-  incarceratedHernia: [
+  incarcerated_hernia: [
     "incarcerated hernia",
     "strangulated hernia",
     "irreducible hernia",
     "tender irreducible hernia",
   ],
-  perforationLanguage: [
+  perforation_language: [
     "perforation",
     "perforated viscus",
     "gi perforation",
@@ -813,7 +813,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "free air",
     "free air under diaphragm",
   ],
-  recentSurgery: [
+  recent_surgery: [
     "recent surgery",
     "post op",
     "post-op",
@@ -822,7 +822,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "after surgery",
     "following surgery",
   ],
-  previousAbdominalSurgery: [
+  previous_abdominal_surgery: [
     "previous abdominal surgery",
     "prior abdominal surgery",
     "history of abdominal surgery",
@@ -840,7 +840,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "bedbound",
     "bed bound",
   ],
-  longHaulTravel: [
+  long_haul_travel: [
     "long haul flight",
     "long-haul flight",
     "long haul travel",
@@ -848,7 +848,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "prolonged flight",
     "long flight",
   ],
-  unilateralReducedAirEntry: [
+  unilateral_reduced_air_entry: [
     "unilateral reduced air entry",
     "reduced air entry on one side",
     "reduced air entry on the left",
@@ -876,20 +876,20 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "unilateral absent breath sounds",
     "hyperresonant hemithorax",
   ],
-  tallThinHabitus: [
+  tall_thin_habitus: [
     "tall thin male",
     "tall slim male",
     "tall and thin",
     "tall and slim",
     "tall thin",
   ],
-  recentChestDrain: [
+  recent_chest_drain: [
     "recent chest drain",
     "had a chest drain recently",
     "post chest drain",
     "after chest drain",
   ],
-  previousPneumothorax: [
+  previous_pneumothorax: [
     "previous pneumothorax",
     "history of pneumothorax",
     "prior pneumothorax",
@@ -903,7 +903,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "post trauma",
     "spontaneous pneumothorax",
   ],
-  painOutOfProportion: [
+  pain_out_of_proportion: [
     "pain out of proportion",
     "pain seems out of proportion",
     "severe unexplained abdominal pain",
@@ -916,7 +916,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain disproportionate to the findings",
     "severe pain with minimal abdominal findings",
   ],
-  painSevereButExamMild: [
+  pain_severe_but_exam_mild: [
     "severe pain but mild tenderness",
     "severe pain with minimal tenderness",
     "pain much worse than exam",
@@ -935,7 +935,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "mildly tender abdomen",
     "minimal abdominal findings",
   ],
-  vascularDisease: [
+  vascular_disease: [
     "vascular disease",
     "peripheral vascular disease",
     "pvd",
@@ -968,7 +968,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "headaches",
     "head pain",
   ],
-  visualAura: [
+  visual_aura: [
     "visual aura",
     "aura before headache",
     "flashing lights",
@@ -976,7 +976,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "zig-zags",
     "scintillating scotoma",
   ],
-  gradualSpreadPositiveSymptoms: [
+  gradual_spread_positive_symptoms: [
     "gradual spread of symptoms",
     "symptoms spread gradually",
     "marching tingling",
@@ -984,14 +984,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "gradually spreading numbness",
     "positive symptoms spread",
   ],
-  throbbingHeadache: [
+  throbbing_headache: [
     "throbbing headache",
     "throbbing headaches",
     "unilateral throbbing headaches",
     "pounding headache",
     "pulsating headache",
   ],
-  unilateralHeadache: [
+  unilateral_headache: [
     "unilateral headache",
     "unilateral throbbing",
     "unilateral throbbing headache",
@@ -1001,7 +1001,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "left sided headache",
     "right sided headache",
   ],
-  recurrentHeadache: [
+  recurrent_headache: [
     "recurrent headaches",
     "recurrent headache",
     "recurrent unilateral throbbing headaches",
@@ -1010,7 +1010,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "recurrent migraines",
     "has had this before",
   ],
-  transientFocalDeficit: [
+  transient_focal_deficit: [
     "transient focal deficit",
     "transient weakness",
     "transient numbness",
@@ -1020,7 +1020,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "episode of weakness that resolved",
     "transient visual loss",
   ],
-  wellIntervals: [
+  well_intervals: [
     "well intervals",
     "well between episodes",
     "well between attacks",
@@ -1032,14 +1032,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "completely well between attacks",
     "completely well between headaches",
   ],
-  gradualOnset: [
+  gradual_onset: [
     "gradual",
     "gradual onset",
     "came on gradually",
     "started gradually",
     "gradually worsening",
   ],
-  bilateralHeadache: [
+  bilateral_headache: [
     "bilateral",
     "bilateral headache",
     "bilateral band like headache",
@@ -1047,20 +1047,20 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "both sides of the head",
     "whole head headache",
   ],
-  bandLikeHeadache: [
+  band_like_headache: [
     "band like",
     "band-like",
     "tight band",
     "tight band around head",
     "pressure band",
   ],
-  stressTrigger: [
+  stress_trigger: [
     "stress",
     "stressed",
     "stress related",
     "stress-related",
   ],
-  poorSleep: [
+  poor_sleep: [
     "poor sleep",
     "sleep deprived",
     "not sleeping well",
@@ -1072,7 +1072,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "vomit",
     "being sick",
   ],
-  neckStiffness: [
+  neck_stiffness: [
     "neck stiffness",
     "meningism",
     "stiff neck",
@@ -1085,7 +1085,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "light hurts eyes",
     "light hurts the eyes",
   ],
-  sharedAccommodation: [
+  shared_accommodation: [
     "shared accommodation",
     "student halls",
     "university halls",
@@ -1093,7 +1093,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "dormitory",
     "shared housing",
   ],
-  recentInfection: [
+  recent_infection: [
     "recent infection",
     "recent viral illness",
     "recent cold",
@@ -1108,7 +1108,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "after a viral illness",
     "after a cold",
   ],
-  ibdContext: [
+  ibd_context: [
     "ulcerative colitis",
     "inflammatory bowel disease",
     "ibd",
@@ -1119,14 +1119,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "tired all the time",
     "very tired",
   ],
-  dryEyesMouth: [
+  dry_eyes_mouth: [
     "dry eyes",
     "dry mouth",
     "dry eyes and mouth",
     "sicca symptoms",
     "sicca",
   ],
-  chronicCourse: [
+  chronic_course: [
     "months of",
     "for months",
     "over months",
@@ -1153,7 +1153,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "fluctuating course",
     "waxing and waning",
   ],
-  focalNeurology: [
+  focal_neurology: [
     "focal neurology",
     "focal neurological deficit",
     "focal deficit",
@@ -1178,7 +1178,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "arm weakness",
     "leg weakness",
   ],
-  urinarySymptoms: [
+  urinary_symptoms: [
     "dysuria",
     "urinary frequency",
     "frequency of urination",
@@ -1218,18 +1218,18 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "looked pale",
     "appeared pale",
   ],
-  cvaTenderness: [
+  cva_tenderness: [
     "cva tenderness",
     "costovertebral angle tenderness",
     "renal angle tenderness",
   ],
-  flankPain: [
+  flank_pain: [
     "flank pain",
     "loin pain",
     "cva tenderness",
     "costovertebral angle tenderness",
   ],
-  loinToGroinPain: [
+  loin_to_groin_pain: [
     "loin to groin pain",
     "pain radiating to groin",
     "radiates to the groin",
@@ -1257,7 +1257,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "needs extra pillows",
     "sleeping propped up",
   ],
-  ankleSwelling: [
+  ankle_swelling: [
     "ankle swelling",
     "leg swelling",
     "bilateral leg swelling",
@@ -1266,7 +1266,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pitting oedema",
     "pitting edema",
   ],
-  diabeticContext: [
+  diabetic_context: [
     "diabetic",
     "diabetes",
     "type 1 diabetes",
@@ -1284,13 +1284,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "very thirsty",
     "excessive thirst",
   ],
-  ketosisBreath: [
+  ketosis_breath: [
     "ketotic breath",
     "ketosis breath",
     "fruity breath",
     "acetone breath",
   ],
-  hypoglycaemiaCue: [
+  hypoglycaemia_cue: [
     "hypoglycaemia",
     "hypoglycemia",
     "hypo",
@@ -1299,7 +1299,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "blood sugar low",
     "low blood sugar",
   ],
-  panicFeatures: [
+  panic_features: [
     "panic attack",
     "anxiety attack",
     "very anxious",
@@ -1326,7 +1326,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "o2 sat 88",
     "o2 sat 89",
   ],
-  pleuriticPain: [
+  pleuritic_pain: [
     "pleuritic pain",
     "pleuritic chest pain",
     "pleuritic",
@@ -1389,7 +1389,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "rr 30",
     "rr 32",
   ],
-  giBleed: [
+  gi_bleed: [
     "pr bleeding",
     "blood per rectum",
     "bright red blood per rectum",
@@ -1420,14 +1420,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "bloody diarrhoea",
     "bloody diarrhea",
   ],
-  productiveCough: [
+  productive_cough: [
     "productive cough",
     "bringing up sputum",
     "bringing up phlegm",
     "cough with sputum",
     "cough productive of sputum",
   ],
-  progressiveCourse: [
+  progressive_course: [
     "worsening over days",
     "getting worse over days",
     "progressive over days",
@@ -1443,20 +1443,20 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "wheezing",
     "audible wheeze",
   ],
-  knownAsthma: [
+  known_asthma: [
     "known asthma",
     "history of asthma",
     "asthmatic",
     "usually uses salbutamol",
   ],
-  knownCopd: [
+  known_copd: [
     "known copd",
     "history of copd",
     "copd patient",
     "emphysema",
     "chronic obstructive pulmonary disease",
   ],
-  increasedInhalerUse: [
+  increased_inhaler_use: [
     "increased inhaler use",
     "using inhaler more",
     "using inhaler more often",
@@ -1465,7 +1465,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "using blue inhaler more",
     "using reliever more",
   ],
-  difficultySpeaking: [
+  difficulty_speaking: [
     "difficulty speaking full sentences",
     "cannot speak full sentences",
     "can't speak full sentences",
@@ -1475,7 +1475,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "struggling to finish sentences",
     "unable to complete sentences",
   ],
-  sputumChange: [
+  sputum_change: [
     "sputum volume increase",
     "more sputum",
     "increased sputum",
@@ -1484,7 +1484,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "green sputum",
     "yellow sputum",
   ],
-  reproducibleChestWallTenderness: [
+  reproducible_chest_wall_tenderness: [
     "reproducible tenderness",
     "reproducible chest wall tenderness",
     "reproducible on palpation",
@@ -1493,37 +1493,37 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "chest wall tenderness",
     "pain reproducible on palpation",
   ],
-  movementRelatedChestPain: [
+  movement_related_chest_pain: [
     "worse on movement",
     "worse with movement",
     "pain on movement",
     "movement related chest pain",
     "worse with twisting",
   ],
-  postLiftingOnset: [
+  post_lifting_onset: [
     "after heavy lifting",
     "after lifting",
     "post lifting",
     "following heavy lifting",
   ],
-  scalpTenderness: [
+  scalp_tenderness: [
     "scalp tenderness",
     "tender scalp",
     "painful scalp",
   ],
-  jawClaudication: [
+  jaw_claudication: [
     "jaw claudication",
     "pain when chewing",
     "jaw pain when chewing",
     "jaw ache when chewing",
   ],
-  temporalHeadache: [
+  temporal_headache: [
     "temporal headache",
     "temple headache",
     "pain over temple",
     "pain over the temple",
   ],
-  transientVisualSymptoms: [
+  transient_visual_symptoms: [
     "transient visual loss",
     "transient visual symptoms",
     "blurred vision",
@@ -1531,7 +1531,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "amaurosis fugax",
     "visual blurring",
   ],
-  pmrLikeSymptoms: [
+  pmr_like_symptoms: [
     "shoulder aching",
     "proximal shoulder aching",
     "pmr",
@@ -1553,8 +1553,8 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
   fever: ["no fever", "not feverish", "without fever"],
   vomiting: ["no vomiting", "not vomiting", "without vomiting"],
   diarrhoea: ["no diarrhoea", "no diarrhea", "without diarrhoea", "without diarrhea"],
-  pleuriticPain: ["no pleuritic pain", "denies pleuritic pain", "without pleuritic pain"],
-  focalNeurology: [
+  pleuritic_pain: ["no pleuritic pain", "denies pleuritic pain", "without pleuritic pain"],
+  focal_neurology: [
     "no focal neurology",
     "no focal neurological deficit",
     "denies focal neurology",
@@ -1583,8 +1583,14 @@ function normaliseText(text: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
-function toEngineFeature(slug: string): string {
-  return slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+
+function normaliseFeatureName(feature: string): string {
+  return feature
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/[\s-]+/g, "_")
+    .toLowerCase();
 }
 
 function escapeRegExp(value: string): string {
@@ -1619,7 +1625,6 @@ async function loadDbFeaturePatterns() {
       },
       orderBy: [{ featureLabelId: "asc" }, { phrase: "asc" }],
     });
-    console.log("PHRASES:", featurePhrases);
 
     const phraseToFeatureSlug = new Map<string, string>();
     for (const featurePhrase of featurePhrases) {
@@ -1629,10 +1634,7 @@ async function loadDbFeaturePatterns() {
         continue;
       }
 
-      phraseToFeatureSlug.set(
-  normalizedPhrase,
-  toEngineFeature(featurePhrase.featureLabel.slug)
-);
+      phraseToFeatureSlug.set(normalizedPhrase, normaliseFeatureName(featurePhrase.featureLabel.slug));
     }
 
     dbPhraseToFeatureSlug = phraseToFeatureSlug;
@@ -1823,10 +1825,10 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
   }
 
   const aliasFeatures: Array<[string, string]> = [
-    ["migrationToRIF", "painMigrationToRIF"],
-    ["abdominalMovementPain", "painWorseOnMovement"],
-    ["wellBetweenEpisodes", "painSettlesBetweenEpisodes"],
-    ["unilateralTesticularPain", "testicularPain"],
+    ["migration_to_rif", "pain_migration_to_rif"],
+    ["abdominal_movement_pain", "pain_worse_on_movement"],
+    ["well_between_episodes", "pain_settles_between_episodes"],
+    ["unilateral_testicular_pain", "testicular_pain"],
   ];
 
   for (const [sourceFeature, aliasFeature] of aliasFeatures) {
@@ -1835,10 +1837,10 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     }
   }
 
-  const hasChestPainContext = matchedFeatures.includes("chestPain");
+  const hasChestPainContext = matchedFeatures.includes("chest_pain");
 
   if (!hasChestPainContext) {
-    const chestWallOnlyFeatures = ["movementRelatedChestPain", "postLiftingOnset", "reproducibleChestWallTenderness"];
+    const chestWallOnlyFeatures = ["movement_related_chest_pain", "post_lifting_onset", "reproducible_chest_wall_tenderness"];
 
     for (const feature of chestWallOnlyFeatures) {
       const featureIndex = matchedFeatures.indexOf(feature);

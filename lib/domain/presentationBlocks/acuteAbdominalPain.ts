@@ -2,71 +2,71 @@ import type { DiagnosisDefinition } from "../../types";
 
 export const acuteAbdominalPainFeatureVocabulary = {
   painLocation: [
-    "abdominalPain",
-    "upperAbdominalPain",
-    "epigastricPain",
-    "ruqPain",
-    "rifPain",
-    "llqPain",
-    "generalizedAbdominalPain",
-    "pelvicPain",
-    "suprapubicPain",
-    "flankPain",
-    "loinToGroinPain",
-    "backPain",
-    "testicularPain",
+    "abdominal_pain",
+    "upper_abdominal_pain",
+    "epigastric_pain",
+    "ruq_pain",
+    "rif_pain",
+    "llq_pain",
+    "generalized_abdominal_pain",
+    "pelvic_pain",
+    "suprapubic_pain",
+    "flank_pain",
+    "loin_to_groin_pain",
+    "back_pain",
+    "testicular_pain",
   ],
   painPattern: [
-    "suddenOnset",
-    "gradualOnset",
-    "constantPain",
-    "episodicPain",
-    "recurrentAttacks",
-    "painSettlesBetweenEpisodes",
-    "progressivePain",
-    "painMigrationToRIF",
-    "severePain",
-    "colickyPain",
-    "painOutOfProportion",
-    "painSevereButExamMild",
-    "painRadiatesToBack",
-    "painWorseOnMovement",
-    "painWorseWithCough",
-    "lyingStill",
+    "sudden_onset",
+    "gradual_onset",
+    "constant_pain",
+    "episodic_pain",
+    "recurrent_attacks",
+    "pain_settles_between_episodes",
+    "progressive_pain",
+    "pain_migration_to_rif",
+    "severe_pain",
+    "colicky_pain",
+    "pain_out_of_proportion",
+    "pain_severe_but_exam_mild",
+    "pain_radiates_to_back",
+    "pain_worse_on_movement",
+    "pain_worse_with_cough",
+    "lying_still",
     "restless",
-    "postPrandialPain",
+    "post_prandial_pain",
   ],
   abdominalExam: [
-    "localizedTenderness",
-    "ruqTenderness",
-    "rifTenderness",
+    "localized_tenderness",
+    "ruq_tenderness",
+    "rif_tenderness",
     "guarding",
     "rigidity",
     "peritonism",
-    "murphysSign",
+    "murphys_sign",
     "distension",
-    "herniaPresent",
-    "incarceratedHernia",
+    "hernia_present",
+    "incarcerated_hernia",
   ],
   giFeatures: [
     "nausea",
     "vomiting",
     "diarrhoea",
     "constipation",
-    "bowelHabitChange",
+    "bowel_habit_change",
     "obstipation",
-    "unableToPassFlatus",
+    "unable_to_pass_flatus",
     "anorexia",
     "jaundice",
-    "darkUrine",
-    "paleStools",
+    "dark_urine",
+    "pale_stools",
     "pruritus",
-    "giBleed",
+    "gi_bleed",
     "haematemesis",
     "melaena",
-    "prBleeding",
+    "pr_bleeding",
     "heartburn",
-    "burningPain",
+    "burning_pain",
   ],
   systemic: [
     "fever",
@@ -75,53 +75,53 @@ export const acuteAbdominalPainFeatureVocabulary = {
     "hypotension",
     "collapse",
     "shock",
-    "sepsisPattern",
+    "sepsis_pattern",
     "dehydration",
     "confusion",
     "dizziness",
     "pallor",
   ],
   urinary: [
-    "urinarySymptoms",
+    "urinary_symptoms",
     "dysuria",
     "frequency",
     "haematuria",
-    "urinaryRetention",
-    "cvaTenderness",
+    "urinary_retention",
+    "cva_tenderness",
   ],
   gynae: [
-    "pregnancyPossible",
-    "positivePregnancyTest",
-    "missedPeriod",
-    "vaginalBleeding",
-    "adnexalPain",
+    "pregnancy_possible",
+    "positive_pregnancy_test",
+    "missed_period",
+    "vaginal_bleeding",
+    "adnexal_pain",
   ],
   cardioResp: [
-    "chestPain",
+    "chest_pain",
     "sob",
     "cough",
     "hypoxia",
-    "acsEquivalentPain",
+    "acs_equivalent_pain",
   ],
   metabolic: [
-    "diabeticContext",
+    "diabetic_context",
     "polyuria",
     "polydipsia",
-    "ketosisBreath",
+    "ketosis_breath",
   ],
   riskFactors: [
-    "olderAge",
-    "smokingHistory",
+    "older_age",
+    "smoking_history",
     "hypertension",
-    "vascularDisease",
-    "atrialFibrillation",
-    "gallstoneHistory",
-    "heavyAlcoholIntake",
-    "nsaidUse",
-    "pepticUlcerHistory",
-    "previousAbdominalSurgery",
-    "knownHernia",
-    "femaleOfChildbearingAge",
+    "vascular_disease",
+    "atrial_fibrillation",
+    "gallstone_history",
+    "heavy_alcohol_intake",
+    "nsaid_use",
+    "peptic_ulcer_history",
+    "previous_abdominal_surgery",
+    "known_hernia",
+    "female_of_childbearing_age",
   ],
 } as const;
 
@@ -132,24 +132,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Sudden abdominal or back pain with collapse or shock in an older vascular patient.",
     features: {
-      core: ["abdominalPain", "suddenOnset"],
-      discriminating: ["collapse", "hypotension", "backPain"],
+      core: ["abdominal_pain", "sudden_onset"],
+      discriminating: ["collapse", "hypotension", "back_pain"],
       weak: ["vomiting"],
-      against: ["diarrhoea", "painSettlesBetweenEpisodes", "urinarySymptoms"],
-      riskFactors: ["olderAge", "smokingHistory", "hypertension", "vascularDisease"],
+      against: ["diarrhoea", "pain_settles_between_episodes", "urinary_symptoms"],
+      riskFactors: ["older_age", "smoking_history", "hypertension", "vascular_disease"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "suddenOnset"],
-          ifAny: ["backPain", "collapse", "hypotension"],
+          ifAll: ["abdominal_pain", "sudden_onset"],
+          ifAny: ["back_pain", "collapse", "hypotension"],
           add: 5,
           reason: "sudden abdominal or back pain with instability fits symptomatic or ruptured AAA",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["abdominalPain"],
+          ifAll: ["abdominal_pain"],
           ifAny: ["collapse", "hypotension", "shock"],
           add: 8,
           reason: "unstable abdominal pain in an older vascular patient must escalate AAA",
@@ -157,7 +157,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["diarrhoea", "painMigrationToRIF", "urinarySymptoms"],
+          ifAny: ["diarrhoea", "pain_migration_to_rif", "urinary_symptoms"],
           subtract: 2,
           reason: "localizing gastrointestinal or urinary patterns reduce AAA plausibility",
         },
@@ -171,7 +171,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     language: {
       featureSynonyms: {
         collapse: ["syncope", "passed out"],
-        backPain: ["pain radiating to the back", "back radiation"],
+        back_pain: ["pain radiating to the back", "back radiation"],
       },
     },
     teaching: {
@@ -186,52 +186,52 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Severe abdominal pain out of proportion, especially with AF or vascular risk.",
     features: {
-      core: ["abdominalPain", "severePain"],
-      discriminating: ["painOutOfProportion", "painSevereButExamMild", "suddenOnset"],
-      weak: ["vomiting", "bowelHabitChange"],
-      against: ["painMigrationToRIF", "painSettlesBetweenEpisodes", "diarrhoea"],
-      riskFactors: ["atrialFibrillation", "vascularDisease", "olderAge"],
+      core: ["abdominal_pain", "severe_pain"],
+      discriminating: ["pain_out_of_proportion", "pain_severe_but_exam_mild", "sudden_onset"],
+      weak: ["vomiting", "bowel_habit_change"],
+      against: ["pain_migration_to_rif", "pain_settles_between_episodes", "diarrhoea"],
+      riskFactors: ["atrial_fibrillation", "vascular_disease", "older_age"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "painOutOfProportion"],
+          ifAll: ["abdominal_pain", "pain_out_of_proportion"],
           add: 6,
           reason: "pain out of proportion is highly discriminating for mesenteric ischaemia",
         },
         {
-          ifAll: ["abdominalPain", "painSevereButExamMild"],
+          ifAll: ["abdominal_pain", "pain_severe_but_exam_mild"],
           add: 6,
           reason: "severe pain with mild abdominal findings supports mesenteric ischaemia",
         },
         {
-          ifAll: ["abdominalPain", "painOutOfProportion"],
-          ifAny: ["atrialFibrillation", "vascularDisease"],
+          ifAll: ["abdominal_pain", "pain_out_of_proportion"],
+          ifAny: ["atrial_fibrillation", "vascular_disease"],
           add: 4,
           reason: "vascular or embolic context strongly supports mesenteric ischaemia",
         },
         {
-          ifAll: ["abdominalPain", "painSevereButExamMild"],
-          ifAny: ["atrialFibrillation", "vascularDisease", "olderAge"],
+          ifAll: ["abdominal_pain", "pain_severe_but_exam_mild"],
+          ifAny: ["atrial_fibrillation", "vascular_disease", "older_age"],
           add: 5,
           reason: "vascular-risk severe-pain exam mismatch strongly supports mesenteric ischaemia",
         },
         {
-          ifAll: ["abdominalPain"],
-          ifAny: ["painOutOfProportion", "painSevereButExamMild", "severePain"],
+          ifAll: ["abdominal_pain"],
+          ifAny: ["pain_out_of_proportion", "pain_severe_but_exam_mild", "severe_pain"],
           add: 4,
           reason: "severe unexplained abdominal pain pattern supports mesenteric ischaemia",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["abdominalPain", "painOutOfProportion"],
+          ifAll: ["abdominal_pain", "pain_out_of_proportion"],
           ifAny: ["collapse", "hypotension", "shock"],
           add: 7,
           reason: "pain out of proportion with physiological compromise must escalate mesenteric ischaemia",
         },
         {
-          ifAll: ["abdominalPain", "painSevereButExamMild"],
+          ifAll: ["abdominal_pain", "pain_severe_but_exam_mild"],
           ifAny: ["collapse", "hypotension", "shock"],
           add: 7,
           reason: "severe pain with mild abdominal findings and physiological compromise must escalate mesenteric ischaemia",
@@ -239,7 +239,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAll: ["painMigrationToRIF"],
+          ifAll: ["pain_migration_to_rif"],
           subtract: 3,
           reason: "migratory RIF pain fits appendicitis better",
         },
@@ -252,7 +252,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     },
     language: {
       featureSynonyms: {
-        painOutOfProportion: ["pain out of proportion to examination", "pain out of proportion to exam"],
+        pain_out_of_proportion: ["pain out of proportion to examination", "pain out of proportion to exam"],
       },
     },
     teaching: {
@@ -267,30 +267,30 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Sudden severe pain with peritonism and pain worsened by movement.",
     features: {
-      core: ["abdominalPain", "suddenOnset"],
-      discriminating: ["peritonism", "guarding", "rigidity", "painWorseOnMovement", "lyingStill"],
-      weak: ["vomiting", "sepsisPattern"],
-      against: ["painSettlesBetweenEpisodes", "colickyPain"],
-      riskFactors: ["pepticUlcerHistory", "nsaidUse", "previousAbdominalSurgery"],
+      core: ["abdominal_pain", "sudden_onset"],
+      discriminating: ["peritonism", "guarding", "rigidity", "pain_worse_on_movement", "lying_still"],
+      weak: ["vomiting", "sepsis_pattern"],
+      against: ["pain_settles_between_episodes", "colicky_pain"],
+      riskFactors: ["peptic_ulcer_history", "nsaid_use", "previous_abdominal_surgery"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "suddenOnset"],
+          ifAll: ["abdominal_pain", "sudden_onset"],
           ifAny: ["peritonism", "guarding", "rigidity"],
           add: 6,
           reason: "sudden pain with peritoneal signs strongly supports perforation or peritonitis",
         },
         {
-          ifAll: ["abdominalPain", "painWorseOnMovement"],
-          ifAny: ["lyingStill", "painWorseWithCough"],
+          ifAll: ["abdominal_pain", "pain_worse_on_movement"],
+          ifAny: ["lying_still", "pain_worse_with_cough"],
           add: 3,
           reason: "movement-aggravated pain with stillness preference fits peritonitic pain",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["abdominalPain"],
+          ifAll: ["abdominal_pain"],
           ifAny: ["peritonism", "rigidity", "shock"],
           add: 7,
           reason: "peritonitic abdominal pain is a surgical emergency",
@@ -298,7 +298,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 3,
           reason: "episodic settling pain fits colic better than perforation",
         },
@@ -321,32 +321,32 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Vomiting, distension, colicky pain, and obstipation, with escalation if strangulation risk appears.",
     features: {
-      core: ["abdominalPain", "vomiting"],
-      discriminating: ["distension", "obstipation", "unableToPassFlatus", "colickyPain"],
-      weak: ["previousAbdominalSurgery", "herniaPresent"],
-      against: ["diarrhoea", "painSettlesBetweenEpisodes"],
-      riskFactors: ["previousAbdominalSurgery", "knownHernia"],
+      core: ["abdominal_pain", "vomiting"],
+      discriminating: ["distension", "obstipation", "unable_to_pass_flatus", "colicky_pain"],
+      weak: ["previous_abdominal_surgery", "hernia_present"],
+      against: ["diarrhoea", "pain_settles_between_episodes"],
+      riskFactors: ["previous_abdominal_surgery", "known_hernia"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "vomiting"],
-          ifAny: ["distension", "obstipation", "unableToPassFlatus"],
+          ifAll: ["abdominal_pain", "vomiting"],
+          ifAny: ["distension", "obstipation", "unable_to_pass_flatus"],
           add: 5,
           reason: "vomiting with distension and obstructive bowel symptoms supports bowel obstruction",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["abdominalPain"],
-          ifAny: ["incarceratedHernia", "hypotension", "sepsisPattern"],
+          ifAll: ["abdominal_pain"],
+          ifAny: ["incarcerated_hernia", "hypotension", "sepsis_pattern"],
           add: 6,
           reason: "obstruction with strangulation or ischaemia risk should escalate",
         },
       ],
       penalties: [
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 2,
           reason: "settling recurrent pain fits biliary colic better",
         },
@@ -369,16 +369,16 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Abdominal source plus fever, rigors, and physiological instability before the exact source is clear.",
     features: {
-      core: ["abdominalPain", "fever"],
-      discriminating: ["rigors", "hypotension", "sepsisPattern"],
+      core: ["abdominal_pain", "fever"],
+      discriminating: ["rigors", "hypotension", "sepsis_pattern"],
       weak: ["vomiting", "confusion"],
-      against: ["painSettlesBetweenEpisodes"],
+      against: ["pain_settles_between_episodes"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "fever"],
+          ifAll: ["abdominal_pain", "fever"],
           ifAny: ["rigors", "tachycardia", "hypotension"],
           add: 4,
           reason: "abdominal pain plus infective instability supports intra-abdominal sepsis",
@@ -386,7 +386,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       escalationRules: [
         {
-          ifAll: ["abdominalPain"],
+          ifAll: ["abdominal_pain"],
           ifAny: ["hypotension", "shock", "confusion"],
           add: 7,
           reason: "systemically unwell abdominal pain requires sepsis escalation",
@@ -394,7 +394,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 3,
           reason: "well intervals fit colic rather than sepsis",
         },
@@ -417,33 +417,33 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Pregnancy possibility with pelvic pain and vaginal bleeding, especially if unstable.",
     features: {
-      core: ["pelvicPain"],
-      discriminating: ["pregnancyPossible", "missedPeriod", "vaginalBleeding"],
+      core: ["pelvic_pain"],
+      discriminating: ["pregnancy_possible", "missed_period", "vaginal_bleeding"],
       weak: ["collapse", "dizziness", "pallor"],
-      against: ["painSettlesBetweenEpisodes", "urinarySymptoms"],
-      riskFactors: ["femaleOfChildbearingAge"],
+      against: ["pain_settles_between_episodes", "urinary_symptoms"],
+      riskFactors: ["female_of_childbearing_age"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["pelvicPain"],
-          ifAny: ["pregnancyPossible", "positivePregnancyTest", "missedPeriod"],
+          ifAll: ["pelvic_pain"],
+          ifAny: ["pregnancy_possible", "positive_pregnancy_test", "missed_period"],
           add: 5,
           reason: "pregnancy context plus pelvic pain strongly supports ectopic pregnancy",
         },
         {
-          ifAll: ["pelvicPain", "vaginalBleeding"],
+          ifAll: ["pelvic_pain", "vaginal_bleeding"],
           add: 4,
           reason: "pelvic pain with bleeding is a classic ectopic pattern",
         },
         {
-          ifAll: ["pelvicPain", "vaginalBleeding"],
-          ifAny: ["pregnancyPossible", "positivePregnancyTest", "missedPeriod"],
+          ifAll: ["pelvic_pain", "vaginal_bleeding"],
+          ifAny: ["pregnancy_possible", "positive_pregnancy_test", "missed_period"],
           add: 8,
           reason: "classic ectopic pregnancy composite pattern",
         },
         {
-          ifAll: ["pelvicPain", "vaginalBleeding"],
+          ifAll: ["pelvic_pain", "vaginal_bleeding"],
           ifAny: ["dizziness", "pallor", "collapse", "hypotension"],
           add: 6,
           reason: "unstable ectopic pregnancy warning pattern",
@@ -451,7 +451,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       escalationRules: [
         {
-          ifAll: ["pelvicPain"],
+          ifAll: ["pelvic_pain"],
           ifAny: ["collapse", "hypotension", "shock"],
           add: 8,
           reason: "possible ruptured ectopic with instability must escalate immediately",
@@ -465,8 +465,8 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     },
     language: {
       featureSynonyms: {
-        missedPeriod: ["late period", "amenorrhoea"],
-        pregnancyPossible: ["could be pregnant", "pregnancy possible"],
+        missed_period: ["late period", "amenorrhoea"],
+        pregnancy_possible: ["could be pregnant", "pregnancy possible"],
       },
     },
     teaching: {
@@ -481,38 +481,38 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Migratory pain to the RIF with local tenderness, with escalation if perforation or sepsis features appear.",
     features: {
-      core: ["abdominalPain", "rifPain"],
-      discriminating: ["painMigrationToRIF", "rifTenderness"],
-      weak: ["nausea", "vomiting", "fever", "localizedTenderness", "anorexia", "painWorseOnMovement"],
-      against: ["diarrhoea", "painSettlesBetweenEpisodes", "jaundice"],
+      core: ["abdominal_pain", "rif_pain"],
+      discriminating: ["pain_migration_to_rif", "rif_tenderness"],
+      weak: ["nausea", "vomiting", "fever", "localized_tenderness", "anorexia", "pain_worse_on_movement"],
+      against: ["diarrhoea", "pain_settles_between_episodes", "jaundice"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["rifPain"],
-          ifAny: ["painMigrationToRIF", "rifTenderness"],
+          ifAll: ["rif_pain"],
+          ifAny: ["pain_migration_to_rif", "rif_tenderness"],
           add: 5,
           reason: "migratory pain with RIF localization strongly supports appendicitis",
         },
         {
-          ifAll: ["rifTenderness"],
-          ifAny: ["painWorseOnMovement", "painWorseWithCough"],
+          ifAll: ["rif_tenderness"],
+          ifAny: ["pain_worse_on_movement", "pain_worse_with_cough"],
           add: 4,
           reason: "localized peritoneal irritation supports appendicitis",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["rifPain"],
-          ifAny: ["sepsisPattern", "guarding", "rigidity"],
+          ifAll: ["rif_pain"],
+          ifAny: ["sepsis_pattern", "guarding", "rigidity"],
           add: 6,
           reason: "appendicitis with perforation or sepsis risk should escalate",
         },
       ],
       penalties: [
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 3,
           reason: "settling recurrent pain argues against appendicitis",
         },
@@ -535,16 +535,16 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "RUQ pain with jaundice and fever or rigors indicating septic biliary obstruction.",
     features: {
-      core: ["ruqPain", "jaundice", "fever"],
-      discriminating: ["rigors", "darkUrine", "paleStools"],
-      weak: ["vomiting", "gallstoneHistory", "pruritus"],
-      against: ["painSettlesBetweenEpisodes"],
-      riskFactors: ["gallstoneHistory"],
+      core: ["ruq_pain", "jaundice", "fever"],
+      discriminating: ["rigors", "dark_urine", "pale_stools"],
+      weak: ["vomiting", "gallstone_history", "pruritus"],
+      against: ["pain_settles_between_episodes"],
+      riskFactors: ["gallstone_history"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["ruqPain", "jaundice"],
+          ifAll: ["ruq_pain", "jaundice"],
           ifAny: ["fever", "rigors"],
           add: 6,
           reason: "biliary sepsis pattern strongly supports cholangitis",
@@ -552,7 +552,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       escalationRules: [
         {
-          ifAll: ["ruqPain", "jaundice"],
+          ifAll: ["ruq_pain", "jaundice"],
           ifAny: ["hypotension", "confusion", "shock"],
           add: 8,
           reason: "biliary obstruction with sepsis physiology must escalate urgently",
@@ -560,7 +560,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 3,
           reason: "well intervals fit biliary colic rather than cholangitis",
         },
@@ -583,33 +583,33 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Severe constant epigastric pain, often radiating to the back, with vomiting.",
     features: {
-      core: ["epigastricPain", "constantPain"],
-      discriminating: ["painRadiatesToBack", "severePain"],
+      core: ["epigastric_pain", "constant_pain"],
+      discriminating: ["pain_radiates_to_back", "severe_pain"],
       weak: ["vomiting", "nausea"],
-      against: ["painMigrationToRIF", "painSettlesBetweenEpisodes", "urinarySymptoms"],
-      riskFactors: ["heavyAlcoholIntake", "gallstoneHistory"],
+      against: ["pain_migration_to_rif", "pain_settles_between_episodes", "urinary_symptoms"],
+      riskFactors: ["heavy_alcohol_intake", "gallstone_history"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["epigastricPain"],
-          ifAny: ["painRadiatesToBack", "heavyAlcoholIntake", "gallstoneHistory"],
+          ifAll: ["epigastric_pain"],
+          ifAny: ["pain_radiates_to_back", "heavy_alcohol_intake", "gallstone_history"],
           add: 5,
           reason: "epigastric pain with back radiation or classic trigger context supports pancreatitis",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["epigastricPain"],
-          ifAny: ["hypotension", "shock", "sepsisPattern"],
+          ifAll: ["epigastric_pain"],
+          ifAny: ["hypotension", "shock", "sepsis_pattern"],
           add: 5,
           reason: "severe pancreatitis with organ dysfunction should escalate",
         },
       ],
       penalties: [
         {
-          ifAll: ["ruqPain", "fever"],
-          ifAny: ["murphysSign", "ruqTenderness"],
+          ifAll: ["ruq_pain", "fever"],
+          ifAny: ["murphys_sign", "ruq_tenderness"],
           subtract: 3,
           reason: "localized febrile RUQ inflammatory pattern fits cholecystitis better",
         },
@@ -632,17 +632,17 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Persistent febrile RUQ pain with localized tenderness or Murphy sign.",
     features: {
-      core: ["ruqPain", "constantPain"],
-      discriminating: ["murphysSign", "ruqTenderness", "fever"],
-      weak: ["nausea", "vomiting", "postPrandialPain"],
-      against: ["jaundice", "painSettlesBetweenEpisodes"],
-      riskFactors: ["gallstoneHistory"],
+      core: ["ruq_pain", "constant_pain"],
+      discriminating: ["murphys_sign", "ruq_tenderness", "fever"],
+      weak: ["nausea", "vomiting", "post_prandial_pain"],
+      against: ["jaundice", "pain_settles_between_episodes"],
+      riskFactors: ["gallstone_history"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["ruqPain"],
-          ifAny: ["murphysSign", "ruqTenderness", "fever"],
+          ifAll: ["ruq_pain"],
+          ifAny: ["murphys_sign", "ruq_tenderness", "fever"],
           add: 5,
           reason: "persistent localized inflammatory RUQ pattern supports cholecystitis",
         },
@@ -654,7 +654,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           reason: "jaundice plus fever pushes toward cholangitis",
         },
         {
-          ifAll: ["painSettlesBetweenEpisodes"],
+          ifAll: ["pain_settles_between_episodes"],
           subtract: 3,
           reason: "episodic settling pain fits biliary colic better",
         },
@@ -677,24 +677,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Episodic post-prandial RUQ or epigastric pain with well intervals.",
     features: {
-      core: ["ruqPain", "episodicPain"],
-      discriminating: ["postPrandialPain", "recurrentAttacks", "painSettlesBetweenEpisodes"],
-      weak: ["epigastricPain", "gallstoneHistory"],
-      against: ["fever", "jaundice", "constantPain"],
-      riskFactors: ["gallstoneHistory"],
+      core: ["ruq_pain", "episodic_pain"],
+      discriminating: ["post_prandial_pain", "recurrent_attacks", "pain_settles_between_episodes"],
+      weak: ["epigastric_pain", "gallstone_history"],
+      against: ["fever", "jaundice", "constant_pain"],
+      riskFactors: ["gallstone_history"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["ruqPain", "episodicPain"],
-          ifAny: ["postPrandialPain", "recurrentAttacks", "painSettlesBetweenEpisodes"],
+          ifAll: ["ruq_pain", "episodic_pain"],
+          ifAny: ["post_prandial_pain", "recurrent_attacks", "pain_settles_between_episodes"],
           add: 5,
           reason: "recurrent meal-related settling biliary pain supports biliary colic",
         },
       ],
       penalties: [
         {
-          ifAny: ["fever", "jaundice", "constantPain"],
+          ifAny: ["fever", "jaundice", "constant_pain"],
           subtract: 3,
           reason: "inflammatory, obstructive, or persistent patterns suggest more serious biliary disease",
         },
@@ -717,17 +717,17 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Lower abdominal pain with fever and localized tenderness, often LLQ.",
     features: {
-      core: ["abdominalPain", "localizedTenderness"],
-      discriminating: ["llqPain", "fever"],
-      weak: ["bowelHabitChange", "constipation", "nausea"],
-      against: ["painMigrationToRIF", "painSettlesBetweenEpisodes", "jaundice"],
+      core: ["abdominal_pain", "localized_tenderness"],
+      discriminating: ["llq_pain", "fever"],
+      weak: ["bowel_habit_change", "constipation", "nausea"],
+      against: ["pain_migration_to_rif", "pain_settles_between_episodes", "jaundice"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["llqPain", "localizedTenderness"],
-          ifAny: ["fever", "bowelHabitChange"],
+          ifAll: ["llq_pain", "localized_tenderness"],
+          ifAny: ["fever", "bowel_habit_change"],
           add: 4,
           reason: "localized inflammatory lower abdominal pattern supports diverticulitis",
         },
@@ -750,23 +750,23 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Painful hernia with obstruction or compromise.",
     features: {
-      core: ["abdominalPain"],
-      discriminating: ["herniaPresent", "incarceratedHernia"],
+      core: ["abdominal_pain"],
+      discriminating: ["hernia_present", "incarcerated_hernia"],
       weak: ["vomiting", "obstipation", "distension"],
-      against: ["painSettlesBetweenEpisodes"],
-      riskFactors: ["knownHernia"],
+      against: ["pain_settles_between_episodes"],
+      riskFactors: ["known_hernia"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["herniaPresent", "incarceratedHernia"],
+          ifAll: ["hernia_present", "incarcerated_hernia"],
           add: 6,
           reason: "painful incarcerated hernia is highly specific",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["herniaPresent"],
+          ifAll: ["hernia_present"],
           ifAny: ["vomiting", "obstipation", "hypotension"],
           add: 6,
           reason: "hernia plus obstruction or compromise suggests strangulation risk",
@@ -790,10 +790,10 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Diffuse abdominal pain with vomiting and diarrhoea, usually without focal or red-flag features.",
     features: {
-      core: ["abdominalPain", "vomiting", "diarrhoea"],
-      discriminating: ["generalizedAbdominalPain"],
+      core: ["abdominal_pain", "vomiting", "diarrhoea"],
+      discriminating: ["generalized_abdominal_pain"],
       weak: ["fever", "dehydration"],
-      against: ["peritonism", "painOutOfProportion", "painSevereButExamMild", "painMigrationToRIF", "jaundice"],
+      against: ["peritonism", "pain_out_of_proportion", "pain_severe_but_exam_mild", "pain_migration_to_rif", "jaundice"],
       riskFactors: [],
     },
     logic: {
@@ -806,13 +806,13 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["peritonism", "painOutOfProportion", "painSevereButExamMild", "painMigrationToRIF", "jaundice", "testicularPain"],
+          ifAny: ["peritonism", "pain_out_of_proportion", "pain_severe_but_exam_mild", "pain_migration_to_rif", "jaundice", "testicular_pain"],
           subtract: 5,
           reason: "focal or dangerous localizing features argue strongly against gastroenteritis",
         },
         {
-          ifAll: ["abdominalPain", "severePain"],
-          ifAny: ["atrialFibrillation", "vascularDisease", "olderAge"],
+          ifAll: ["abdominal_pain", "severe_pain"],
+          ifAny: ["atrial_fibrillation", "vascular_disease", "older_age"],
           subtract: 2,
           reason: "vascular-risk severe abdominal pain should only modestly fit gastroenteritis",
         },
@@ -835,24 +835,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Abdominal discomfort with reduced bowel opening and no focal red flags.",
     features: {
-      core: ["abdominalPain", "constipation"],
-      discriminating: ["bowelHabitChange"],
+      core: ["abdominal_pain", "constipation"],
+      discriminating: ["bowel_habit_change"],
       weak: ["distension"],
-      against: ["vomiting", "peritonism", "fever", "painOutOfProportion"],
+      against: ["vomiting", "peritonism", "fever", "pain_out_of_proportion"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
           ifAll: ["constipation"],
-          ifAny: ["bowelHabitChange"],
+          ifAny: ["bowel_habit_change"],
           add: 2,
           reason: "bowel habit change supports constipation as a benign comparator",
         },
       ],
       penalties: [
         {
-          ifAny: ["vomiting", "peritonism", "fever", "painOutOfProportion"],
+          ifAny: ["vomiting", "peritonism", "fever", "pain_out_of_proportion"],
           subtract: 4,
           reason: "red flags or obstruction features argue against simple constipation",
         },
@@ -875,24 +875,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Upper abdominal burning discomfort without peritonism or instability.",
     features: {
-      core: ["epigastricPain"],
-      discriminating: ["burningPain", "heartburn", "postPrandialPain"],
+      core: ["epigastric_pain"],
+      discriminating: ["burning_pain", "heartburn", "post_prandial_pain"],
       weak: ["nausea"],
-      against: ["peritonism", "shock", "painRadiatesToBack", "jaundice"],
-      riskFactors: ["nsaidUse", "pepticUlcerHistory"],
+      against: ["peritonism", "shock", "pain_radiates_to_back", "jaundice"],
+      riskFactors: ["nsaid_use", "peptic_ulcer_history"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["epigastricPain"],
-          ifAny: ["burningPain", "heartburn"],
+          ifAll: ["epigastric_pain"],
+          ifAny: ["burning_pain", "heartburn"],
           add: 3,
           reason: "burning dyspeptic pattern supports benign upper GI causes",
         },
       ],
       penalties: [
         {
-          ifAny: ["peritonism", "shock", "painRadiatesToBack"],
+          ifAny: ["peritonism", "shock", "pain_radiates_to_back"],
           subtract: 4,
           reason: "catastrophic or pancreatitis-like features argue against simple dyspepsia",
         },
@@ -915,23 +915,23 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Lower-priority recurrent pain comparator with bowel habit change and well intervals.",
     features: {
-      core: ["abdominalPain", "bowelHabitChange"],
-      discriminating: ["recurrentAttacks", "painSettlesBetweenEpisodes"],
+      core: ["abdominal_pain", "bowel_habit_change"],
+      discriminating: ["recurrent_attacks", "pain_settles_between_episodes"],
       weak: ["constipation", "diarrhoea"],
-      against: ["fever", "peritonism", "shock", "localizedTenderness"],
+      against: ["fever", "peritonism", "shock", "localized_tenderness"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "bowelHabitChange", "painSettlesBetweenEpisodes"],
+          ifAll: ["abdominal_pain", "bowel_habit_change", "pain_settles_between_episodes"],
           add: 2,
           reason: "recurrent well-between-attacks bowel pattern fits IBS",
         },
       ],
       penalties: [
         {
-          ifAny: ["fever", "peritonism", "shock", "localizedTenderness"],
+          ifAny: ["fever", "peritonism", "shock", "localized_tenderness"],
           subtract: 5,
           reason: "inflammatory or dangerous features argue strongly against IBS",
         },
@@ -954,16 +954,16 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "RUQ discomfort with jaundice and systemic upset, but without septic obstruction pattern.",
     features: {
-      core: ["ruqPain", "jaundice"],
+      core: ["ruq_pain", "jaundice"],
       discriminating: ["anorexia"],
       weak: ["fever", "nausea"],
-      against: ["rigors", "shock", "murphysSign"],
+      against: ["rigors", "shock", "murphys_sign"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["ruqPain", "jaundice"],
+          ifAll: ["ruq_pain", "jaundice"],
           ifAny: ["anorexia"],
           add: 3,
           reason: "hepatic inflammatory pattern with jaundice supports hepatitis",
@@ -971,7 +971,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["rigors", "darkUrine", "paleStools", "murphysSign"],
+          ifAny: ["rigors", "dark_urine", "pale_stools", "murphys_sign"],
           subtract: 3,
           reason: "obstructive or septic biliary features point away from hepatitis",
         },
@@ -994,24 +994,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Abdominal pain with vomiting in a diabetic patient with dehydration or metabolic clues.",
     features: {
-      core: ["abdominalPain", "vomiting", "diabeticContext"],
-      discriminating: ["polyuria", "polydipsia", "ketosisBreath"],
+      core: ["abdominal_pain", "vomiting", "diabetic_context"],
+      discriminating: ["polyuria", "polydipsia", "ketosis_breath"],
       weak: ["dehydration", "confusion"],
-      against: ["localizedTenderness", "painMigrationToRIF", "murphysSign"],
-      riskFactors: ["diabeticContext"],
+      against: ["localized_tenderness", "pain_migration_to_rif", "murphys_sign"],
+      riskFactors: ["diabetic_context"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain", "diabeticContext"],
-          ifAny: ["polyuria", "polydipsia", "ketosisBreath", "dehydration"],
+          ifAll: ["abdominal_pain", "diabetic_context"],
+          ifAny: ["polyuria", "polydipsia", "ketosis_breath", "dehydration"],
           add: 5,
           reason: "metabolic diabetic pattern with abdominal pain supports DKA",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["diabeticContext"],
+          ifAll: ["diabetic_context"],
           ifAny: ["confusion", "shock", "dehydration"],
           add: 6,
           reason: "systemically unwell diabetic patient requires DKA escalation",
@@ -1035,16 +1035,16 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Referred upper abdominal pain with respiratory infective features.",
     features: {
-      core: ["abdominalPain"],
+      core: ["abdominal_pain"],
       discriminating: ["cough", "sob", "fever"],
       weak: ["hypoxia"],
-      against: ["rifTenderness", "painMigrationToRIF", "peritonism"],
+      against: ["rif_tenderness", "pain_migration_to_rif", "peritonism"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["abdominalPain"],
+          ifAll: ["abdominal_pain"],
           ifAny: ["cough", "sob", "hypoxia"],
           add: 4,
           reason: "respiratory infective features can explain referred abdominal pain",
@@ -1052,7 +1052,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["rifTenderness", "peritonism", "painMigrationToRIF"],
+          ifAny: ["rif_tenderness", "peritonism", "pain_migration_to_rif"],
           subtract: 4,
           reason: "focal abdominal localization argues against referred pneumonia pain",
         },
@@ -1075,24 +1075,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Epigastric or upper abdominal pain with cardiac-equivalent features or vascular risk.",
     features: {
-      core: ["epigastricPain"],
-      discriminating: ["acsEquivalentPain", "chestPain", "sob"],
+      core: ["epigastric_pain"],
+      discriminating: ["acs_equivalent_pain", "chest_pain", "sob"],
       weak: ["nausea", "vomiting"],
-      against: ["localizedTenderness", "painMigrationToRIF", "diarrhoea"],
-      riskFactors: ["olderAge", "smokingHistory", "hypertension", "vascularDisease"],
+      against: ["localized_tenderness", "pain_migration_to_rif", "diarrhoea"],
+      riskFactors: ["older_age", "smoking_history", "hypertension", "vascular_disease"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["epigastricPain"],
-          ifAny: ["acsEquivalentPain", "chestPain", "sob"],
+          ifAll: ["epigastric_pain"],
+          ifAny: ["acs_equivalent_pain", "chest_pain", "sob"],
           add: 5,
           reason: "upper abdominal pain with cardiac-equivalent features supports ACS",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["epigastricPain"],
+          ifAll: ["epigastric_pain"],
           ifAny: ["hypotension", "collapse"],
           add: 5,
           reason: "unstable epigastric pain can still be cardiac",
@@ -1100,7 +1100,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       ],
       penalties: [
         {
-          ifAny: ["localizedTenderness", "painMigrationToRIF", "murphysSign"],
+          ifAny: ["localized_tenderness", "pain_migration_to_rif", "murphys_sign"],
           subtract: 3,
           reason: "focal abdominal exam features argue against ACS",
         },
@@ -1123,24 +1123,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Sudden unilateral pelvic pain with vomiting and adnexal localization.",
     features: {
-      core: ["pelvicPain", "suddenOnset"],
-      discriminating: ["adnexalPain"],
+      core: ["pelvic_pain", "sudden_onset"],
+      discriminating: ["adnexal_pain"],
       weak: ["vomiting"],
-      against: ["painSettlesBetweenEpisodes", "urinarySymptoms", "diarrhoea"],
-      riskFactors: ["femaleOfChildbearingAge"],
+      against: ["pain_settles_between_episodes", "urinary_symptoms", "diarrhoea"],
+      riskFactors: ["female_of_childbearing_age"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["pelvicPain", "suddenOnset"],
-          ifAny: ["adnexalPain", "vomiting"],
+          ifAll: ["pelvic_pain", "sudden_onset"],
+          ifAny: ["adnexal_pain", "vomiting"],
           add: 5,
           reason: "sudden pelvic pain with vomiting or adnexal localization supports torsion",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["pelvicPain", "suddenOnset"],
+          ifAll: ["pelvic_pain", "sudden_onset"],
           add: 5,
           reason: "torsion is a time-critical gynae diagnosis",
         },
@@ -1163,24 +1163,24 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Pelvic pain with fever and infective gynae pattern.",
     features: {
-      core: ["pelvicPain"],
-      discriminating: ["fever", "vaginalBleeding"],
-      weak: ["urinarySymptoms"],
-      against: ["suddenOnset", "collapse", "painSettlesBetweenEpisodes"],
-      riskFactors: ["femaleOfChildbearingAge"],
+      core: ["pelvic_pain"],
+      discriminating: ["fever", "vaginal_bleeding"],
+      weak: ["urinary_symptoms"],
+      against: ["sudden_onset", "collapse", "pain_settles_between_episodes"],
+      riskFactors: ["female_of_childbearing_age"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["pelvicPain"],
-          ifAny: ["fever", "vaginalBleeding"],
+          ifAll: ["pelvic_pain"],
+          ifAny: ["fever", "vaginal_bleeding"],
           add: 3,
           reason: "infective pelvic inflammatory pattern supports PID",
         },
       ],
       penalties: [
         {
-          ifAll: ["suddenOnset", "collapse"],
+          ifAll: ["sudden_onset", "collapse"],
           subtract: 3,
           reason: "sudden collapse fits ectopic better",
         },
@@ -1203,17 +1203,17 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Sudden pelvic pain, usually without septic features.",
     features: {
-      core: ["pelvicPain", "suddenOnset"],
-      discriminating: ["adnexalPain"],
-      weak: ["vaginalBleeding"],
-      against: ["fever", "painSettlesBetweenEpisodes"],
-      riskFactors: ["femaleOfChildbearingAge"],
+      core: ["pelvic_pain", "sudden_onset"],
+      discriminating: ["adnexal_pain"],
+      weak: ["vaginal_bleeding"],
+      against: ["fever", "pain_settles_between_episodes"],
+      riskFactors: ["female_of_childbearing_age"],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["pelvicPain", "suddenOnset"],
-          ifAny: ["adnexalPain", "vaginalBleeding"],
+          ifAll: ["pelvic_pain", "sudden_onset"],
+          ifAny: ["adnexal_pain", "vaginal_bleeding"],
           add: 4,
           reason: "sudden adnexal-predominant pain supports ruptured ovarian cyst",
         },
@@ -1243,23 +1243,23 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Severe colicky flank-to-groin pain, often with haematuria.",
     features: {
-      core: ["flankPain", "colickyPain"],
-      discriminating: ["loinToGroinPain", "haematuria", "restless"],
+      core: ["flank_pain", "colicky_pain"],
+      discriminating: ["loin_to_groin_pain", "haematuria", "restless"],
       weak: ["vomiting"],
-      against: ["peritonism", "fever", "painMigrationToRIF"],
+      against: ["peritonism", "fever", "pain_migration_to_rif"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["flankPain"],
-          ifAny: ["loinToGroinPain", "haematuria", "colickyPain"],
+          ifAll: ["flank_pain"],
+          ifAny: ["loin_to_groin_pain", "haematuria", "colicky_pain"],
           add: 5,
           reason: "flank-to-groin colicky pattern strongly supports ureteric stone",
         },
         {
-          ifAll: ["flankPain", "loinToGroinPain"],
-          ifAny: ["colickyPain", "restless", "haematuria"],
+          ifAll: ["flank_pain", "loin_to_groin_pain"],
+          ifAny: ["colicky_pain", "restless", "haematuria"],
           add: 8,
           reason: "classic renal colic composite pattern",
         },
@@ -1289,33 +1289,33 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Fever, flank pain, and urinary symptoms, sometimes presenting as abdominal pain.",
     features: {
-      core: ["flankPain", "fever"],
-      discriminating: ["urinarySymptoms", "cvaTenderness"],
+      core: ["flank_pain", "fever"],
+      discriminating: ["urinary_symptoms", "cva_tenderness"],
       weak: ["vomiting"],
-      against: ["painOutOfProportion", "peritonism", "painSettlesBetweenEpisodes", "restless"],
+      against: ["pain_out_of_proportion", "peritonism", "pain_settles_between_episodes", "restless"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["flankPain", "fever"],
-          ifAny: ["urinarySymptoms", "cvaTenderness"],
+          ifAll: ["flank_pain", "fever"],
+          ifAny: ["urinary_symptoms", "cva_tenderness"],
           add: 5,
           reason: "feverish flank pain with urinary source supports pyelonephritis",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["flankPain", "fever"],
-          ifAny: ["hypotension", "sepsisPattern"],
+          ifAll: ["flank_pain", "fever"],
+          ifAny: ["hypotension", "sepsis_pattern"],
           add: 5,
           reason: "urosepsis physiology should escalate",
         },
       ],
       penalties: [
         {
-          ifAll: ["flankPain", "fever"],
-          ifAny: ["loinToGroinPain", "restless"],
+          ifAll: ["flank_pain", "fever"],
+          ifAny: ["loin_to_groin_pain", "restless"],
           subtract: 3,
           reason: "restless loin-to-groin pain without a urinary infective source fits renal colic better than pyelonephritis",
         },
@@ -1338,23 +1338,23 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Young male with lower abdominal pain that is actually acute scrotal pain unless asked about.",
     features: {
-      core: ["testicularPain", "suddenOnset"],
-      discriminating: ["testicularPain"],
+      core: ["testicular_pain", "sudden_onset"],
+      discriminating: ["testicular_pain"],
       weak: ["vomiting"],
-      against: ["fever", "urinarySymptoms"],
+      against: ["fever", "urinary_symptoms"],
       riskFactors: [],
     },
     logic: {
       boosts: [
         {
-          ifAll: ["testicularPain", "suddenOnset"],
+          ifAll: ["testicular_pain", "sudden_onset"],
           add: 6,
           reason: "acute testicular pain is highly specific for torsion",
         },
       ],
       escalationRules: [
         {
-          ifAll: ["testicularPain", "suddenOnset"],
+          ifAll: ["testicular_pain", "sudden_onset"],
           add: 7,
           reason: "torsion is a time-critical emergency",
         },
@@ -1377,8 +1377,8 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     presentationBlocks: ["acute_abdominal_pain"],
     summary: "Suprapubic pain and inability to pass urine.",
     features: {
-      core: ["suprapubicPain"],
-      discriminating: ["urinaryRetention"],
+      core: ["suprapubic_pain"],
+      discriminating: ["urinary_retention"],
       weak: [],
       against: ["diarrhoea", "peritonism", "jaundice"],
       riskFactors: [],
@@ -1386,7 +1386,7 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
     logic: {
       boosts: [
         {
-          ifAll: ["suprapubicPain", "urinaryRetention"],
+          ifAll: ["suprapubic_pain", "urinary_retention"],
           add: 5,
           reason: "suprapubic pain plus retention strongly supports urinary retention",
         },

@@ -21,8 +21,8 @@ test("domain feature extractor detects classic localized inflammatory RUQ patter
     dangerousDiagnoses: "",
   });
 
-  assert.ok(features.matchedFeatures.includes("ruqPain"));
-  assert.ok(features.matchedFeatures.includes("persistentRuqPain"));
-  assert.ok(features.matchedFeatures.includes("localizedRuqTenderness"));
-  assert.ok(features.matchedFeatures.includes("postPrandialPain"));
+  assert.ok(features.matchedFeatures.includes("ruq_pain"));
+  assert.ok(features.matchedFeatures.includes("persistent_ruq_pain"));
+  assert.ok(features.matchedFeatures.includes("localized_ruq_tenderness"));
+  assert.ok(features.matchedFeatures.includes("post_prandial_pain"));
 });

@@ -16,22 +16,22 @@ const RISK_FACTOR_WEIGHT = 1;
 const SOFT_NEGATIVE_WEIGHT = -1;
 
 const GENERIC_CORE_FEATURE_WEIGHTS: Record<string, number> = {
-  abdominalPain: 1,
-  generalizedAbdominalPain: 0,
+  abdominal_pain: 1,
+  generalized_abdominal_pain: 0,
 };
 
 const GENERIC_WEAK_FEATURE_WEIGHTS: Record<string, number> = {
   vomiting: 0,
   nausea: 0,
   diarrhoea: 0,
-  generalizedAbdominalPain: 0,
+  generalized_abdominal_pain: 0,
 };
 
 const SOFT_NEGATIVE_FEATURES = new Set([
   "diarrhoea",
   "vomiting",
   "nausea",
-  "generalizedAbdominalPain",
+  "generalized_abdominal_pain",
 ]);
 
 const DEFINITION_DISPLAY_NAME_OVERRIDES: Record<string, string> = {
@@ -57,45 +57,45 @@ function buildAugmentedFeatureSet(features: ExtractedFeatures, input: CaseInput)
     augmented.add(input.sex);
   }
 
-  if (augmented.has("guardingRigidity")) {
+  if (augmented.has("guarding_rigidity")) {
     augmented.add("guarding");
     augmented.add("rigidity");
     augmented.add("peritonism");
   }
 
-  if (augmented.has("backRadiation")) {
-    augmented.add("painRadiatesToBack");
+  if (augmented.has("back_radiation")) {
+    augmented.add("pain_radiates_to_back");
   }
 
-  if (augmented.has("severeConstantUpperAbdominalPain")) {
-    augmented.add("upperAbdominalPain");
-    augmented.add("epigastricPain");
-    augmented.add("constantPain");
-    augmented.add("severePain");
+  if (augmented.has("severe_constant_upper_abdominal_pain")) {
+    augmented.add("upper_abdominal_pain");
+    augmented.add("epigastric_pain");
+    augmented.add("constant_pain");
+    augmented.add("severe_pain");
   }
 
   if (augmented.has("af")) {
-    augmented.add("atrialFibrillation");
+    augmented.add("atrial_fibrillation");
   }
 
   if (augmented.has("smoker")) {
-    augmented.add("smokingHistory");
+    augmented.add("smoking_history");
   }
 
-  if (augmented.has("gallstoneContext")) {
-    augmented.add("gallstoneHistory");
+  if (augmented.has("gallstone_context")) {
+    augmented.add("gallstone_history");
   }
 
-  if (augmented.has("alcoholExcess")) {
-    augmented.add("heavyAlcoholIntake");
+  if (augmented.has("alcohol_excess")) {
+    augmented.add("heavy_alcohol_intake");
   }
 
-  if (augmented.has("pepticUlcerDisease")) {
-    augmented.add("pepticUlcerHistory");
+  if (augmented.has("peptic_ulcer_disease")) {
+    augmented.add("peptic_ulcer_history");
   }
 
   if (!Number.isNaN(parsedAge) && parsedAge >= 65) {
-    augmented.add("olderAge");
+    augmented.add("older_age");
   }
 
   if (
@@ -104,7 +104,7 @@ function buildAugmentedFeatureSet(features: ExtractedFeatures, input: CaseInput)
     parsedAge >= 12 &&
     parsedAge <= 55
   ) {
-    augmented.add("femaleOfChildbearingAge");
+    augmented.add("female_of_childbearing_age");
   }
 
   return augmented;
@@ -135,12 +135,12 @@ function getFeatureWeight(
 
 function hasClearSurgicalAbdominalPattern(featureSet: Set<string>): boolean {
   return (
-    (hasFeature(featureSet, "painMigrationToRIF") && (hasFeature(featureSet, "rifPain") || hasFeature(featureSet, "rifTenderness"))) ||
+    (hasFeature(featureSet, "pain_migration_to_rif") && (hasFeature(featureSet, "rif_pain") || hasFeature(featureSet, "rif_tenderness"))) ||
     (hasFeature(featureSet, "peritonism") &&
-      (hasFeature(featureSet, "painWorseOnMovement") || hasFeature(featureSet, "lyingStill"))) ||
-    (hasFeature(featureSet, "flankPain") &&
-      hasFeature(featureSet, "loinToGroinPain") &&
-      (hasFeature(featureSet, "restless") || hasFeature(featureSet, "colickyPain")))
+      (hasFeature(featureSet, "pain_worse_on_movement") || hasFeature(featureSet, "lying_still"))) ||
+    (hasFeature(featureSet, "flank_pain") &&
+      hasFeature(featureSet, "loin_to_groin_pain") &&
+      (hasFeature(featureSet, "restless") || hasFeature(featureSet, "colicky_pain")))
   );
 }
 
@@ -155,13 +155,13 @@ function getDefinitionPolicyModifier(
   switch (definition.id) {
     case "mesenteric_ischaemia":
       if (
-        hasFeature(featureSet, "abdominalPain") &&
-        (hasFeature(featureSet, "painOutOfProportion") ||
-          hasFeature(featureSet, "painSevereButExamMild") ||
-          hasFeature(featureSet, "severePain")) &&
-        (hasFeature(featureSet, "atrialFibrillation") ||
-          hasFeature(featureSet, "vascularDisease") ||
-          hasFeature(featureSet, "olderAge"))
+        hasFeature(featureSet, "abdominal_pain") &&
+        (hasFeature(featureSet, "pain_out_of_proportion") ||
+          hasFeature(featureSet, "pain_severe_but_exam_mild") ||
+          hasFeature(featureSet, "severe_pain")) &&
+        (hasFeature(featureSet, "atrial_fibrillation") ||
+          hasFeature(featureSet, "vascular_disease") ||
+          hasFeature(featureSet, "older_age"))
       ) {
         scoreDelta += 12;
         reasonsFor.push("high-specificity mesenteric emergency pattern");
@@ -174,19 +174,19 @@ function getDefinitionPolicyModifier(
       }
 
       if (
-        hasFeature(featureSet, "pelvicPain") &&
-        hasFeature(featureSet, "vaginalBleeding") &&
-        (hasFeature(featureSet, "pregnancyPossible") ||
-          hasFeature(featureSet, "missedPeriod") ||
-          hasFeature(featureSet, "positivePregnancyTest"))
+        hasFeature(featureSet, "pelvic_pain") &&
+        hasFeature(featureSet, "vaginal_bleeding") &&
+        (hasFeature(featureSet, "pregnancy_possible") ||
+          hasFeature(featureSet, "missed_period") ||
+          hasFeature(featureSet, "positive_pregnancy_test"))
       ) {
         scoreDelta += 9;
         reasonsFor.push("high-specificity ectopic pregnancy pattern");
       }
 
       if (
-        hasFeature(featureSet, "pelvicPain") &&
-        hasFeature(featureSet, "vaginalBleeding") &&
+        hasFeature(featureSet, "pelvic_pain") &&
+        hasFeature(featureSet, "vaginal_bleeding") &&
         (hasFeature(featureSet, "dizziness") ||
           hasFeature(featureSet, "pallor") ||
           hasFeature(featureSet, "collapse") ||
@@ -198,17 +198,17 @@ function getDefinitionPolicyModifier(
       break;
     case "appendicitis":
       if (
-        hasFeature(featureSet, "painMigrationToRIF") &&
-        (hasFeature(featureSet, "rifPain") || hasFeature(featureSet, "rifTenderness"))
+        hasFeature(featureSet, "pain_migration_to_rif") &&
+        (hasFeature(featureSet, "rif_pain") || hasFeature(featureSet, "rif_tenderness"))
       ) {
         scoreDelta += 10;
         reasonsFor.push("high-specificity appendicitis localization pattern");
       }
 
       if (
-        hasFeature(featureSet, "painMigrationToRIF") &&
-        hasFeature(featureSet, "rifTenderness") &&
-        (hasFeature(featureSet, "anorexia") || hasFeature(featureSet, "painWorseOnMovement"))
+        hasFeature(featureSet, "pain_migration_to_rif") &&
+        hasFeature(featureSet, "rif_tenderness") &&
+        (hasFeature(featureSet, "anorexia") || hasFeature(featureSet, "pain_worse_on_movement"))
       ) {
         scoreDelta += 6;
         reasonsFor.push("appendicitis composite pattern");
@@ -217,19 +217,19 @@ function getDefinitionPolicyModifier(
     case "perforated_viscus_peritonitis":
       if (
         (hasFeature(featureSet, "peritonism") || hasFeature(featureSet, "guarding") || hasFeature(featureSet, "rigidity")) &&
-        (hasFeature(featureSet, "painWorseOnMovement") || hasFeature(featureSet, "lyingStill"))
+        (hasFeature(featureSet, "pain_worse_on_movement") || hasFeature(featureSet, "lying_still"))
       ) {
         scoreDelta += 10;
         reasonsFor.push("high-specificity peritonitic emergency pattern");
       }
 
       if (
-        hasFeature(featureSet, "painWorseOnMovement") &&
-        !hasFeature(featureSet, "suddenOnset") &&
+        hasFeature(featureSet, "pain_worse_on_movement") &&
+        !hasFeature(featureSet, "sudden_onset") &&
         !hasFeature(featureSet, "peritonism") &&
         !hasFeature(featureSet, "guarding") &&
         !hasFeature(featureSet, "rigidity") &&
-        !hasFeature(featureSet, "lyingStill")
+        !hasFeature(featureSet, "lying_still")
       ) {
         scoreDelta -= 5;
         reasonsAgainst.push("movement pain alone without a true peritonitic pattern is weak support for perforation");
@@ -237,8 +237,8 @@ function getDefinitionPolicyModifier(
       break;
     case "renal_colic":
       if (
-        hasFeature(featureSet, "flankPain") &&
-        hasFeature(featureSet, "loinToGroinPain") &&
+        hasFeature(featureSet, "flank_pain") &&
+        hasFeature(featureSet, "loin_to_groin_pain") &&
         hasFeature(featureSet, "restless")
       ) {
         scoreDelta += 12;
@@ -246,9 +246,9 @@ function getDefinitionPolicyModifier(
       }
 
       if (
-        hasFeature(featureSet, "flankPain") &&
-        hasFeature(featureSet, "loinToGroinPain") &&
-        (hasFeature(featureSet, "colickyPain") || hasFeature(featureSet, "haematuria"))
+        hasFeature(featureSet, "flank_pain") &&
+        hasFeature(featureSet, "loin_to_groin_pain") &&
+        (hasFeature(featureSet, "colicky_pain") || hasFeature(featureSet, "haematuria"))
       ) {
         scoreDelta += 5;
         reasonsFor.push("renal colic flank-to-groin composite pattern");
@@ -256,10 +256,10 @@ function getDefinitionPolicyModifier(
       break;
     case "pyelonephritis":
       if (
-        hasFeature(featureSet, "flankPain") &&
-        !hasFeature(featureSet, "urinarySymptoms") &&
-        !hasFeature(featureSet, "cvaTenderness") &&
-        (hasFeature(featureSet, "loinToGroinPain") || hasFeature(featureSet, "restless"))
+        hasFeature(featureSet, "flank_pain") &&
+        !hasFeature(featureSet, "urinary_symptoms") &&
+        !hasFeature(featureSet, "cva_tenderness") &&
+        (hasFeature(featureSet, "loin_to_groin_pain") || hasFeature(featureSet, "restless"))
       ) {
         scoreDelta -= 5;
         reasonsAgainst.push("weak infective urinary signature in a renal-colic-like pattern");
@@ -267,8 +267,8 @@ function getDefinitionPolicyModifier(
       break;
     case "dka":
       if (
-        !hasFeature(featureSet, "diabeticContext") &&
-        !hasFeature(featureSet, "ketosisBreath") &&
+        !hasFeature(featureSet, "diabetic_context") &&
+        !hasFeature(featureSet, "ketosis_breath") &&
         !hasFeature(featureSet, "polyuria") &&
         !hasFeature(featureSet, "polydipsia")
       ) {
@@ -278,11 +278,11 @@ function getDefinitionPolicyModifier(
       break;
     case "acs_epigastric_presentation":
       if (
-        hasFeature(featureSet, "flankPain") &&
-        hasFeature(featureSet, "loinToGroinPain") &&
+        hasFeature(featureSet, "flank_pain") &&
+        hasFeature(featureSet, "loin_to_groin_pain") &&
         hasFeature(featureSet, "restless") &&
-        !hasFeature(featureSet, "acsEquivalentPain") &&
-        !hasFeature(featureSet, "chestPain") &&
+        !hasFeature(featureSet, "acs_equivalent_pain") &&
+        !hasFeature(featureSet, "chest_pain") &&
         !hasFeature(featureSet, "sob")
       ) {
         scoreDelta -= 8;
@@ -290,8 +290,8 @@ function getDefinitionPolicyModifier(
       }
 
       if (
-        !hasFeature(featureSet, "acsEquivalentPain") &&
-        !hasFeature(featureSet, "chestPain") &&
+        !hasFeature(featureSet, "acs_equivalent_pain") &&
+        !hasFeature(featureSet, "chest_pain") &&
         !hasFeature(featureSet, "sob") &&
         hasClearSurgicalAbdominalPattern(featureSet)
       ) {
@@ -301,11 +301,11 @@ function getDefinitionPolicyModifier(
       break;
     case "gastroenteritis":
       if (
-        hasFeature(featureSet, "abdominalPain") &&
-        hasFeature(featureSet, "severePain") &&
-        (hasFeature(featureSet, "atrialFibrillation") ||
-          hasFeature(featureSet, "vascularDisease") ||
-          hasFeature(featureSet, "olderAge"))
+        hasFeature(featureSet, "abdominal_pain") &&
+        hasFeature(featureSet, "severe_pain") &&
+        (hasFeature(featureSet, "atrial_fibrillation") ||
+          hasFeature(featureSet, "vascular_disease") ||
+          hasFeature(featureSet, "older_age"))
       ) {
         scoreDelta -= 3;
         reasonsAgainst.push("vascular-risk severe abdominal pain only modestly fits gastroenteritis");
@@ -315,8 +315,8 @@ function getDefinitionPolicyModifier(
       if (
         !hasFeature(featureSet, "collapse") &&
         !hasFeature(featureSet, "hypotension") &&
-        !hasFeature(featureSet, "backPain") &&
-        !hasFeature(featureSet, "flankPain") &&
+        !hasFeature(featureSet, "back_pain") &&
+        !hasFeature(featureSet, "flank_pain") &&
         hasClearSurgicalAbdominalPattern(featureSet)
       ) {
         scoreDelta -= 5;
