@@ -1780,6 +1780,27 @@ function getObservationFeatures(observations: string): string[] {
   return observationFeatures;
 }
 
+function getDynamicFeatures(allText: string): string[] {
+  const dynamicFeatures: string[] = [];
+  const missedPeriodWeekPatterns = [
+    /\b(?:last period(?: was)?|lmp|last menstrual period)\s+(\d+)\s+weeks?\s+ago\b/g,
+    /\bperiod overdue by\s+(\d+)\s+weeks?\b/g,
+  ];
+
+  for (const pattern of missedPeriodWeekPatterns) {
+    for (const match of allText.matchAll(pattern)) {
+      const weeks = Number.parseInt(match[1] ?? "", 10);
+
+      if (!Number.isNaN(weeks) && weeks >= 4) {
+        dynamicFeatures.push("missed_period");
+        return dynamicFeatures;
+      }
+    }
+  }
+
+  return dynamicFeatures;
+}
+
 export function extractFeatures(input: CaseInput): ExtractedFeatures {
   ensureDbFeaturePatternsLoaded();
 
@@ -1819,6 +1840,12 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
   }
 
   for (const feature of getObservationFeatures(input.observations)) {
+    if (!matchedFeatures.includes(feature)) {
+      matchedFeatures.push(feature);
+    }
+  }
+
+  for (const feature of getDynamicFeatures(allText)) {
     if (!matchedFeatures.includes(feature)) {
       matchedFeatures.push(feature);
     }
