@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { analyzeCase } from '../../../lib/application/analyzeCase';
 import type { CaseInput } from '../../../lib/types';
-import { getToken } from "next-auth/jwt"
 import { z } from "zod"
+import { auth } from "../../../auth";
 
 const caseInputSchema = z.object({
   age: z.string().min(1),
@@ -22,13 +22,9 @@ const caseInputSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  // Check for JWT token - optional for MVP
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  })
+  const session = await auth()
 
-  if (!token) {
+  if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
