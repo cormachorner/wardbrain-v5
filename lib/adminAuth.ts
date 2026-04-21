@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation"
-import { getToken } from "next-auth/jwt"
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { auth } from "../auth"
@@ -22,18 +21,15 @@ export async function requireAdminPage() {
   return session
 }
 
-export async function requireAdminRoute(request: NextRequest): Promise<AdminRouteAuth> {
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  })
+export async function requireAdminRoute(_request: NextRequest): Promise<AdminRouteAuth> {
+  const session = await auth()
 
-  if (!token || token.role !== "ADMIN") {
+  if (!session?.user || session.user.role !== "ADMIN") {
     return {
       ok: false,
       response: NextResponse.json({ error: "Admin access required" }, { status: 403 }),
     }
   }
 
-  return { ok: true, userId: typeof token.id === "string" ? token.id : undefined }
+  return { ok: true, userId: session.user.id }
 }
