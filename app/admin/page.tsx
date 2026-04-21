@@ -2,6 +2,11 @@ import Link from "next/link"
 
 const sections = [
   {
+    href: "/admin/activity",
+    title: "Activity",
+    description: "Review stored user case runs, outputs, detected features, red flags, and potentially missing features.",
+  },
+  {
     href: "/admin/feature-labels",
     title: "Feature labels",
     description: "Manage reusable feature slugs, display labels, groupings, and draft/published state.",

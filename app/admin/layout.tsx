@@ -3,6 +3,7 @@ import { requireAdminPage } from "../../lib/adminAuth"
 
 const navItems = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/activity", label: "Activity" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/feature-labels", label: "Feature labels" },
   { href: "/admin/feature-phrases", label: "Feature phrases" },

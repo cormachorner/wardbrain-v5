@@ -4,6 +4,7 @@ import type { CaseInput } from '../../../lib/types';
 import { z } from "zod"
 import { auth } from "../../../auth";
 import { getToken } from "next-auth/jwt";
+import { prisma } from "../../../lib/prisma";
 
 const caseInputSchema = z.object({
   age: z.string().min(1),
@@ -41,6 +42,25 @@ export async function POST(request: Request) {
     const caseInput: CaseInput = caseInputSchema.parse(body);
 
     const result = analyzeCase(caseInput);
+
+    const userId =
+      typeof session?.user?.id === "string"
+        ? session.user.id
+        : typeof token?.id === "string"
+          ? token.id
+          : null;
+
+    if (userId) {
+      await prisma.case.create({
+        data: {
+          userId,
+          title: caseInput.presentingComplaint || "Untitled case",
+          caseData: JSON.stringify(caseInput),
+          analysis: JSON.stringify(result),
+        },
+      });
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
