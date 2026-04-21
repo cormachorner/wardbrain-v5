@@ -1780,11 +1780,22 @@ function getObservationFeatures(observations: string): string[] {
   return observationFeatures;
 }
 
-function getDynamicFeatures(allText: string): string[] {
+function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[] {
   const dynamicFeatures: string[] = [];
   const missedPeriodWeekPatterns = [
     /\b(?:last period(?: was)?|lmp|last menstrual period)\s+(\d+)\s+weeks?\s+ago\b/g,
     /\bperiod overdue by\s+(\d+)\s+weeks?\b/g,
+  ];
+  const agePatterns = [/\b(\d{1,3})\s+year\s+old\b/g, /\baged\s+(\d{1,3})\b/g];
+  const severePainCompositeSources = ["severe_pain", "pain_out_of_proportion"];
+  const mildExamCuePatterns = [
+    /\bmildly tender\b/g,
+    /\bonly mild tenderness\b/g,
+    /\bmild tenderness\b/g,
+    /\bminimal tenderness\b/g,
+    /\bsoft abdomen\b/g,
+    /\babdomen is soft\b/g,
+    /\bno guarding\b/g,
   ];
 
   for (const pattern of missedPeriodWeekPatterns) {
@@ -1796,6 +1807,30 @@ function getDynamicFeatures(allText: string): string[] {
         return dynamicFeatures;
       }
     }
+  }
+
+  for (const pattern of agePatterns) {
+    for (const match of allText.matchAll(pattern)) {
+      const age = Number.parseInt(match[1] ?? "", 10);
+
+      if (!Number.isNaN(age) && age >= 65) {
+        dynamicFeatures.push("older_age");
+        break;
+      }
+    }
+
+    if (dynamicFeatures.includes("older_age")) {
+      break;
+    }
+  }
+
+  const hasSeverePainCue = severePainCompositeSources.some(
+    (feature) => matchedFeatures.includes(feature) || dynamicFeatures.includes(feature),
+  );
+  const hasMildExamCue = mildExamCuePatterns.some((pattern) => pattern.test(allText));
+
+  if (hasSeverePainCue && hasMildExamCue) {
+    dynamicFeatures.push("pain_severe_but_exam_mild");
   }
 
   return dynamicFeatures;
@@ -1845,7 +1880,7 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     }
   }
 
-  for (const feature of getDynamicFeatures(allText)) {
+  for (const feature of getDynamicFeatures(allText, matchedFeatures)) {
     if (!matchedFeatures.includes(feature)) {
       matchedFeatures.push(feature);
     }
@@ -1862,6 +1897,13 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     if (matchedFeatures.includes(sourceFeature) && !matchedFeatures.includes(aliasFeature)) {
       matchedFeatures.push(aliasFeature);
     }
+  }
+
+  if (
+    matchedFeatures.includes("pain_severe_but_exam_mild") &&
+    !matchedFeatures.includes("pain_out_of_proportion")
+  ) {
+    matchedFeatures.push("pain_out_of_proportion");
   }
 
   const hasChestPainContext = matchedFeatures.includes("chest_pain");

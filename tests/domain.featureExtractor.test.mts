@@ -86,3 +86,45 @@ test("domain feature extractor triggers missed_period for 7 weeks ago", () => {
 
   assert.ok(features.matchedFeatures.includes("missed_period"));
 });
+
+test("domain feature extractor adds older_age from dynamic age phrases", () => {
+  const features = extractFeatures({
+    age: "",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history: "A 79-year-old man presents with central abdominal pain.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(features.matchedFeatures.includes("older_age"));
+});
+
+test("domain feature extractor adds pain_severe_but_exam_mild from severe pain plus mild exam mismatch", () => {
+  const features = extractFeatures({
+    age: "79",
+    sex: "female",
+    presentingComplaint: "Abdominal pain",
+    history:
+      "She feels clammy and says the pain is much worse than expected. She has atrial fibrillation and peripheral vascular disease. Her abdomen is soft with only mild tenderness.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(features.matchedFeatures.includes("pain_out_of_proportion"));
+  assert.ok(features.matchedFeatures.includes("pain_severe_but_exam_mild"));
+});
