@@ -23,7 +23,10 @@ const caseInputSchema = z.object({
 
 export async function POST(request: Request) {
   // Check for JWT token - optional for MVP
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  })
 
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

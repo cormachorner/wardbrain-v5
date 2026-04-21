@@ -23,7 +23,10 @@ export async function requireAdminPage() {
 }
 
 export async function requireAdminRoute(request: NextRequest): Promise<AdminRouteAuth> {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  })
 
   if (!token || token.role !== "ADMIN") {
     return {
