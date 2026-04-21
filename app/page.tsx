@@ -71,6 +71,7 @@ export default function Home() {
     try {
       const response = await fetch("/api/analyze-case", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

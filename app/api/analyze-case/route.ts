@@ -3,6 +3,7 @@ import { analyzeCase } from '../../../lib/application/analyzeCase';
 import type { CaseInput } from '../../../lib/types';
 import { z } from "zod"
 import { auth } from "../../../auth";
+import { getToken } from "next-auth/jwt";
 
 const caseInputSchema = z.object({
   age: z.string().min(1),
@@ -23,8 +24,15 @@ const caseInputSchema = z.object({
 
 export async function POST(request: Request) {
   const session = await auth()
+  const token =
+    session?.user
+      ? null
+      : await getToken({
+          req: request,
+          secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+        })
 
-  if (!session?.user) {
+  if (!session?.user && !token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
