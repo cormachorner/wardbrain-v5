@@ -16,18 +16,33 @@ type ClinicalTestCase = {
   vignette: string
   expectedLeadDiagnosis: string | null
   expectedLeadDiagnosisSlug: string | null
-  expectedFeatureSlugsJson: string | null
-  expectedRedFlagSlugsJson: string | null
+  expectedFeatureSlugsJson: unknown
+  expectedRedFlagSlugsJson: unknown
   expectedPresentationBlock: string | null
   notes: string | null
   status: "DRAFT" | "PUBLISHED"
   lastRunAt: string | null
   lastRunStatus: "PASS" | "PARTIAL" | "FAIL" | null
-  lastRunResultJson: string | null
+  lastRunResultJson: ClinicalTestRunResult | null
   expectedFeatures: Array<{
     id: string
     featureLabel: FeatureLabelOption
   }>
+}
+
+type ClinicalTestRunResult = {
+  status: "PASS" | "PARTIAL" | "FAIL"
+  missingFeatures: string[]
+  missingRequiredFeatures?: string[]
+  missingOptionalFeatures?: string[]
+  missingRedFlags: string[]
+  unexpectedForbiddenRedFlags?: string[]
+  actualLeadDiagnosisSlug: string | null
+  actualTop3DiagnosisSlugs: string[]
+  actualDetectedFeatureSlugs: string[]
+  actualRedFlagSlugs: string[]
+  leadDiagnosisMatched: boolean | null
+  leadDiagnosisInTop3: boolean | null
 }
 
 type TestCaseFormState = {
@@ -64,6 +79,7 @@ export default function AdminTestCasesPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [runningId, setRunningId] = useState<string | null>(null)
+  const [runningAll, setRunningAll] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(initialFormState)
   const [error, setError] = useState<string | null>(null)
@@ -154,6 +170,28 @@ export default function AdminTestCasesPage() {
     }
   }
 
+  async function handleRunAll() {
+    setRunningAll(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/admin/test-cases/run-all", {
+        method: "POST",
+      })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Failed to run published test cases.")
+      }
+
+      await loadData()
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Failed to run published test cases.")
+    } finally {
+      setRunningAll(false)
+    }
+  }
+
   async function handleDelete(id: string) {
     const confirmed = window.confirm("Delete this test case?")
     if (!confirmed) {
@@ -196,8 +234,29 @@ export default function AdminTestCasesPage() {
     })
   }
 
-  function safeParseSlugList(value: string | null) {
+  function safeParseSlugList(value: unknown) {
     if (!value) {
+      return []
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item))
+    }
+
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>
+      const candidates = ["requiredExpectedFeatureSlugs", "expectedFeatureSlugs", "expectedRedFlagSlugs"]
+
+      for (const key of candidates) {
+        if (Array.isArray(record[key])) {
+          return record[key].map((item) => String(item))
+        }
+      }
+
+      return []
+    }
+
+    if (typeof value !== "string") {
       return []
     }
 
@@ -207,6 +266,14 @@ export default function AdminTestCasesPage() {
     } catch {
       return []
     }
+  }
+
+  function formatSlugList(value: unknown) {
+    if (!Array.isArray(value)) {
+      return "None"
+    }
+
+    return value.map((item) => String(item)).join(", ") || "None"
   }
 
   function formatRunTime(value: string | null) {
@@ -381,8 +448,19 @@ export default function AdminTestCasesPage() {
       </form>
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h2 className="text-lg font-semibold">Test cases</h2>
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Test cases</h2>
+            <p className="mt-1 text-sm text-slate-600">Run individual cases or all published cases through the live analyzer.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleRunAll()}
+            disabled={runningAll}
+            className="rounded-md border border-blue-200 px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+          >
+            {runningAll ? "Running published..." : "Run all published"}
+          </button>
         </div>
 
         {loading ? (
@@ -455,27 +533,25 @@ export default function AdminTestCasesPage() {
                 {testCase.lastRunResultJson ? (
                   <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
                     {(() => {
-                      const result = JSON.parse(testCase.lastRunResultJson) as {
-                        actualLeadDiagnosis: string | null
-                        actualTop3: string[]
-                        detectedFeatures: string[]
-                        detectedRedFlags: string[]
-                        missingExpectedFeatures: string[]
-                        missingExpectedRedFlags: string[]
-                      }
+                      const result = testCase.lastRunResultJson
 
                       return (
                         <div className="space-y-2">
-                          <div>Actual lead: {result.actualLeadDiagnosis ?? "None"}</div>
-                          <div>Actual top 3: {result.actualTop3.join(", ") || "None"}</div>
-                          <div>Detected features: {result.detectedFeatures.join(", ") || "None"}</div>
-                          <div>Detected red flags: {result.detectedRedFlags.join(", ") || "None"}</div>
+                          <div>Actual lead: {result.actualLeadDiagnosisSlug ?? "None"}</div>
+                          <div>Actual top 3: {formatSlugList(result.actualTop3DiagnosisSlugs)}</div>
+                          <div>Detected features: {formatSlugList(result.actualDetectedFeatureSlugs)}</div>
+                          <div>Detected red flags: {formatSlugList(result.actualRedFlagSlugs)}</div>
                           <div>
-                            Missing expected features: {result.missingExpectedFeatures.join(", ") || "None"}
+                            Missing required features:{" "}
+                            {formatSlugList(result.missingRequiredFeatures ?? result.missingFeatures)}
                           </div>
+                          <div>Missing optional features: {formatSlugList(result.missingOptionalFeatures)}</div>
+                          <div>Missing expected red flags: {formatSlugList(result.missingRedFlags)}</div>
                           <div>
-                            Missing expected red flags: {result.missingExpectedRedFlags.join(", ") || "None"}
+                            Forbidden red flags present: {formatSlugList(result.unexpectedForbiddenRedFlags)}
                           </div>
+                          <div>Lead exact match: {String(result.leadDiagnosisMatched ?? "Not checked")}</div>
+                          <div>Lead in top 3: {String(result.leadDiagnosisInTop3 ?? "Not checked")}</div>
                         </div>
                       )
                     })()}

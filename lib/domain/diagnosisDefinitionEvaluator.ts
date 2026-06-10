@@ -257,6 +257,19 @@ function getDefinitionPolicyModifier(
     case "pyelonephritis":
       if (
         hasFeature(featureSet, "flank_pain") &&
+        hasFeature(featureSet, "fever") &&
+        hasFeature(featureSet, "cva_tenderness") &&
+        (hasFeature(featureSet, "urinary_symptoms") ||
+          hasFeature(featureSet, "dysuria") ||
+          hasFeature(featureSet, "frequency") ||
+          hasFeature(featureSet, "urinary_frequency"))
+      ) {
+        scoreDelta += 8;
+        reasonsFor.push("high-specificity pyelonephritis urinary-source pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "flank_pain") &&
         !hasFeature(featureSet, "urinary_symptoms") &&
         !hasFeature(featureSet, "cva_tenderness") &&
         (hasFeature(featureSet, "loin_to_groin_pain") || hasFeature(featureSet, "restless"))

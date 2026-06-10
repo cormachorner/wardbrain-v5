@@ -129,9 +129,11 @@ export type AnalysisResult = {
   anchorWarning: string;
   presentation: string;
   detectedFeatures?: string[];
+  detectedFeatureSlugs?: string[];
 };
 
 export type AnalyzeCaseResponse = AnalysisResult & {
+  detectedFeatureSlugs: string[];
   detectedFeatures: string[];
   matchedPresentationBlock: WardBrainPresentationBlockMatch | null;
 };

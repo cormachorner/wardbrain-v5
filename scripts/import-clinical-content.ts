@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 type SqliteFeatureLabel = {
   slug: string;
@@ -61,6 +61,14 @@ function readSqliteJson<T>(sqliteDbPath: string, sql: string): T[] {
   }
 
   return JSON.parse(raw) as T[];
+}
+
+function parseStoredJson(value: string | null) {
+  if (!value) {
+    return Prisma.JsonNull;
+  }
+
+  return JSON.parse(value) as Prisma.InputJsonValue;
 }
 
 async function main() {
@@ -227,13 +235,13 @@ async function main() {
         expectedLeadDiagnosis: testCase.expectedLeadDiagnosis,
         expectedLeadDiagnosisSlug: testCase.expectedLeadDiagnosisSlug,
         expectedPresentationBlock: testCase.expectedPresentationBlock,
-        expectedFeatureSlugsJson: testCase.expectedFeatureSlugsJson,
-        expectedRedFlagSlugsJson: testCase.expectedRedFlagSlugsJson,
+        expectedFeatureSlugsJson: parseStoredJson(testCase.expectedFeatureSlugsJson),
+        expectedRedFlagSlugsJson: parseStoredJson(testCase.expectedRedFlagSlugsJson),
         notes: testCase.notes,
         status: testCase.status,
         lastRunAt: testCase.lastRunAt ? new Date(testCase.lastRunAt) : null,
         lastRunStatus: testCase.lastRunStatus,
-        lastRunResultJson: testCase.lastRunResultJson,
+        lastRunResultJson: parseStoredJson(testCase.lastRunResultJson),
       },
       update: {
         title: testCase.title,
@@ -242,13 +250,13 @@ async function main() {
         expectedLeadDiagnosis: testCase.expectedLeadDiagnosis,
         expectedLeadDiagnosisSlug: testCase.expectedLeadDiagnosisSlug,
         expectedPresentationBlock: testCase.expectedPresentationBlock,
-        expectedFeatureSlugsJson: testCase.expectedFeatureSlugsJson,
-        expectedRedFlagSlugsJson: testCase.expectedRedFlagSlugsJson,
+        expectedFeatureSlugsJson: parseStoredJson(testCase.expectedFeatureSlugsJson),
+        expectedRedFlagSlugsJson: parseStoredJson(testCase.expectedRedFlagSlugsJson),
         notes: testCase.notes,
         status: testCase.status,
         lastRunAt: testCase.lastRunAt ? new Date(testCase.lastRunAt) : null,
         lastRunStatus: testCase.lastRunStatus,
-        lastRunResultJson: testCase.lastRunResultJson,
+        lastRunResultJson: parseStoredJson(testCase.lastRunResultJson),
       },
       select: { id: true, slug: true },
     });

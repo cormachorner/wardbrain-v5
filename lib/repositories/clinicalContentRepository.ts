@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client"
 import { prisma } from "../prisma"
+import type { ClinicalTestEvaluationResult } from "../testing/evaluateClinicalTestCase"
 
 type ContentStatus = "DRAFT" | "PUBLISHED"
 
@@ -31,19 +32,6 @@ type TestCaseInput = {
   notes?: string
   status: ContentStatus
   expectedFeatureSlugs: string[]
-}
-
-type ClinicalTestCaseRunStatus = "PASS" | "PARTIAL" | "FAIL"
-
-type ClinicalTestCaseRunResult = {
-  status: ClinicalTestCaseRunStatus
-  actualLeadDiagnosis: string | null
-  actualTop3: string[]
-  detectedFeatures: string[]
-  detectedRedFlags: string[]
-  missingExpectedFeatures: string[]
-  missingExpectedRedFlags: string[]
-  leadDiagnosisMatched: boolean
 }
 
 type RepositoryValidationError = Error & {
@@ -296,10 +284,10 @@ export async function createClinicalTestCase(input: TestCaseInput) {
         ? normalizeSlug(input.expectedLeadDiagnosisSlug as string)
         : undefined,
       expectedPresentationBlock: normalizeOptionalText(input.expectedPresentationBlock),
-      expectedFeatureSlugsJson: JSON.stringify(
-        Array.from(new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean))),
+      expectedFeatureSlugsJson: Array.from(
+        new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean)),
       ),
-      expectedRedFlagSlugsJson: JSON.stringify(normalizeSlugList(input.expectedRedFlagSlugs)),
+      expectedRedFlagSlugsJson: normalizeSlugList(input.expectedRedFlagSlugs),
       notes: normalizeOptionalText(input.notes),
       status: normalizeStatus(input.status),
       expectedFeatures: {
@@ -329,10 +317,10 @@ export async function updateClinicalTestCase(id: string, input: TestCaseInput) {
         ? normalizeSlug(input.expectedLeadDiagnosisSlug as string)
         : undefined,
       expectedPresentationBlock: normalizeOptionalText(input.expectedPresentationBlock),
-      expectedFeatureSlugsJson: JSON.stringify(
-        Array.from(new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean))),
+      expectedFeatureSlugsJson: Array.from(
+        new Set(input.expectedFeatureSlugs.map((value) => normalizeFeatureToken(value)).filter(Boolean)),
       ),
-      expectedRedFlagSlugsJson: JSON.stringify(normalizeSlugList(input.expectedRedFlagSlugs)),
+      expectedRedFlagSlugsJson: normalizeSlugList(input.expectedRedFlagSlugs),
       notes: normalizeOptionalText(input.notes),
       status: normalizeStatus(input.status),
       expectedFeatures: {
@@ -357,16 +345,24 @@ export async function getClinicalTestCaseForRun(id: string) {
   })
 }
 
+export async function listPublishedClinicalTestCasesForRun() {
+  return prisma.clinicalTestCase.findMany({
+    where: { status: "PUBLISHED" },
+    include: testCaseInclude,
+    orderBy: { slug: "asc" },
+  })
+}
+
 export async function saveClinicalTestCaseRunResult(
   id: string,
-  runResult: ClinicalTestCaseRunResult,
+  runResult: ClinicalTestEvaluationResult,
 ) {
   return prisma.clinicalTestCase.update({
     where: { id },
     data: {
       lastRunAt: new Date(),
       lastRunStatus: runResult.status,
-      lastRunResultJson: JSON.stringify(runResult),
+      lastRunResultJson: runResult,
     },
     include: testCaseInclude,
   })

@@ -1303,6 +1303,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           add: 5,
           reason: "feverish flank pain with urinary source supports pyelonephritis",
         },
+        {
+          ifAll: ["flank_pain", "fever", "cva_tenderness"],
+          ifAny: ["urinary_symptoms", "dysuria", "frequency", "urinary_frequency"],
+          add: 7,
+          reason: "flank pain with fever, urinary symptoms, and renal angle tenderness strongly supports pyelonephritis",
+        },
       ],
       escalationRules: [
         {

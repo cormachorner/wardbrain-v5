@@ -594,6 +594,7 @@ export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
     reasoningComparison,
     anchorWarning,
     presentation,
+    detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,
   };

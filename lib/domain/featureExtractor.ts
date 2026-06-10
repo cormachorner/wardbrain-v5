@@ -1,5 +1,6 @@
 import type { CaseInput, ExtractedFeatures } from "../types";
 import { prisma } from "../prisma";
+import { canonicalFeatureSlug } from "./featureSlug";
 
 const FEATURE_PATTERNS: Record<string, string[]> = {
   chest_pain: [
@@ -34,6 +35,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "sudden shortness of breath",
     "sudden breathlessness",
     "abrupt onset",
+    "abrupt epigastric abdominal pain",
     "came on suddenly",
     "started suddenly",
   ],
@@ -61,6 +63,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   collapse: [
     "collapse",
+    "collapses",
     "collapsed",
     "syncope",
     "syncopal episode",
@@ -89,6 +92,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "current smoker",
     "long smoking history",
   ],
+  smoking_history: [
+    "smoker",
+    "smoking",
+    "current smoker",
+    "long smoking history",
+    "smoking history",
+  ],
   hypertension: [
     "hypertension",
     "untreated hypertension",
@@ -104,6 +114,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain radiating to the jaw",
     "radiates to the jaw",
     "jaw discomfort",
+  ],
+  pain_radiates_to_jaw: [
+    "radiating to the jaw",
+    "pain radiating to the jaw",
+    "radiates to the jaw",
   ],
   arm_pain: [
     "arm pain",
@@ -232,6 +247,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "belly pain",
     "upper abdominal heaviness",
     "upper abdominal pressure",
+    "abdominal back and left flank pain",
+    "abdominal back and right flank pain",
   ],
   upper_abdominal_pain: [
     "upper abdominal pain",
@@ -240,6 +257,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   epigastric_pain: [
     "epigastric pain",
+    "epigastric abdominal pain",
+    "epigastric and upper abdominal pain",
     "epigastric discomfort",
     "pain in the epigastrium",
     "epigastric tenderness",
@@ -248,12 +267,17 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "generalised abdominal pain",
     "generalized abdominal pain",
     "diffuse abdominal pain",
+    "diffuse abdominal discomfort",
     "whole abdomen pain",
   ],
   rif_pain: [
     "rif pain",
+    "rif discomfort",
     "right iliac fossa pain",
     "pain in the right iliac fossa",
+    "sharp in the right iliac fossa",
+    "sharp pain in the right iliac fossa",
+    "pain in the rif",
     "right lower quadrant pain",
     "rlq pain",
     "right lower abdominal pain",
@@ -262,6 +286,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   rif_tenderness: [
     "rif tenderness",
+    "focal rif tenderness",
     "right iliac fossa tenderness",
     "right lower quadrant tenderness",
     "tender over the rif",
@@ -278,6 +303,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "started around the umbilicus then moved to the right iliac fossa",
     "pain moved to the right iliac fossa",
     "moved to the right iliac fossa",
+    "began centrally and is now sharp in the right iliac fossa",
   ],
   pain_migration_to_rif: [
     "migrated to the right iliac fossa",
@@ -289,6 +315,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "started around the umbilicus then moved to the right iliac fossa",
     "pain moved to the right iliac fossa",
     "moved to the right iliac fossa",
+    "began centrally and is now sharp in the right iliac fossa",
   ],
   pelvic_pain: [
     "pelvic pain",
@@ -489,6 +516,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   back_pain: [
     "back pain",
+    "abdominal back and left flank pain",
+    "abdominal back and right flank pain",
     "lower back pain",
     "severe back pain",
     "lumbar pain",
@@ -505,6 +534,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   colicky_pain: [
     "colicky pain",
+    "crampy colicky pain",
+    "crampy colicky abdominal pain",
+    "crampy pain",
     "colic",
     "comes in waves",
     "wave like pain",
@@ -584,10 +616,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "obstipation",
     "not opened bowels or passed flatus",
     "no bowel motion and no flatus",
+    "constipation and has not passed wind",
+    "not passed wind",
   ],
   unable_to_pass_flatus: [
     "unable to pass flatus",
     "not passing flatus",
+    "not passed wind",
     "no flatus",
     "cannot pass wind",
     "can't pass wind",
@@ -713,7 +748,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   guarding_rigidity: [
     "guarding",
+    "guarded",
     "guarded abdomen",
+    "abdomen is guarded",
     "abdominal guarding",
     "rigidity",
     "rigid abdomen",
@@ -722,22 +759,43 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "peritonism",
     "peritonitic",
   ],
+  guarding: [
+    "guarding",
+    "guarded",
+    "guarded abdomen",
+    "abdomen is guarded",
+    "abdominal guarding",
+  ],
+  mild_tenderness: [
+    "mildly tender",
+    "only mild tenderness",
+    "mild tenderness",
+    "mild abdominal tenderness",
+    "minimal tenderness",
+  ],
   abdominal_movement_pain: [
     "pain worse on movement",
     "pain worse with movement",
     "pain worse on coughing",
     "pain worse with coughing",
+    "movement makes it worse",
     "worse on movement and coughing",
     "worse with movement and coughing",
     "worse on movement or coughing",
     "worse on coughing",
     "worse with coughing",
+    "coughing worsens the pain",
+    "worse when he coughs or moves",
+    "worse when she coughs or moves",
+    "worse when they cough or move",
   ],
   pain_worse_on_movement: [
     "pain worse on movement",
     "pain worse with movement",
     "worse on movement",
     "worse with movement",
+    "worsens with movement",
+    "movement makes it worse",
     "worse over bumps",
     "worse on bumps",
     "worse in the car over bumps",
@@ -745,6 +803,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain worse over bumps in the road",
     "worse with bumps in the road",
     "pain worse with jolts",
+    "worse when he coughs or moves",
+    "worse when she coughs or moves",
+    "worse when they cough or move",
   ],
   pain_worse_with_cough: [
     "pain worse on coughing",
@@ -753,10 +814,16 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "worse with coughing",
     "pain worse with cough",
     "pain worse on cough",
+    "coughing worsens the pain",
+    "worse when he coughs or moves",
+    "worse when she coughs or moves",
+    "worse when they cough or move",
   ],
   lying_still: [
     "lying still",
     "lies still",
+    "lies very still",
+    "lies completely still",
     "keeping still because of pain",
     "does not want to move",
   ],
@@ -1210,11 +1277,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "lightheaded",
     "light-headed",
     "felt faint",
+    "feels faint",
     "nearly fainted",
   ],
   pallor: [
     "pallor",
-    "pale",
     "looked pale",
     "appeared pale",
   ],
@@ -1225,6 +1292,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   flank_pain: [
     "flank pain",
+    "left flank pain",
+    "right flank pain",
+    "abdominal back and left flank pain",
+    "abdominal back and right flank pain",
     "loin pain",
     "cva tenderness",
     "costovertebral angle tenderness",
@@ -1281,6 +1352,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   polydipsia: [
     "polydipsia",
+    "marked thirst",
     "very thirsty",
     "excessive thirst",
   ],
@@ -1571,6 +1643,23 @@ const HIGH_TEMPERATURE_THRESHOLD = 38;
 const LOW_TEMPERATURE_THRESHOLD = 36;
 const FEATURE_PHRASE_CACHE_TTL_MS = 30_000;
 
+const COORDINATED_PAIN_LOCATION_MAP = [
+  { pattern: /\bright\s+iliac\s+fossa\b|\brif\b/g, feature: "rif_pain" },
+  { pattern: /\bright\s+upper\s+quadrant\b|\bruq\b/g, feature: "ruq_pain" },
+  { pattern: /\babdominal\b|\babdomen\b|\babdo\b|\btummy\b|\bstomach\b/g, feature: "abdominal_pain" },
+  { pattern: /\bpelvic\b|\bpelvis\b/g, feature: "pelvic_pain" },
+  { pattern: /\bchest\b/g, feature: "chest_pain" },
+  { pattern: /\bjaw\b/g, feature: "jaw_pain" },
+  { pattern: /\bback\b/g, feature: "back_pain" },
+  { pattern: /\bflank\b|\bloin\b/g, feature: "flank_pain" },
+  { pattern: /\bshoulder\b/g, feature: "shoulder_pain" },
+  { pattern: /\barm\b/g, feature: "arm_pain" },
+  { pattern: /\bepigastric\b|\bepigastrium\b/g, feature: "epigastric_pain" },
+] as const;
+
+const COORDINATED_PAIN_NEGATION_PATTERN =
+  /\b(?:no|not|denies|denied|without|nil)\b(?:\s+\w+){0,8}\s+(?:pain|discomfort|ache|aching)\b/;
+
 let dbPhraseToFeatureSlug = new Map<string, string>();
 let dbFeaturePhraseLoadPromise: Promise<void> | null = null;
 let dbFeaturePhraseLastLoadedAt = 0;
@@ -1585,12 +1674,15 @@ function normaliseText(text: string): string {
 }
 
 function normaliseFeatureName(feature: string): string {
-  return feature
-    .trim()
-    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
-    .replace(/[\s-]+/g, "_")
-    .toLowerCase();
+  return canonicalFeatureSlug(feature);
+}
+
+function addMatchedFeature(matchedFeatures: string[], feature: string) {
+  const canonicalFeature = canonicalFeatureSlug(feature);
+
+  if (canonicalFeature && !matchedFeatures.includes(canonicalFeature)) {
+    matchedFeatures.push(canonicalFeature);
+  }
 }
 
 function escapeRegExp(value: string): string {
@@ -1664,6 +1756,25 @@ function ensureDbFeaturePatternsLoaded() {
   dbFeaturePhraseLoadPromise = loadDbFeaturePatterns();
 }
 
+export function setDbFeaturePhrasePatternsForTest(patterns: Record<string, string>) {
+  dbPhraseToFeatureSlug = new Map(
+    Object.entries(patterns).map(([phrase, feature]) => [
+      normaliseText(phrase),
+      canonicalFeatureSlug(feature),
+    ]),
+  );
+  dbFeaturePhraseLastLoadedAt = Date.now();
+  dbFeaturePhraseLoadFailed = false;
+  dbFeaturePhraseLoadPromise = null;
+}
+
+export function resetDbFeaturePhrasePatternsForTest() {
+  dbPhraseToFeatureSlug = new Map();
+  dbFeaturePhraseLastLoadedAt = 0;
+  dbFeaturePhraseLoadFailed = false;
+  dbFeaturePhraseLoadPromise = null;
+}
+
 function hasNegatedPattern(text: string, feature: string, patterns: string[]): boolean {
   const explicitNegations = FEATURE_NEGATION_PHRASES[feature] ?? [];
 
@@ -1683,6 +1794,86 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
       return negatedPattern.test(text);
     });
   });
+}
+
+function normaliseClauseText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[()[\]{}"']/g, " ")
+    .replace(/[,\-/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitIntoPainLocationClauses(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[.!?;:\n]|\bbut\b|\bhowever\b/)
+    .map(normaliseClauseText)
+    .filter(Boolean);
+}
+
+function getCoordinatedPainLocationFeatures(rawText: string): string[] {
+  const features: string[] = [];
+
+  for (const clause of splitIntoPainLocationClauses(rawText)) {
+    if (!/\b(?:pain|discomfort|ache|aching)\b/.test(clause)) {
+      continue;
+    }
+
+    if (COORDINATED_PAIN_NEGATION_PATTERN.test(clause)) {
+      continue;
+    }
+
+    const painKeywordMatch = /\b(?:pain|discomfort|ache|aching)\b/.exec(clause);
+    if (!painKeywordMatch) {
+      continue;
+    }
+
+    const locationHits = COORDINATED_PAIN_LOCATION_MAP
+      .flatMap(({ pattern, feature }) => {
+        pattern.lastIndex = 0;
+        return Array.from(clause.matchAll(pattern)).map((match) => ({
+          feature,
+          index: match.index ?? 0,
+        }));
+      })
+      .sort((left, right) => left.index - right.index);
+
+    const uniqueFeatures = Array.from(new Set(locationHits.map((hit) => hit.feature)));
+    if (uniqueFeatures.length < 2) {
+      continue;
+    }
+
+    const painIndex = painKeywordMatch.index;
+    const locationsBeforePain = locationHits.filter((hit) => hit.index < painIndex);
+    const locationsAfterPain = locationHits.filter((hit) => hit.index > painIndex);
+    const supportsSharedLaterPain =
+      locationsBeforePain.length >= 2 &&
+      /^[a-z\s]*(?:,|\band\b|\bor\b)[a-z\s]*$/.test(clause.slice(locationsBeforePain[0].index, painIndex));
+    const supportsSharedEarlierPain =
+      locationsAfterPain.length >= 2 &&
+      /\b(?:in|affecting|to|around|over|across)\b/.test(clause.slice(painIndex, locationsAfterPain[0].index + 1));
+
+    if (!supportsSharedLaterPain && !supportsSharedEarlierPain) {
+      continue;
+    }
+
+    for (const feature of uniqueFeatures) {
+      features.push(canonicalFeatureSlug(feature));
+    }
+  }
+
+  const uniqueFeatures = Array.from(new Set(features));
+
+  if (process.env.WARDBRAIN_FEATURE_EXTRACTOR_DEBUG === "1") {
+    console.log("getCoordinatedPainLocationFeatures", {
+      rawText,
+      matchedFeatures: uniqueFeatures,
+    });
+  }
+
+  return uniqueFeatures;
 }
 
 function normaliseObservations(text: string): string {
@@ -1783,15 +1974,22 @@ function getObservationFeatures(observations: string): string[] {
 function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[] {
   const dynamicFeatures: string[] = [];
   const missedPeriodWeekPatterns = [
-    /\b(?:last period(?: was)?|lmp|last menstrual period)\s+(\d+)\s+weeks?\s+ago\b/g,
+    /\b(?:last period(?: was)?|lmp|last menstrual period(?: was)?)\s+(\d+)\s+weeks?\s+ago\b/g,
     /\bperiod overdue by\s+(\d+)\s+weeks?\b/g,
   ];
   const agePatterns = [/\b(\d{1,3})\s+year\s+old\b/g, /\baged\s+(\d{1,3})\b/g];
   const severePainCompositeSources = ["severe_pain", "pain_out_of_proportion"];
+  const severePainCuePatterns = [
+    /\bsevere(?:\s+\w+){0,3}\s+pain\b/g,
+    /\bexcruciating(?:\s+\w+){0,3}\s+pain\b/g,
+    /\bpain(?:\s+is)?\s+(?:much|far)\s+worse\s+than\s+expected\b/g,
+    /\bpain\s+much\s+worse\s+than\s+exam\b/g,
+  ];
   const mildExamCuePatterns = [
     /\bmildly tender\b/g,
     /\bonly mild tenderness\b/g,
     /\bmild tenderness\b/g,
+    /\bmild abdominal tenderness\b/g,
     /\bminimal tenderness\b/g,
     /\bsoft abdomen\b/g,
     /\babdomen is soft\b/g,
@@ -1826,32 +2024,35 @@ function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[
 
   const hasSeverePainCue = severePainCompositeSources.some(
     (feature) => matchedFeatures.includes(feature) || dynamicFeatures.includes(feature),
-  );
+  ) || severePainCuePatterns.some((pattern) => pattern.test(allText));
   const hasMildExamCue = mildExamCuePatterns.some((pattern) => pattern.test(allText));
 
   if (hasSeverePainCue && hasMildExamCue) {
-    dynamicFeatures.push("pain_severe_but_exam_mild");
+    dynamicFeatures.push(canonicalFeatureSlug("pain_severe_but_exam_mild"));
   }
 
-  return dynamicFeatures;
+  return dynamicFeatures.map(canonicalFeatureSlug);
 }
 
 export function extractFeatures(input: CaseInput): ExtractedFeatures {
   ensureDbFeaturePatternsLoaded();
 
+  const rawText = [
+    input.presentingComplaint,
+    input.history,
+    input.pmh,
+    input.meds,
+    input.social,
+    input.keyPositives,
+    input.keyNegatives,
+    input.observations,
+  ]
+    .filter(Boolean)
+    .join(". ")
+    .trim();
+
   const allText = normaliseText(
-    [
-      input.presentingComplaint,
-      input.history,
-      input.pmh,
-      input.meds,
-      input.social,
-      input.keyPositives,
-      input.keyNegatives,
-      input.observations,
-    ]
-      .join(" ")
-      .trim(),
+    rawText,
   );
 
   const matchedFeatures: string[] = [];
@@ -1860,8 +2061,8 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     const present = buildPatternRegex(phrase).test(allText);
     const negated = hasNegatedPattern(allText, feature, [phrase]);
 
-    if (present && !negated && !matchedFeatures.includes(feature)) {
-      matchedFeatures.push(feature);
+    if (present && !negated) {
+      addMatchedFeature(matchedFeatures, feature);
     }
   }
 
@@ -1869,21 +2070,29 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     const present = hasPattern(allText, patterns);
     const negated = hasNegatedPattern(allText, feature, patterns);
 
-    if (present && !negated && !matchedFeatures.includes(feature)) {
-      matchedFeatures.push(feature);
+    if (present && !negated) {
+      addMatchedFeature(matchedFeatures, feature);
     }
   }
 
   for (const feature of getObservationFeatures(input.observations)) {
-    if (!matchedFeatures.includes(feature)) {
-      matchedFeatures.push(feature);
-    }
+    addMatchedFeature(matchedFeatures, feature);
+  }
+
+  const coordinatedPainLocationFeatures = getCoordinatedPainLocationFeatures(rawText);
+  for (const feature of coordinatedPainLocationFeatures) {
+    addMatchedFeature(matchedFeatures, feature);
+  }
+
+  if (process.env.WARDBRAIN_FEATURE_EXTRACTOR_DEBUG === "1") {
+    console.log("matchedFeaturesAfterCoordinatedPainLocationExtraction", {
+      coordinatedPainLocationFeatures,
+      matchedFeatures: [...matchedFeatures],
+    });
   }
 
   for (const feature of getDynamicFeatures(allText, matchedFeatures)) {
-    if (!matchedFeatures.includes(feature)) {
-      matchedFeatures.push(feature);
-    }
+    addMatchedFeature(matchedFeatures, feature);
   }
 
   const aliasFeatures: Array<[string, string]> = [
@@ -1891,11 +2100,15 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["abdominal_movement_pain", "pain_worse_on_movement"],
     ["well_between_episodes", "pain_settles_between_episodes"],
     ["unilateral_testicular_pain", "testicular_pain"],
+    ["af", "atrial_fibrillation"],
+    ["frequency", "urinary_frequency"],
+    ["guarding_rigidity", "guarding"],
+    ["smoker", "smoking_history"],
   ];
 
   for (const [sourceFeature, aliasFeature] of aliasFeatures) {
-    if (matchedFeatures.includes(sourceFeature) && !matchedFeatures.includes(aliasFeature)) {
-      matchedFeatures.push(aliasFeature);
+    if (matchedFeatures.includes(sourceFeature)) {
+      addMatchedFeature(matchedFeatures, aliasFeature);
     }
   }
 
@@ -1903,7 +2116,16 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     matchedFeatures.includes("pain_severe_but_exam_mild") &&
     !matchedFeatures.includes("pain_out_of_proportion")
   ) {
-    matchedFeatures.push("pain_out_of_proportion");
+    addMatchedFeature(matchedFeatures, "pain_out_of_proportion");
+  }
+
+  if (
+    matchedFeatures.includes("severe_tenderness") &&
+    /\b(?:mildly tender|only mild tenderness|mild tenderness|mild abdominal tenderness|minimal tenderness)\b/.test(allText) &&
+    !/\b(?:severe tenderness|marked tenderness|exquisite tenderness)\b/.test(allText)
+  ) {
+    const featureIndex = matchedFeatures.indexOf("severe_tenderness");
+    matchedFeatures.splice(featureIndex, 1);
   }
 
   const hasChestPainContext = matchedFeatures.includes("chest_pain");

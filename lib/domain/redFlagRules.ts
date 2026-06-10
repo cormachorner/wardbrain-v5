@@ -16,6 +16,26 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
   for (const rule of GUIDELINE_RULES) {
     if (rule.id === "gmc-ai-001") continue;
 
+    if (rule.id === "nice-ng156-aaa-001") {
+      const hasAaaPainContext =
+        has(features, "abdominal_pain") ||
+        has(features, "back_radiation") ||
+        has(features, "back_pain") ||
+        has(features, "flank_pain") ||
+        has(features, "pulsatile_abdomen");
+      const hasInstability = has(features, "collapse") || has(features, "hypotension");
+      const hasVascularContext =
+        has(features, "older_age") ||
+        has(features, "smoker") ||
+        has(features, "smoking_history") ||
+        has(features, "vascular_disease") ||
+        has(features, "hypertension");
+
+      if (!hasAaaPainContext || !hasInstability || !hasVascularContext) {
+        continue;
+      }
+    }
+
     if (
       rule.requiredAnyFeatures &&
       !rule.requiredAnyFeatures.some((requiredFeature) => has(features, requiredFeature))

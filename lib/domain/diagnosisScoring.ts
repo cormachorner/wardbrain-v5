@@ -161,6 +161,10 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     if (!hasAcuteBiliaryInfectivePattern && hasChronicCholestaticPattern) {
       return -4;
     }
+
+    if (hasAcuteBiliaryInfectivePattern) {
+      return 5;
+    }
   }
 
   if (rule.name === "Acute cholecystitis") {
@@ -336,8 +340,8 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
   if (rule.name === "Hypoglycaemia") {
     if (
-      (has(features, "diabetic_context") || has(features, "hypoglycaemia_cue")) &&
-      (has(features, "confusion") || has(features, "collapse") || has(features, "sweating"))
+      has(features, "hypoglycaemia_cue") ||
+      (has(features, "diabetic_context") && (has(features, "confusion") || has(features, "collapse")))
     ) {
       return 4;
     }
@@ -350,6 +354,22 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   }
 
   if (rule.name === "UTI / urosepsis") {
+    const hasLocalizedPyelonephritisPattern =
+      has(features, "flank_pain") &&
+      has(features, "fever") &&
+      (has(features, "urinary_symptoms") || has(features, "dysuria") || has(features, "frequency") || has(features, "urinary_frequency")) &&
+      has(features, "cva_tenderness");
+    const hasInstabilityOrSepsisPattern =
+      has(features, "hypotension") ||
+      has(features, "confusion") ||
+      has(features, "collapse") ||
+      has(features, "shock") ||
+      has(features, "sepsis_pattern");
+
+    if (hasLocalizedPyelonephritisPattern && !hasInstabilityOrSepsisPattern) {
+      return -3;
+    }
+
     if (
       has(features, "urinary_symptoms") &&
       (has(features, "fever") || has(features, "rigors")) &&
