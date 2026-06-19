@@ -1,6 +1,6 @@
 "use client"
 
-import { getProviders, signIn } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useState } from "react"
 
 export default function SignIn() {
@@ -24,7 +24,7 @@ export default function SignIn() {
       } else {
         window.location.href = "/"
       }
-    } catch (error) {
+    } catch {
       alert("An error occurred")
     } finally {
       setIsLoading(false)

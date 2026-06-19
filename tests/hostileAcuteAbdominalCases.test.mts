@@ -383,6 +383,54 @@ test("hostile-aap-bowel-obstruction-constipation-flatus extracts colicky obstruc
   assert.deepEqual(result.missingFeatures, []);
 });
 
+test("hostile-aap-bowel-obstruction-strangulation-risk beats perforation with focal guarding only", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const input = buildInput(
+    "A 67-year-old man with previous abdominal surgery presents with 24 hours of worsening central abdominal pain and repeated green vomiting. The pain initially came in waves but has now become constant. His abdomen is visibly swollen, and he has not opened his bowels or passed wind since yesterday. He is tachycardic and has focal guarding in the lower abdomen.",
+    "male",
+  );
+  const features = extractFeatures(input);
+  const analysis = analyzeCase(input);
+  const result = evaluateClinicalTestCase({
+    expectedLeadDiagnosisSlug: "bowel-obstruction",
+    expectedFeatureSlugs: [
+      "abdominal-pain",
+      "vomiting",
+      "bilious-vomiting",
+      "colicky-pain",
+      "constant-pain",
+      "distension",
+      "obstipation",
+      "unable-to-pass-flatus",
+      "previous-abdominal-surgery",
+      "tachycardia",
+      "guarding",
+    ],
+    expectedRedFlagSlugs: ["bowel-obstruction-strangulation-risk-pattern"],
+    forbiddenRedFlagSlugs: ["perforated-viscus-peritonitis-pattern"],
+    analysis,
+    detectedFeatureSlugs: features.matchedFeatures,
+  });
+
+  assert.ok(features.matchedFeatures.includes("distension"));
+  assert.ok(features.matchedFeatures.includes("obstipation"));
+  assert.ok(features.matchedFeatures.includes("unable_to_pass_flatus"));
+  assert.ok(features.matchedFeatures.includes("colicky_pain"));
+  assert.ok(features.matchedFeatures.includes("constant_pain"));
+  assert.ok(features.matchedFeatures.includes("bilious_vomiting"));
+  assert.ok(features.matchedFeatures.includes("guarding"));
+  assert.ok(!features.matchedFeatures.includes("guarding_rigidity"));
+  assert.ok(!features.matchedFeatures.includes("rigidity"));
+  assert.ok(!features.matchedFeatures.includes("peritonism"));
+  assert.equal(analysis.differentials[0]?.name, "Bowel obstruction");
+  assert.ok(analysis.redFlags.some((flag) => flag.name === "Bowel obstruction strangulation risk pattern"));
+  assert.ok(!analysis.redFlags.some((flag) => flag.name === "Perforated viscus / peritonitis pattern"));
+  assert.deepEqual(result.missingFeatures, []);
+  assert.deepEqual(result.missingRedFlags, []);
+  assert.deepEqual(result.unexpectedForbiddenRedFlags, []);
+});
+
 test("hostile-aap-perforation-alcohol-noise extracts peritonitic behaviour and outranks pancreatitis", () => {
   setDbFeaturePhrasePatternsForTest({});
 
@@ -398,7 +446,7 @@ test("hostile-aap-perforation-alcohol-noise extracts peritonitic behaviour and o
       "sudden-onset",
       "epigastric-pain",
       "lying-still",
-      "guarding-rigidity",
+      "guarding",
       "pain-worse-on-movement",
       "pain-worse-with-cough",
     ],
@@ -426,7 +474,7 @@ test("hostile-aap-perforation-nsaid-cough extracts guarded cough-pain pattern", 
     expectedFeatureSlugs: [
       "sudden-onset",
       "epigastric-pain",
-      "guarding-rigidity",
+      "guarding",
       "lying-still",
       "pain-worse-with-cough",
     ],

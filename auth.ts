@@ -39,7 +39,7 @@ export const { handlers, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = (user as any).role || token.role
+        token.role = typeof user.role === "string" ? user.role : token.role
       }
       return token
     },

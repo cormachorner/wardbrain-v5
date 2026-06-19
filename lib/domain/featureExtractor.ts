@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import type { CaseInput, ExtractedFeatures } from "../types";
 import { prisma } from "../prisma";
 import { canonicalFeatureSlug } from "./featureSlug";
@@ -181,6 +182,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   heartburn: [
     "heartburn",
     "retrosternal burning",
+    "burning retrosternal chest discomfort",
+    "burning retrosternal discomfort",
     "burning discomfort behind sternum",
     "burning behind sternum",
     "burning behind the sternum",
@@ -195,6 +198,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "worse after eating",
     "after meals",
     "after eating",
+    "after a large spicy meal",
+    "large spicy meal",
+    "spicy meal",
     "post prandial",
     "post-prandial",
   ],
@@ -205,11 +211,22 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "worse when lying down",
     "worse on lying down",
   ],
+  better_sitting_forward: [
+    "better sitting forward",
+    "better when sitting forward",
+    "improved by sitting forward",
+    "improves by sitting forward",
+    "relieved by sitting forward",
+    "better leaning forward",
+    "improved leaning forward",
+  ],
   acid_regurgitation: [
     "acidic taste",
     "acid taste",
+    "acid reflux",
     "acid in mouth",
     "acid in the mouth",
+    "sour taste",
     "regurgitation",
     "regurgitating acid",
     "brash",
@@ -448,6 +465,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   constant_pain: [
     "constant pain",
     "constant abdominal pain",
+    "become constant",
+    "became constant",
+    "now become constant",
+    "now became constant",
     "pain has not settled",
     "ongoing constant pain",
   ],
@@ -539,6 +560,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "crampy pain",
     "colic",
     "comes in waves",
+    "came in waves",
+    "initially came in waves",
     "wave like pain",
     "wave-like pain",
   ],
@@ -617,12 +640,19 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened bowels or passed flatus",
     "no bowel motion and no flatus",
     "constipation and has not passed wind",
+    "not opened his bowels",
+    "not opened her bowels",
+    "not opened their bowels",
     "not passed wind",
   ],
   unable_to_pass_flatus: [
     "unable to pass flatus",
     "not passing flatus",
     "not passed wind",
+    "not opened bowels or passed wind",
+    "not opened his bowels or passed wind",
+    "not opened her bowels or passed wind",
+    "not opened their bowels or passed wind",
     "no flatus",
     "cannot pass wind",
     "can't pass wind",
@@ -747,11 +777,6 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "severe upper abdominal pain",
   ],
   guarding_rigidity: [
-    "guarding",
-    "guarded",
-    "guarded abdomen",
-    "abdomen is guarded",
-    "abdominal guarding",
     "rigidity",
     "rigid abdomen",
     "board like abdomen",
@@ -761,6 +786,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   guarding: [
     "guarding",
+    "focal guarding",
     "guarded",
     "guarded abdomen",
     "abdomen is guarded",
@@ -850,6 +876,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "distension",
     "abdominal distension",
     "distended abdomen",
+    "visibly swollen",
+    "abdomen is visibly swollen",
+    "swollen abdomen",
     "bloated abdomen",
   ],
   hernia_present: [
@@ -1139,6 +1168,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "vomit",
     "being sick",
   ],
+  bilious_vomiting: [
+    "green vomiting",
+    "bilious vomiting",
+    "green vomit",
+    "bilious vomit",
+  ],
   neck_stiffness: [
     "neck stiffness",
     "meningism",
@@ -1375,7 +1410,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "panic attack",
     "anxiety attack",
     "very anxious",
+    "hyperventilation",
     "hyperventilating",
+    "tingling fingers",
     "sense of doom",
     "tingling in both hands",
     "tingling around the mouth",
@@ -1571,6 +1608,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain on movement",
     "movement related chest pain",
     "worse with twisting",
+    "worse when twisting",
+    "worse moving the arm",
+    "worse when moving the arm",
   ],
   post_lifting_onset: [
     "after heavy lifting",
@@ -1664,6 +1704,7 @@ let dbPhraseToFeatureSlug = new Map<string, string>();
 let dbFeaturePhraseLoadPromise: Promise<void> | null = null;
 let dbFeaturePhraseLastLoadedAt = 0;
 let dbFeaturePhraseLoadFailed = false;
+let dbFeaturePhraseFallbackLogged = false;
 
 function normaliseText(text: string): string {
   return text
@@ -1697,6 +1738,35 @@ function buildPatternRegex(pattern: string): RegExp {
 
 function hasPattern(text: string, patterns: string[]): boolean {
   return patterns.some((pattern) => buildPatternRegex(pattern).test(text));
+}
+
+function isExpectedTestDbPhraseFailure() {
+  return process.env.WARDBRAIN_TEST_MODE === "1" || process.env.NODE_ENV === "test";
+}
+
+function logDbFeaturePhraseLoadFailure(error: unknown) {
+  if (!isExpectedTestDbPhraseFailure()) {
+    console.error("Failed to load DB feature phrases for extraction:", error);
+    return;
+  }
+
+  if (dbFeaturePhraseFallbackLogged) {
+    return;
+  }
+
+  const fallbackLogPath = process.env.WARDBRAIN_TEST_DB_FALLBACK_LOG_PATH;
+
+  if (fallbackLogPath) {
+    try {
+      writeFileSync(fallbackLogPath, "1", { flag: "wx" });
+    } catch {
+      dbFeaturePhraseFallbackLogged = true;
+      return;
+    }
+  }
+
+  console.warn("DB feature phrases unavailable in test mode; using hardcoded phrase fallback.");
+  dbFeaturePhraseFallbackLogged = true;
 }
 
 async function loadDbFeaturePatterns() {
@@ -1734,7 +1804,7 @@ async function loadDbFeaturePatterns() {
     dbFeaturePhraseLoadFailed = false;
   } catch (error) {
     dbFeaturePhraseLoadFailed = true;
-    console.error("Failed to load DB feature phrases for extraction:", error);
+    logDbFeaturePhraseLoadFailure(error);
   } finally {
     dbFeaturePhraseLoadPromise = null;
   }
@@ -2093,6 +2163,11 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
 
   for (const feature of getDynamicFeatures(allText, matchedFeatures)) {
     addMatchedFeature(matchedFeatures, feature);
+  }
+
+  const structuredAge = Number.parseInt(input.age, 10);
+  if (!Number.isNaN(structuredAge) && structuredAge >= 65) {
+    addMatchedFeature(matchedFeatures, "older_age");
   }
 
   const aliasFeatures: Array<[string, string]> = [

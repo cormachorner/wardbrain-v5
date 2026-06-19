@@ -298,9 +298,9 @@ export const CONDITION_PROMOTION_REGISTRY: WardBrainConditionPromotionEntry[] = 
   {
     canonicalName: "Pericarditis",
     presentationFamilies: ["chest-pain"],
-    promotionStatus: SCAFFOLD_ONLY,
+    promotionStatus: LIVE_ENGINE,
     aliases: ["pericarditis"],
-    notes: "Seeded for future chest-pain family expansion; not yet promoted into live ranking.",
+    notes: "Chest-pain v1 live comparator for positional pleuritic pain after viral illness.",
     learnMoreKey: "pericarditis",
   },
   {

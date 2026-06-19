@@ -339,6 +339,20 @@ const DIAGNOSIS_BOOST_RULES: DiagnosisBoostRule[] = [
     requiredAnyFeatures: ["reproducible_chest_wall_tenderness", "movement_related_chest_pain"],
   },
   {
+    diagnosis: "Pericarditis",
+    threshold: 3,
+    points: 7,
+    reason: "pericarditis positional pleuritic pattern",
+    features: [
+      "chest_pain",
+      "pleuritic_pain",
+      "worse_lying_flat",
+      "better_sitting_forward",
+      "recent_infection",
+    ],
+    requiredAnyFeatures: ["worse_lying_flat", "better_sitting_forward"],
+  },
+  {
     diagnosis: "Migraine",
     threshold: 4,
     points: 4,

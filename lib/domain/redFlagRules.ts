@@ -36,6 +36,79 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
       }
     }
 
+    if (rule.id === "nice-cg95-acs-001") {
+      const hasChestOrEquivalentPain =
+        has(features, "chest_pain") ||
+        has(features, "indigestion_like_chest_pain") ||
+        has(features, "acs_equivalent_pain") ||
+        has(features, "epigastric_pain") ||
+        has(features, "upper_abdominal_pain");
+      const hasCardiacSignature =
+        has(features, "jaw_pain") ||
+        has(features, "arm_pain") ||
+        has(features, "pain_radiates_to_jaw") ||
+        has(features, "pain_radiates_to_left_arm") ||
+        has(features, "indigestion_like_chest_pain") ||
+        has(features, "acs_equivalent_pain") ||
+        has(features, "sweating") ||
+        has(features, "nausea") ||
+        has(features, "collapse") ||
+        has(features, "hypotension");
+
+      if (!hasChestOrEquivalentPain || !hasCardiacSignature) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-bowel-obstruction-001") {
+      const hasObstructionPattern =
+        has(features, "abdominal_pain") &&
+        has(features, "vomiting") &&
+        has(features, "distension") &&
+        (has(features, "obstipation") || has(features, "unable_to_pass_flatus"));
+      const hasStrangulationRisk =
+        has(features, "constant_pain") ||
+        has(features, "guarding") ||
+        has(features, "tachycardia") ||
+        has(features, "hypotension") ||
+        has(features, "fever") ||
+        has(features, "sepsis_pattern");
+
+      if (!hasObstructionPattern || !hasStrangulationRisk) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-ng51-sepsis-001") {
+      const hasInstabilityOrHighRiskPhysiology =
+        has(features, "hypotension") ||
+        has(features, "collapse") ||
+        has(features, "confusion") ||
+        has(features, "tachycardia") ||
+        has(features, "tachypnoea") ||
+        has(features, "hypoxia");
+
+      if (!hasInstabilityOrHighRiskPhysiology) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-hypoglycaemia-001") {
+      const hasGlycaemicContext =
+        has(features, "hypoglycaemia_cue") ||
+        has(features, "diabetic_context");
+
+      if (!hasGlycaemicContext) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-cg188-cholangitis-001") {
+      if (!has(features, "ruq_pain") || !has(features, "jaundice")) {
+        continue;
+      }
+    }
+
     if (
       rule.requiredAnyFeatures &&
       !rule.requiredAnyFeatures.some((requiredFeature) => has(features, requiredFeature))

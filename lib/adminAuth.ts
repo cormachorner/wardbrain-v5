@@ -21,7 +21,9 @@ export async function requireAdminPage() {
   return session
 }
 
-export async function requireAdminRoute(_request: NextRequest): Promise<AdminRouteAuth> {
+export async function requireAdminRoute(request: NextRequest): Promise<AdminRouteAuth> {
+  void request
+
   const session = await auth()
 
   if (!session?.user || session.user.role !== "ADMIN") {

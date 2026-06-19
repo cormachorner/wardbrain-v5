@@ -85,6 +85,7 @@ export const acuteAbdominalPainFeatureVocabulary = {
     "urinary_symptoms",
     "dysuria",
     "frequency",
+    "urinary_frequency",
     "haematuria",
     "urinary_retention",
     "cva_tenderness",
@@ -277,9 +278,9 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       boosts: [
         {
           ifAll: ["abdominal_pain", "sudden_onset"],
-          ifAny: ["peritonism", "guarding", "rigidity"],
+          ifAny: ["peritonism", "rigidity", "lying_still", "pain_worse_on_movement", "pain_worse_with_cough"],
           add: 6,
-          reason: "sudden pain with peritoneal signs strongly supports perforation or peritonitis",
+          reason: "sudden pain with strong peritoneal signs or peritonitic behaviour strongly supports perforation or peritonitis",
         },
         {
           ifAll: ["abdominal_pain", "pain_worse_on_movement"],
@@ -335,6 +336,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           add: 5,
           reason: "vomiting with distension and obstructive bowel symptoms supports bowel obstruction",
         },
+        {
+          ifAll: ["abdominal_pain", "vomiting", "distension"],
+          ifAny: ["obstipation", "unable_to_pass_flatus", "previous_abdominal_surgery"],
+          add: 6,
+          reason: "vomiting with distension, obstructive bowel symptoms, and adhesion risk strongly supports bowel obstruction",
+        },
       ],
       escalationRules: [
         {
@@ -342,6 +349,12 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
           ifAny: ["incarcerated_hernia", "hypotension", "sepsis_pattern"],
           add: 6,
           reason: "obstruction with strangulation or ischaemia risk should escalate",
+        },
+        {
+          ifAll: ["abdominal_pain", "vomiting", "distension"],
+          ifAny: ["constant_pain", "guarding", "tachycardia", "hypotension", "fever", "sepsis_pattern"],
+          add: 6,
+          reason: "obstruction with constant pain, guarding, or abnormal physiology suggests strangulation or ischaemia risk",
         },
       ],
       penalties: [

@@ -517,6 +517,13 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       has(features, "productive_cough") &&
       has(features, "progressive_course") &&
       (has(features, "sputum_change") || has(features, "rigors"));
+    const hasInstabilityOrHighRiskPhysiology =
+      has(features, "hypotension") ||
+      has(features, "collapse") ||
+      has(features, "confusion") ||
+      has(features, "tachycardia") ||
+      has(features, "tachypnoea") ||
+      has(features, "hypoxia");
     const hasStrongLocalizedUrinarySource =
       has(features, "urinary_symptoms") &&
       (has(features, "flank_pain") || has(features, "cva_tenderness"));
@@ -525,9 +532,9 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
 
     if (
       (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&
-      !has(features, "collapse")
+      !hasInstabilityOrHighRiskPhysiology
     ) {
-      return -2;
+      return -5;
     }
   }
 

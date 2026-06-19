@@ -256,9 +256,9 @@ test("classic biliary colic now routes to the RUQ family rather than generic acu
 test("scaffold-only conditions do not appear as ranked diagnoses", () => {
   const result = analyzeCase({
     age: "47",
-    sex: "male",
-    presentingComplaint: "Chest pain",
-    history: "Sharp chest pain worse on inspiration with normal observations.",
+    sex: "female",
+    presentingComplaint: "Jaundice",
+    history: "RUQ discomfort with jaundice, pruritus, fatigue, and dark urine.",
     pmh: "",
     meds: "",
     social: "",
@@ -272,7 +272,8 @@ test("scaffold-only conditions do not appear as ranked diagnoses", () => {
 
   const rankedNames = result.differentials.map((differential) => differential.name);
 
-  assert.ok(!rankedNames.includes("Pericarditis"));
+  assert.ok(!rankedNames.includes("Primary sclerosing cholangitis"));
+  assert.ok(!rankedNames.includes("Primary biliary cholangitis"));
 });
 
 test("globally dangerous diagnoses survive family scoping when strongly relevant", () => {

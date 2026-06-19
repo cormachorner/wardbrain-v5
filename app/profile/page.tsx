@@ -79,7 +79,7 @@ export default function ProfilePage() {
                 Role
               </label>
               <div className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-gray-900 capitalize">
-                {(session.user as any)?.role || "Student"}
+                {session.user.role || "Student"}
               </div>
             </div>
           </div>

@@ -18,6 +18,7 @@ export const FAMILY_DIAGNOSIS_MAP: Record<PresentationFamily, string[]> = {
     "Pulmonary embolism",
     "Acute aortic syndrome",
     "Pneumothorax",
+    "Pericarditis",
     "GORD",
     "Pneumonia",
     "Musculoskeletal chest pain",

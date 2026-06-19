@@ -80,7 +80,7 @@ test("seeded next-wave conditions have the expected controlled promotion status"
   );
 
   assert.deepEqual(Object.fromEntries(seededStatuses), {
-    Pericarditis: "scaffold-only",
+    Pericarditis: "live-engine",
     "Musculoskeletal chest pain": "live-engine",
     "Tension headache": "live-engine",
     "Temporal arteritis": "live-engine",

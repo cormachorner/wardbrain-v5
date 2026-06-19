@@ -1,14 +1,21 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const buildDir = mkdtempSync(join(tmpdir(), "wardbrain-tests-"));
+symlinkSync(join(process.cwd(), "node_modules"), join(buildDir, "node_modules"), "dir");
 
 function run(command, args) {
   const result = spawnSync(command, args, {
     stdio: "inherit",
     cwd: process.cwd(),
+    env: {
+      ...process.env,
+      NODE_ENV: process.env.NODE_ENV ?? "test",
+      WARDBRAIN_TEST_MODE: "1",
+      WARDBRAIN_TEST_DB_FALLBACK_LOG_PATH: join(buildDir, "db-feature-phrase-fallback.log"),
+    },
   });
 
   if (result.status !== 0) {
@@ -26,6 +33,8 @@ run("./node_modules/.bin/tsc", [
   "nodenext",
   "--target",
   "es2022",
+  "--skipLibCheck",
+  "true",
   "--noEmit",
   "false",
   "app/api/analyze-case/route.ts",
@@ -47,6 +56,7 @@ run("./node_modules/.bin/tsc", [
   "lib/guidelineRules.ts",
   "lib/types.ts",
   "lib/types/index.ts",
+  "types/next-auth.d.ts",
   "lib/domain/conditionPromotionRegistry.ts",
   "lib/domain/diagnosisAliases.ts",
   "lib/domain/diagnosisBoosts.ts",
@@ -76,6 +86,7 @@ run("./node_modules/.bin/tsc", [
   "tests/diagnosisAliases.test.mts",
   "tests/conditionPromotionRegistry.test.mts",
   "tests/acuteAbdominalPainDefinitions.test.mts",
+  "tests/chestPainV1.test.mts",
   "tests/diagnosisDefinitionEvaluator.test.mts",
   "tests/finalCalibration.test.mts",
   "tests/highPriorityCalibration.test.mts",
@@ -97,6 +108,7 @@ run("node", [
   join(buildDir, "tests", "diagnosisAliases.test.mjs"),
   join(buildDir, "tests", "conditionPromotionRegistry.test.mjs"),
   join(buildDir, "tests", "acuteAbdominalPainDefinitions.test.mjs"),
+  join(buildDir, "tests", "chestPainV1.test.mjs"),
   join(buildDir, "tests", "diagnosisDefinitionEvaluator.test.mjs"),
   join(buildDir, "tests", "domain.featureExtractor.test.mjs"),
   join(buildDir, "tests", "evaluateClinicalTestCase.test.mjs"),

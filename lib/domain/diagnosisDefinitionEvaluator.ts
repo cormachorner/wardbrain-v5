@@ -59,8 +59,6 @@ function buildAugmentedFeatureSet(features: ExtractedFeatures, input: CaseInput)
 
   if (augmented.has("guarding_rigidity")) {
     augmented.add("guarding");
-    augmented.add("rigidity");
-    augmented.add("peritonism");
   }
 
   if (augmented.has("back_radiation")) {
@@ -140,7 +138,11 @@ function hasClearSurgicalAbdominalPattern(featureSet: Set<string>): boolean {
       (hasFeature(featureSet, "pain_worse_on_movement") || hasFeature(featureSet, "lying_still"))) ||
     (hasFeature(featureSet, "flank_pain") &&
       hasFeature(featureSet, "loin_to_groin_pain") &&
-      (hasFeature(featureSet, "restless") || hasFeature(featureSet, "colicky_pain")))
+      (hasFeature(featureSet, "restless") || hasFeature(featureSet, "colicky_pain"))) ||
+    (hasFeature(featureSet, "abdominal_pain") &&
+      hasFeature(featureSet, "vomiting") &&
+      hasFeature(featureSet, "distension") &&
+      (hasFeature(featureSet, "obstipation") || hasFeature(featureSet, "unable_to_pass_flatus")))
   );
 }
 
@@ -233,6 +235,42 @@ function getDefinitionPolicyModifier(
       ) {
         scoreDelta -= 5;
         reasonsAgainst.push("movement pain alone without a true peritonitic pattern is weak support for perforation");
+      }
+      break;
+    case "bowel_obstruction":
+      if (
+        hasFeature(featureSet, "abdominal_pain") &&
+        hasFeature(featureSet, "vomiting") &&
+        hasFeature(featureSet, "distension") &&
+        (hasFeature(featureSet, "obstipation") || hasFeature(featureSet, "unable_to_pass_flatus"))
+      ) {
+        scoreDelta += 10;
+        reasonsFor.push("high-specificity obstructive bowel pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "abdominal_pain") &&
+        hasFeature(featureSet, "vomiting") &&
+        hasFeature(featureSet, "distension") &&
+        hasFeature(featureSet, "previous_abdominal_surgery")
+      ) {
+        scoreDelta += 6;
+        reasonsFor.push("adhesion-risk bowel obstruction pattern");
+      }
+
+      if (
+        hasFeature(featureSet, "abdominal_pain") &&
+        hasFeature(featureSet, "vomiting") &&
+        hasFeature(featureSet, "distension") &&
+        (hasFeature(featureSet, "constant_pain") ||
+          hasFeature(featureSet, "guarding") ||
+          hasFeature(featureSet, "tachycardia") ||
+          hasFeature(featureSet, "hypotension") ||
+          hasFeature(featureSet, "fever") ||
+          hasFeature(featureSet, "sepsis_pattern"))
+      ) {
+        scoreDelta += 7;
+        reasonsFor.push("bowel obstruction with strangulation or ischaemia risk pattern");
       }
       break;
     case "renal_colic":

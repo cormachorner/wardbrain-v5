@@ -16,6 +16,7 @@ const FEATURE_LABELS: Record<string, string> = {
   heartburn: "heartburn / retrosternal burning",
   worse_after_meals: "worse after meals",
   worse_lying_flat: "worse lying flat",
+  better_sitting_forward: "better sitting forward",
   acid_regurgitation: "acid regurgitation",
   antacid_relief: "antacid relief",
   abdominal_pain: "abdominal pain",
