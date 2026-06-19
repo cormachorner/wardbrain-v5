@@ -59,6 +59,8 @@ type TestCaseFormState = {
   expectedFeatureSlugs: string
 }
 
+type TestCaseStatusFilter = "ALL" | "DRAFT" | "PUBLISHED"
+
 const initialFormState: TestCaseFormState = {
   slug: "",
   title: "",
@@ -83,6 +85,39 @@ export default function AdminTestCasesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(initialFormState)
   const [error, setError] = useState<string | null>(null)
+  const [presentationFilter, setPresentationFilter] = useState("ALL")
+  const [statusFilter, setStatusFilter] = useState<TestCaseStatusFilter>("ALL")
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const presentationOptions = Array.from(new Set(testCases.map((testCase) => testCase.presentationBlock))).sort()
+  const filteredTestCases = testCases.filter((testCase) => {
+    const matchesPresentation =
+      presentationFilter === "ALL" || testCase.presentationBlock === presentationFilter
+    const matchesStatus = statusFilter === "ALL" || testCase.status === statusFilter
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      [
+        testCase.title,
+        testCase.slug,
+        testCase.vignette,
+        testCase.expectedLeadDiagnosis,
+        testCase.expectedLeadDiagnosisSlug,
+        testCase.notes,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch))
+
+    return matchesPresentation && matchesStatus && matchesSearch
+  })
+  const groupedTestCases = presentationOptions
+    .map((presentationBlock) => ({
+      presentationBlock,
+      testCases: filteredTestCases.filter((testCase) => testCase.presentationBlock === presentationBlock),
+    }))
+    .filter((group) => group.testCases.length > 0)
+  const draftCount = testCases.filter((testCase) => testCase.status === "DRAFT").length
+  const publishedCount = testCases.filter((testCase) => testCase.status === "PUBLISHED").length
 
   async function loadData() {
     setLoading(true)
@@ -300,6 +335,12 @@ export default function AdminTestCasesPage() {
     return "bg-slate-100 text-slate-700"
   }
 
+  function formatPresentationBlock(value: string) {
+    return value
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase())
+  }
+
   return (
     <section className="grid gap-6 lg:grid-cols-[420px,1fr]">
       <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -451,7 +492,9 @@ export default function AdminTestCasesPage() {
         <div className="flex flex-col gap-3 border-b border-slate-200 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Test cases</h2>
-            <p className="mt-1 text-sm text-slate-600">Run individual cases or all published cases through the live analyzer.</p>
+            <p className="mt-1 text-sm text-slate-600">
+              {filteredTestCases.length} shown of {testCases.length}. Draft: {draftCount}. Published: {publishedCount}.
+            </p>
           </div>
           <button
             type="button"
@@ -463,12 +506,70 @@ export default function AdminTestCasesPage() {
           </button>
         </div>
 
+        <div className="grid gap-3 border-b border-slate-200 px-6 py-4 md:grid-cols-[1fr,180px,180px]">
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Search</span>
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Title, slug, vignette, diagnosis..."
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Area</span>
+            <select
+              value={presentationFilter}
+              onChange={(event) => setPresentationFilter(event.target.value)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="ALL">All areas</option>
+              {presentationOptions.map((presentationBlock) => (
+                <option key={presentationBlock} value={presentationBlock}>
+                  {formatPresentationBlock(presentationBlock)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Status</span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as TestCaseStatusFilter)}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="ALL">All statuses</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </label>
+        </div>
+
         {loading ? (
           <div className="p-6 text-sm text-slate-600">Loading test cases...</div>
         ) : (
           <div className="space-y-4 p-4">
-            {testCases.map((testCase) => (
-              <article key={testCase.id} className="rounded-xl border border-slate-200 p-4">
+            {groupedTestCases.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600">
+                No test cases match the current filters.
+              </div>
+            ) : null}
+
+            {groupedTestCases.map((group) => (
+              <section key={group.presentationBlock} className="space-y-3">
+                <div className="flex items-center justify-between rounded-xl bg-slate-100 px-4 py-3">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {formatPresentationBlock(group.presentationBlock)}
+                  </h3>
+                  <span className="text-xs text-slate-600">
+                    {group.testCases.length} case{group.testCases.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                {group.testCases.map((testCase) => (
+                  <article key={testCase.id} className="rounded-xl border border-slate-200 p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <h3 className="text-base font-semibold text-slate-900">{testCase.title}</h3>
@@ -560,6 +661,8 @@ export default function AdminTestCasesPage() {
 
                 {testCase.notes ? <p className="mt-3 text-xs text-slate-500">{testCase.notes}</p> : null}
               </article>
+                ))}
+              </section>
             ))}
           </div>
         )}

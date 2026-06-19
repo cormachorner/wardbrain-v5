@@ -248,6 +248,81 @@ test("domain feature extractor adds older_age from aged wording", () => {
   assert.ok(features.matchedFeatures.includes("older_age"));
 });
 
+test("domain feature extractor adds older_age from yo wording", () => {
+  const features = extractFeatures({
+    age: "",
+    sex: "male",
+    presentingComplaint: "Abdominal pain",
+    history: "A 79yo man presents with abdominal pain.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(features.matchedFeatures.includes("older_age"));
+});
+
+test("domain feature extractor adds female childbearing age from structured age and sex", () => {
+  const features = extractFeatures({
+    age: "32",
+    sex: "female",
+    presentingComplaint: "Pelvic pain",
+    history: "Pelvic pain and vaginal bleeding.",
+    pmh: "",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+  });
+
+  assert.ok(features.matchedFeatures.includes("female_of_childbearing_age"));
+});
+
+test("domain feature extractor handles pregnancy timing and gestational wording dynamically", () => {
+  const features = extractHistoryFeatures("She is six weeks pregnant with pelvic pain and bleeding.");
+
+  assert.ok(features.includes("pregnancy_possible"));
+  assert.ok(features.includes("missed_period"));
+});
+
+test("domain feature extractor maps duration wording to chronic and progressive course features", () => {
+  const features = extractHistoryFeatures(
+    "He has had dry eyes for six months. The cough has been worsening over three days.",
+  );
+
+  assert.ok(features.includes("chronic_course"));
+  assert.ok(features.includes("progressive_course"));
+});
+
+test("domain feature extractor parses richer vital sign wording from the vignette", () => {
+  const features = extractHistoryFeatures(
+    "HR is 118, respiratory rate is 28, BP is 85 over 50, oxygen saturations are 90%, and she is febrile at 38.5.",
+  );
+
+  assert.ok(features.includes("tachycardia"));
+  assert.ok(features.includes("tachypnoea"));
+  assert.ok(features.includes("hypotension"));
+  assert.ok(features.includes("hypoxia"));
+  assert.ok(features.includes("fever"));
+});
+
+test("domain feature extractor detects temporal meal relationship beyond exact phrases", () => {
+  const features = extractHistoryFeatures("The pain starts 30 minutes after meals and settles later.");
+
+  assert.ok(features.includes("post_prandial_pain"));
+  assert.ok(features.includes("worse_after_meals"));
+});
+
 test("domain feature extractor adds pain_severe_but_exam_mild from severe pain plus mild exam mismatch", () => {
   const features = extractFeatures({
     age: "79",
@@ -289,6 +364,13 @@ test("domain feature extractor adds pain_severe_but_exam_mild from severe pain a
 
   assert.ok(features.matchedFeatures.includes("pain_severe_but_exam_mild"));
   assert.ok(features.matchedFeatures.includes("pain_out_of_proportion"));
+});
+
+test("domain feature extractor adds pain_severe_but_exam_mild from 10 out of 10 pain and minimal findings", () => {
+  const features = extractHistoryFeatures("He reports 10/10 abdominal pain. The abdomen has minimal abdominal findings and no peritonism.");
+
+  assert.ok(features.includes("pain_severe_but_exam_mild"));
+  assert.ok(features.includes("pain_out_of_proportion"));
 });
 
 test("canonical feature slug helper converts DB hyphenated slugs to engine underscore slugs", () => {

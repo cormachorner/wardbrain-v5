@@ -18,6 +18,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "heavy feeling in chest",
     "dull central chest pain",
     "retrosternal pain",
+    "retrosternal discomfort",
+    "burning retrosternal discomfort",
+    "burning retrosternal chest discomfort",
     "pain on one side of chest",
     "unilateral chest pain",
     "sudden sharp chest pain",
@@ -96,6 +99,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   smoking_history: [
     "smoker",
     "smoking",
+    "smokes",
     "current smoker",
     "long smoking history",
     "smoking history",
@@ -156,6 +160,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   indigestion_like_chest_pain: [
     "indigestion like chest pain",
     "indigestion-like chest pain",
+    "indigestion like epigastric and chest heaviness",
+    "indigestion-like epigastric and chest heaviness",
     "indigestion-like chest discomfort",
     "indigestion type chest discomfort",
     "indigestion type chest pain",
@@ -174,6 +180,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   acs_equivalent_pain: [
     "epigastric discomfort",
+    "indigestion like epigastric and chest heaviness",
+    "indigestion-like epigastric and chest heaviness",
     "upper abdominal pressure",
     "upper abdominal heaviness",
     "indigestion like chest discomfort",
@@ -275,6 +283,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   epigastric_pain: [
     "epigastric pain",
     "epigastric abdominal pain",
+    "epigastric and chest heaviness",
     "epigastric and upper abdominal pain",
     "epigastric discomfort",
     "pain in the epigastrium",
@@ -1665,6 +1674,14 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
   fever: ["no fever", "not feverish", "without fever"],
   vomiting: ["no vomiting", "not vomiting", "without vomiting"],
   diarrhoea: ["no diarrhoea", "no diarrhea", "without diarrhoea", "without diarrhea"],
+  sweating: ["no sweating", "without sweating", "denies sweating"],
+  sob: [
+    "no shortness of breath",
+    "no sob",
+    "not short of breath",
+    "without shortness of breath",
+    "denies shortness of breath",
+  ],
   pleuritic_pain: ["no pleuritic pain", "denies pleuritic pain", "without pleuritic pain"],
   focal_neurology: [
     "no focal neurology",
@@ -1682,6 +1699,20 @@ const LOW_SATS_THRESHOLD = 92;
 const HIGH_TEMPERATURE_THRESHOLD = 38;
 const LOW_TEMPERATURE_THRESHOLD = 36;
 const FEATURE_PHRASE_CACHE_TTL_MS = 30_000;
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+};
 
 const COORDINATED_PAIN_LOCATION_MAP = [
   { pattern: /\bright\s+iliac\s+fossa\b|\brif\b/g, feature: "rif_pain" },
@@ -1852,6 +1883,17 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
     return true;
   }
 
+  if (patterns.some((pattern) => hasNegatedListItem(text, pattern))) {
+    return true;
+  }
+
+  if (
+    feature === "sob" &&
+    /\b(?:no|denies|denied|without)(?:\s+\w+){0,8}\s+(?:shortness\s+of\s+breath|sob|breathlessness|breathless)\b/.test(text)
+  ) {
+    return true;
+  }
+
   return patterns.some((pattern) => {
     const escapedPattern = escapeRegExp(pattern).replace(/\s+/g, "\\s+");
 
@@ -1864,6 +1906,29 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
       return negatedPattern.test(text);
     });
   });
+}
+
+function hasNegatedListItem(text: string, pattern: string) {
+  const normalizedPattern = normaliseText(pattern);
+
+  if (!normalizedPattern) {
+    return false;
+  }
+
+  if (/\b(?:no|not|without|denies|denied|nil|unable|cannot|can t|can’t)\b/.test(normalizedPattern)) {
+    return false;
+  }
+
+  return text
+    .split(/[.!?;:\n]/)
+    .some((clause) => {
+      if (!/\b(?:no|not|denies|denied|without|nil)\b/.test(clause)) {
+        return false;
+      }
+
+      const negationPrefix = clause.match(/\b(?:no|not|denies|denied|without|nil)\b(?:\s+\w+){0,10}/)?.[0] ?? "";
+      return negationPrefix.includes(normalizedPattern);
+    });
 }
 
 function normaliseClauseText(text: string): string {
@@ -1972,10 +2037,27 @@ function getNumericMatches(text: string, regexes: RegExp[]): number[] {
   return matches;
 }
 
+function parseStructuredNumber(value: string | undefined) {
+  if (!value) {
+    return NaN;
+  }
+
+  const normalizedValue = value.toLowerCase();
+  const parsedNumber = Number.parseInt(normalizedValue, 10);
+
+  if (!Number.isNaN(parsedNumber)) {
+    return parsedNumber;
+  }
+
+  return NUMBER_WORDS[normalizedValue] ?? NaN;
+}
+
 function getBloodPressureValues(text: string): number[] {
   const systolicMatches = getNumericMatches(text, [
     /\bbp(?:\s+is)?\s+(\d{2,3})\s*\/\s*\d{2,3}\b/g,
     /\bblood pressure(?:\s+is)?\s+(\d{2,3})\s*\/\s*\d{2,3}\b/g,
+    /\bbp(?:\s+is)?\s+(\d{2,3})\s+over\s+\d{2,3}\b/g,
+    /\bblood pressure(?:\s+is)?\s+(\d{2,3})\s+over\s+\d{2,3}\b/g,
     /\bbp(?:\s+is)?\s+(\d{2,3})\b/g,
     /\bblood pressure(?:\s+is)?\s+(\d{2,3})\b/g,
     /\bsystolic(?:\s+bp)?(?:\s+is)?\s+(\d{2,3})\b/g,
@@ -1993,23 +2075,24 @@ function getObservationFeatures(observations: string): string[] {
 
   const observationFeatures: string[] = [];
   const respiratoryRates = getNumericMatches(normalisedObservations, [
-    /\brr\s+(\d{1,2})\b/g,
-    /\brespiratory rate\s+(\d{1,2})\b/g,
-    /\bresp rate\s+(\d{1,2})\b/g,
+    /\brr(?:\s+is)?\s+(\d{1,2})\b/g,
+    /\brespiratory rate(?:\s+is)?\s+(\d{1,2})\b/g,
+    /\bresp rate(?:\s+is)?\s+(\d{1,2})\b/g,
   ]);
   const heartRates = getNumericMatches(normalisedObservations, [
-    /\bhr\s+(\d{2,3})\b/g,
-    /\bpulse\s+(\d{2,3})\b/g,
-    /\bheart rate\s+(\d{2,3})\b/g,
+    /\bhr(?:\s+is)?\s+(\d{2,3})\b/g,
+    /\bpulse(?:\s+is)?\s+(\d{2,3})\b/g,
+    /\bheart rate(?:\s+is)?\s+(\d{2,3})\b/g,
   ]);
   const oxygenSaturations = getNumericMatches(normalisedObservations, [
-    /\bsats?\s+(\d{2,3})(?:\s*%| percent)?\b/g,
-    /\bspo2\s+(\d{2,3})(?:\s*%| percent)?\b/g,
-    /\boxygen saturation\s+(\d{2,3})(?:\s*%| percent)?\b/g,
+    /\bsats?(?:\s+are|\s+is|\s+of)?\s+(\d{2,3})(?:\s*%| percent)?\b/g,
+    /\bspo2(?:\s+is|\s+of)?\s+(\d{2,3})(?:\s*%| percent)?\b/g,
+    /\boxygen saturations?(?:\s+are|\s+is|\s+of)?\s+(\d{2,3})(?:\s*%| percent)?\b/g,
   ]);
   const temperatures = getNumericMatches(normalisedObservations, [
-    /\btemp\s+(\d{2}(?:\.\d+)?)\b/g,
-    /\btemperature\s+(\d{2}(?:\.\d+)?)\b/g,
+    /\btemp(?:\s+is)?\s+(\d{2}(?:\.\d+)?)\b/g,
+    /\btemperature(?:\s+is)?\s+(\d{2}(?:\.\d+)?)\b/g,
+    /\bfebrile(?:\s+at|\s+to)?\s+(\d{2}(?:\.\d+)?)\b/g,
     /(?:^|\s)t\s+(\d{2}(?:\.\d+)?)\b/g,
   ]);
   const systolicBloodPressures = getBloodPressureValues(normalisedObservations);
@@ -2041,17 +2124,120 @@ function getObservationFeatures(observations: string): string[] {
   return observationFeatures;
 }
 
-function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[] {
-  const dynamicFeatures: string[] = [];
+function getAgeFeatures(allText: string, structuredAge: string, sex: string): string[] {
+  const features: string[] = [];
+  const ages = [
+    Number.parseInt(structuredAge, 10),
+    ...[
+      /\b(\d{1,3})\s*-\s*year\s*-\s*old\b/g,
+      /\b(\d{1,3})\s+year\s+old\b/g,
+      /\baged\s+(\d{1,3})\b/g,
+      /\b(\d{1,3})\s*y\s*\/?\s*o\b/g,
+      /\b(\d{1,3})\s*yo\b/g,
+    ].flatMap((pattern) => Array.from(allText.matchAll(pattern)).map((match) => Number.parseInt(match[1] ?? "", 10))),
+  ].filter((age) => !Number.isNaN(age));
+
+  if (ages.some((age) => age >= 65)) {
+    features.push("older_age");
+  }
+
+  if (sex.toLowerCase().includes("female") && ages.some((age) => age >= 12 && age <= 55)) {
+    features.push("female_of_childbearing_age");
+  }
+
+  return features;
+}
+
+function getPregnancyTimingFeatures(allText: string): string[] {
+  const features: string[] = [];
   const missedPeriodWeekPatterns = [
-    /\b(?:last period(?: was)?|lmp|last menstrual period(?: was)?)\s+(\d+)\s+weeks?\s+ago\b/g,
-    /\bperiod overdue by\s+(\d+)\s+weeks?\b/g,
+    /\b(?:last period(?: was)?|lmp|last menstrual period(?: was)?)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\s+ago\b/g,
+    /\bperiod overdue by\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\b/g,
   ];
-  const agePatterns = [/\b(\d{1,3})\s+year\s+old\b/g, /\baged\s+(\d{1,3})\b/g];
+  const gestationWeekPatterns = [
+    /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\s+pregnant\b/g,
+    /\bpregnant\s+at\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\b/g,
+    /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\s+gestation\b/g,
+  ];
+
+  for (const pattern of missedPeriodWeekPatterns) {
+    for (const match of allText.matchAll(pattern)) {
+      const weeks = parseStructuredNumber(match[1]);
+
+      if (!Number.isNaN(weeks) && weeks >= 4) {
+        features.push("missed_period");
+      }
+    }
+  }
+
+  for (const pattern of gestationWeekPatterns) {
+    for (const match of allText.matchAll(pattern)) {
+      const weeks = parseStructuredNumber(match[1]);
+
+      if (!Number.isNaN(weeks)) {
+        features.push("pregnancy_possible");
+
+        if (weeks >= 4) {
+          features.push("missed_period");
+        }
+      }
+    }
+  }
+
+  return features;
+}
+
+function getDurationFeatures(allText: string): string[] {
+  const features: string[] = [];
+  const durationPattern =
+    /\b(?:for|over|during|across|in the last|for the last|over the last)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|several|few)\s+(hours?|days?|weeks?|months?|years?)\b/g;
+
+  for (const match of allText.matchAll(durationPattern)) {
+    const quantity = match[1] === "few" || match[1] === "several" ? 3 : parseStructuredNumber(match[1]);
+    const unit = match[2] ?? "";
+    const contextStart = Math.max(0, (match.index ?? 0) - 40);
+    const contextEnd = Math.min(allText.length, (match.index ?? 0) + match[0].length + 40);
+    const context = allText.slice(contextStart, contextEnd);
+
+    if ((unit.startsWith("month") || unit.startsWith("year")) && quantity >= 1) {
+      features.push("chronic_course");
+    }
+
+    if (
+      (unit.startsWith("day") || unit.startsWith("week")) &&
+      /\b(?:worsening|worse|progressive|progressively|deteriorating|get(?:ting)? worse)\b/.test(context)
+    ) {
+      features.push("progressive_course");
+    }
+  }
+
+  return features;
+}
+
+function getTemporalRelationshipFeatures(allText: string): string[] {
+  const features: string[] = [];
+
+  if (/\b(?:pain|symptoms?|discomfort)\s+(?:starts?|started|comes?|came|begins?|began)\s+(?:\d+\s+)?(?:minutes?|hours?)?\s*(?:after|following)\s+(?:meals?|eating|food|fatty food|a fatty meal|a heavy meal)\b/.test(allText)) {
+    features.push("post_prandial_pain", "worse_after_meals");
+  }
+
+  if (/\b(?:recurrent|repeated|similar)\s+(?:attacks?|episodes?|bouts?)\b/.test(allText)) {
+    features.push("recurrent_attacks");
+  }
+
+  return features;
+}
+
+function getCompositeFeatures(allText: string, matchedFeatures: string[]): string[] {
+  const dynamicFeatures: string[] = [];
   const severePainCompositeSources = ["severe_pain", "pain_out_of_proportion"];
   const severePainCuePatterns = [
     /\bsevere(?:\s+\w+){0,3}\s+pain\b/g,
     /\bexcruciating(?:\s+\w+){0,3}\s+pain\b/g,
+    /\b(?:ten|10)\s*\/\s*10\s+pain\b/g,
+    /\b10\s+10\s+pain\b/g,
+    /\b10\s+out\s+of\s+10\s+pain\b/g,
+    /\bworst(?:\s+\w+){0,3}\s+pain\b/g,
     /\bpain(?:\s+is)?\s+(?:much|far)\s+worse\s+than\s+expected\b/g,
     /\bpain\s+much\s+worse\s+than\s+exam\b/g,
   ];
@@ -2061,36 +2247,14 @@ function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[
     /\bmild tenderness\b/g,
     /\bmild abdominal tenderness\b/g,
     /\bminimal tenderness\b/g,
+    /\bminimal abdominal findings\b/g,
+    /\bmild abdominal findings\b/g,
     /\bsoft abdomen\b/g,
     /\babdomen is soft\b/g,
+    /\bsoft non tender abdomen\b/g,
     /\bno guarding\b/g,
+    /\bno peritonism\b/g,
   ];
-
-  for (const pattern of missedPeriodWeekPatterns) {
-    for (const match of allText.matchAll(pattern)) {
-      const weeks = Number.parseInt(match[1] ?? "", 10);
-
-      if (!Number.isNaN(weeks) && weeks >= 4) {
-        dynamicFeatures.push("missed_period");
-        return dynamicFeatures;
-      }
-    }
-  }
-
-  for (const pattern of agePatterns) {
-    for (const match of allText.matchAll(pattern)) {
-      const age = Number.parseInt(match[1] ?? "", 10);
-
-      if (!Number.isNaN(age) && age >= 65) {
-        dynamicFeatures.push("older_age");
-        break;
-      }
-    }
-
-    if (dynamicFeatures.includes("older_age")) {
-      break;
-    }
-  }
 
   const hasSeverePainCue = severePainCompositeSources.some(
     (feature) => matchedFeatures.includes(feature) || dynamicFeatures.includes(feature),
@@ -2102,6 +2266,16 @@ function getDynamicFeatures(allText: string, matchedFeatures: string[]): string[
   }
 
   return dynamicFeatures.map(canonicalFeatureSlug);
+}
+
+function getDynamicFeatures(allText: string, matchedFeatures: string[], input: CaseInput): string[] {
+  return [
+    ...getAgeFeatures(allText, input.age, input.sex),
+    ...getPregnancyTimingFeatures(allText),
+    ...getDurationFeatures(allText),
+    ...getTemporalRelationshipFeatures(allText),
+    ...getCompositeFeatures(allText, matchedFeatures),
+  ].map(canonicalFeatureSlug);
 }
 
 export function extractFeatures(input: CaseInput): ExtractedFeatures {
@@ -2145,7 +2319,7 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     }
   }
 
-  for (const feature of getObservationFeatures(input.observations)) {
+  for (const feature of getObservationFeatures(rawText)) {
     addMatchedFeature(matchedFeatures, feature);
   }
 
@@ -2161,13 +2335,8 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     });
   }
 
-  for (const feature of getDynamicFeatures(allText, matchedFeatures)) {
+  for (const feature of getDynamicFeatures(allText, matchedFeatures, input)) {
     addMatchedFeature(matchedFeatures, feature);
-  }
-
-  const structuredAge = Number.parseInt(input.age, 10);
-  if (!Number.isNaN(structuredAge) && structuredAge >= 65) {
-    addMatchedFeature(matchedFeatures, "older_age");
   }
 
   const aliasFeatures: Array<[string, string]> = [
