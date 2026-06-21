@@ -13,6 +13,7 @@ const FEATURE_LABELS: Record<string, string> = {
   pain_radiates_to_shoulder: "pain radiating to shoulder",
   pain_radiates_to_jaw: "pain radiating to jaw",
   arm_pain: "arm pain",
+  pain_radiates_to_left_arm: "pain radiating to left arm",
   chest_heaviness: "chest heaviness",
   exertional_pain: "exertional pain",
   hyperlipidaemia: "hyperlipidaemia / high cholesterol",

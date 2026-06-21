@@ -77,7 +77,10 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "pregnancy_possible");
       const hasPeSpecificSupport =
         has(features, "pleuritic_pain") ||
-        has(features, "hypoxia") ||
+        has(features, "haemoptysis") ||
+        hasVteSpecificSignal;
+      const hasPeCompatibleSignature =
+        has(features, "pleuritic_pain") ||
         has(features, "haemoptysis") ||
         hasVteSpecificSignal;
       const hasMeaningfulPeSignal =
@@ -100,7 +103,7 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "unilateral_reduced_air_entry") ||
         has(features, "hyperresonance");
 
-      if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal || hasDkaMetabolicSignature) {
+      if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal || !hasPeCompatibleSignature || hasDkaMetabolicSignature) {
         continue;
       }
 

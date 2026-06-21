@@ -677,17 +677,7 @@ export const TRAP_CASES: TrapCase[] = [
     expected: {
       problemRepresentation:
         "58yo female Chest pain and shortness of breath with chest pain, sudden onset, shortness of breath, tachypnoea, tachycardia",
-      redFlags: [
-        {
-          name: "PE suspicion pattern",
-          explanation:
-            "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
-          boostDiagnoses: ["Pulmonary embolism"],
-          sourceBody: "NICE",
-          sourceId: "NG158",
-          sourceCoverage: "full",
-        },
-      ],
+      redFlags: [],
       differentials: [
         {
           name: "Pulmonary embolism",

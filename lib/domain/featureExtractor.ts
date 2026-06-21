@@ -10,6 +10,15 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "central chest pressure",
     "chest pressure",
     "chest heaviness",
+    "centre of his chest",
+    "centre of her chest",
+    "centre of the chest",
+    "center of his chest",
+    "center of her chest",
+    "center of the chest",
+    "middle of his chest",
+    "middle of her chest",
+    "middle of the chest",
     "heavy feeling in the middle of his chest",
     "heavy feeling in the middle of her chest",
     "heavy feeling in the middle of the chest",
@@ -136,6 +145,15 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "spread into his jaw",
     "spread into her jaw",
     "spread into the jaw",
+    "went into his jaw",
+    "went into her jaw",
+    "went into the jaw",
+    "spread to his jaw",
+    "spread to her jaw",
+    "spread to the jaw",
+    "travels to his jaw",
+    "travels to her jaw",
+    "travels to the jaw",
     "spread a bit into his jaw",
     "spread a bit into her jaw",
     "spread a bit into the jaw",
@@ -190,6 +208,25 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain down the right arm",
     "left arm discomfort",
   ],
+  pain_radiates_to_left_arm: [
+    "radiating to the left arm",
+    "radiates to the left arm",
+    "pain radiating to the left arm",
+    "pain down the left arm",
+    "spread to his left arm",
+    "spread to her left arm",
+    "spread to the left arm",
+    "spread into his left arm",
+    "spread into her left arm",
+    "spread into the left arm",
+    "went into his left arm",
+    "went into her left arm",
+    "went into the left arm",
+    "travels to his left arm",
+    "travels to her left arm",
+    "travels to the left arm",
+    "jaw and left arm",
+  ],
   sweating: [
     "sweating",
     "sweaty",
@@ -240,6 +277,15 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "chest heaviness",
     "heavy chest",
     "heavy feeling in chest",
+    "heavy pressure",
+    "heavy tight pressure",
+    "tight pressure",
+    "pressure sensation in the centre of his chest",
+    "pressure sensation in the centre of her chest",
+    "pressure sensation in the centre of the chest",
+    "pressure sensation in the center of his chest",
+    "pressure sensation in the center of her chest",
+    "pressure sensation in the center of the chest",
     "heavy feeling in the middle of his chest",
     "heavy feeling in the middle of her chest",
     "heavy feeling in the middle of the chest",
@@ -247,6 +293,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   exertional_pain: [
     "mowing the lawn",
     "mowing lawn",
+    "carrying shopping upstairs",
+    "carrying groceries upstairs",
+    "walking upstairs",
     "walking uphill",
     "climbing stairs",
     "on exertion",
@@ -543,9 +592,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "constant abdominal pain",
     "become constant",
     "became constant",
+    "becoming constant",
     "now become constant",
     "now became constant",
     "pain has become more constant",
+    "cramps are becoming constant",
     "became more constant",
     "more constant",
     "pain has not settled",
@@ -724,8 +775,14 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened her bowels",
     "not opened their bowels",
     "not passed wind",
+    "has not opened bowels",
+    "has not opened his bowels",
+    "has not opened her bowels",
+    "has not opened their bowels",
+    "has not passed wind",
     "hasn t passed stool",
     "hasn't passed stool",
+    "has not passed stool",
     "not passed stool",
     "passed stool or flatus",
     "stool or flatus",
@@ -734,11 +791,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "unable to pass flatus",
     "not passing flatus",
     "not passed wind",
+    "has not passed wind",
     "not opened bowels or passed wind",
     "not opened his bowels or passed wind",
     "not opened her bowels or passed wind",
     "not opened their bowels or passed wind",
     "no flatus",
+    "has not passed flatus",
     "hasn t passed flatus",
     "hasn't passed flatus",
     "not passed flatus",
@@ -799,6 +858,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "coughing up blood",
     "coughed up blood",
     "blood in sputum",
+    "blood streaked sputum",
+    "blood-streaked sputum",
+    "blood stained sputum",
+    "blood-stained sputum",
   ],
   rigors: [
     "rigors",
@@ -972,6 +1035,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "swollen abdomen",
     "abdominal swelling",
     "bloated abdomen",
+    "blown up like a drum",
+    "abdomen is blown up",
+    "bloated",
   ],
   hernia_present: [
     "hernia",
@@ -1018,6 +1084,17 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "previous laparotomy",
     "previous hysterectomy",
     "prior hysterectomy",
+    "previous c section",
+    "previous c-section",
+    "prior c section",
+    "prior c-section",
+    "caesarean section",
+    "cesarean section",
+    "appendicectomy",
+    "appendectomy",
+    "bowel surgery",
+    "previous bowel surgery",
+    "prior bowel surgery",
   ],
   immobility: [
     "prolonged immobility",
@@ -1037,6 +1114,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "prolonged travel",
     "prolonged flight",
     "long flight",
+    "recent flight",
+    "flew home",
+    "flight from abroad",
+    "travel from abroad",
   ],
   unilateral_reduced_air_entry: [
     "unilateral reduced air entry",
@@ -1459,6 +1540,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "orthopnea",
     "short of breath lying flat",
     "breathless lying flat",
+    "cannot lie flat",
+    "can't lie flat",
+    "cant lie flat",
+    "unable to lie flat",
     "needs extra pillows",
     "sleeping propped up",
   ],
@@ -1531,6 +1616,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "peeing a lot",
     "peeing constantly",
     "passing urine frequently",
+    "passing urine a lot",
   ],
   polydipsia: [
     "polydipsia",
@@ -1538,6 +1624,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "very thirsty",
     "excessive thirst",
     "thirsty for days",
+    "cannot stop drinking",
+    "can't stop drinking",
+    "drinking loads",
+    "drinking lots",
   ],
   ketosis_breath: [
     "ketotic breath",
@@ -1550,12 +1640,21 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "fruity smelling breath",
     "fruity smell",
     "acetone breath",
+    "pear drop breath",
+    "pear drops",
+    "breath smells of pear drops",
   ],
   kussmaul_breathing: [
     "kussmaul breathing",
     "kussmaul respirations",
     "deep rapid breathing",
     "deep and rapid breathing",
+    "deep fast breathing",
+    "deep and fast breathing",
+    "breathing very deep and fast",
+    "breathing deep and fast",
+    "laboured deep breathing",
+    "labored deep breathing",
     "breathing very deeply and quickly",
     "breathing deeply and quickly",
     "acidotic breathing",
@@ -2111,6 +2210,15 @@ function addMatchedFeature(matchedFeatures: string[], feature: string) {
   }
 }
 
+function removeMatchedFeature(matchedFeatures: string[], feature: string) {
+  const canonicalFeature = canonicalFeatureSlug(feature);
+  const featureIndex = matchedFeatures.indexOf(canonicalFeature);
+
+  if (featureIndex >= 0) {
+    matchedFeatures.splice(featureIndex, 1);
+  }
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -2578,6 +2686,64 @@ function getTemporalRelationshipFeatures(allText: string): string[] {
   return features;
 }
 
+function getAcsEquivalentDynamicFeatures(allText: string): string[] {
+  const features: string[] = [];
+  const hasCentralChestDiscomfort =
+    /\b(?:heavy|tight|pressure|heaviness|tightness|discomfort)(?:\s+\w+){0,5}\s+(?:centre|center|middle)\s+of\s+(?:his|her|the)?\s*chest\b/.test(allText) ||
+    /\b(?:centre|center|middle)\s+of\s+(?:his|her|the)?\s*chest(?:\s+\w+){0,5}\s+(?:heavy|tight|pressure|heaviness|tightness|discomfort)\b/.test(allText);
+
+  if (hasCentralChestDiscomfort) {
+    features.push("chest_pain", "chest_heaviness");
+  }
+
+  if (
+    /\b(?:mowing|walking uphill|walking upstairs|climbing stairs|carrying shopping|carrying groceries|exerting (?:himself|herself|themselves))\b/.test(allText) &&
+    /\b(?:chest|indigestion|heartburn|pressure|heaviness|tightness|discomfort)\b/.test(allText)
+  ) {
+    features.push("exertional_pain");
+  }
+
+  if (/\b(?:went|spread|radiat(?:e|es|ed|ing)|travels?)\s+(?:a\s+bit\s+)?(?:into|to|towards?)\s+(?:his|her|the)?\s*(?:neck|jaw)\b/.test(allText)) {
+    features.push("pain_radiates_to_jaw");
+  }
+
+  if (/\b(?:went|spread|radiat(?:e|es|ed|ing)|travels?)\s+(?:a\s+bit\s+)?(?:into|to|towards?)\s+(?:his|her|the)?\s*(?:left\s+)?shoulder\b/.test(allText)) {
+    features.push("pain_radiates_to_shoulder", "shoulder_pain");
+  }
+
+  if (/\b(?:went|spread|radiat(?:e|es|ed|ing)|travels?)\s+(?:a\s+bit\s+)?(?:into|to|towards?)\s+(?:his|her|the)?\s*left\s+arm\b/.test(allText)) {
+    features.push("pain_radiates_to_left_arm", "arm_pain");
+  }
+
+  return features;
+}
+
+function getObstructionDynamicFeatures(allText: string): string[] {
+  const features: string[] = [];
+
+  if (/\b(?:blown up like a drum|abdomen (?:is )?blown up|bloated|abdominal swelling|distended abdomen)\b/.test(allText)) {
+    features.push("distension");
+  }
+
+  if (/\b(?:not|hasn t|has not|haven t|have not)\s+(?:opened (?:his|her|their)?\s*bowels?|passed stool|had a bowel motion|had a bowel movement)\b/.test(allText)) {
+    features.push("obstipation");
+  }
+
+  if (/\b(?:not|hasn t|has not|haven t|have not)\s+passed\s+(?:flatus|wind)\b/.test(allText)) {
+    features.push("unable_to_pass_flatus");
+  }
+
+  if (/\b(?:crampy|cramping|colicky|comes in waves|coming in waves)\b/.test(allText)) {
+    features.push("colicky_pain");
+  }
+
+  if (/\b(?:cramps?|pain)(?:\s+\w+){0,4}\s+(?:becoming|became|become|becomes)\s+(?:more\s+)?constant\b/.test(allText)) {
+    features.push("constant_pain");
+  }
+
+  return features;
+}
+
 function getCompositeFeatures(allText: string, matchedFeatures: string[]): string[] {
   const dynamicFeatures: string[] = [];
   const severePainCompositeSources = ["severe_pain", "pain_out_of_proportion"];
@@ -2621,14 +2787,21 @@ function getCompositeFeatures(allText: string, matchedFeatures: string[]): strin
 function getMetabolicBreathFeatures(allText: string): string[] {
   const ketosisBreathPatterns = [
     /\bbreath\s+(?:smells?|smelled)\s+["'“”‘’]?\s*fruity\b/g,
+    /\bbreath\s+(?:smells?|smelled)\s+(?:of|like)\s+pear\s+drops?\b/g,
+    /\bpear\s+drops?\b/g,
     /\bfruity\s+smell(?:ing)?\s+breath\b/g,
   ];
+  const features: string[] = [];
 
   if (ketosisBreathPatterns.some((pattern) => pattern.test(allText))) {
-    return ["ketosis_breath"];
+    features.push("ketosis_breath");
   }
 
-  return [];
+  if (/\b(?:breathing|breathes?)\s+(?:very\s+)?deep(?:ly)?\s+(?:and\s+)?fast\b/.test(allText)) {
+    features.push("kussmaul_breathing");
+  }
+
+  return features;
 }
 
 function getDynamicFeatures(allText: string, matchedFeatures: string[], input: CaseInput): string[] {
@@ -2637,6 +2810,8 @@ function getDynamicFeatures(allText: string, matchedFeatures: string[], input: C
     ...getPregnancyTimingFeatures(allText),
     ...getDurationFeatures(allText),
     ...getTemporalRelationshipFeatures(allText),
+    ...getAcsEquivalentDynamicFeatures(allText),
+    ...getObstructionDynamicFeatures(allText),
     ...getCompositeFeatures(allText, matchedFeatures),
     ...getMetabolicBreathFeatures(allText),
   ].map(canonicalFeatureSlug);
@@ -2711,6 +2886,7 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["af", "atrial_fibrillation"],
     ["frequency", "urinary_frequency"],
     ["guarding_rigidity", "guarding"],
+    ["pain_radiates_to_left_arm", "arm_pain"],
     ["smoker", "smoking_history"],
     ["asthma_history", "known_asthma"],
     ["known_asthma", "asthma_history"],
@@ -2758,6 +2934,22 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
   ) {
     const featureIndex = matchedFeatures.indexOf("severe_tenderness");
     matchedFeatures.splice(featureIndex, 1);
+  }
+
+  if (/\b(?:no|not|without|denies|rather than looking)\s+(?:\w+\s+){0,3}wheez(?:e|y|ing)\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "wheeze");
+  }
+
+  if (/\b(?:no|not|without|denies)\s+(?:\w+\s+){0,3}(?:leg|calf|ankle)\s+swelling\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "leg_swelling");
+    removeMatchedFeature(matchedFeatures, "ankle_swelling");
+    removeMatchedFeature(matchedFeatures, "peripheral_oedema");
+  }
+
+  if (/\b(?:no|not|without)\s+(?:obvious\s+)?(?:board\s+like\s+|board-like\s+)?rigidity\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "guarding_rigidity");
+    removeMatchedFeature(matchedFeatures, "rigidity");
+    removeMatchedFeature(matchedFeatures, "peritonism");
   }
 
   const hasChestPainContext = matchedFeatures.includes("chest_pain");
