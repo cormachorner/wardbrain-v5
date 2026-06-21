@@ -9,6 +9,10 @@ function countMatches(features: ExtractedFeatures, triggers: string[]) {
   return triggers.filter((trigger) => has(features, trigger)).length;
 }
 
+function getMatchedTriggers(features: ExtractedFeatures, triggers: string[]) {
+  return triggers.filter((trigger) => has(features, trigger));
+}
+
 export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
   const flags: RedFlag[] = [];
 
@@ -221,12 +225,14 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
     }
 
     const matchCount = countMatches(features, rule.triggers);
+    const triggeredFeatures = getMatchedTriggers(features, rule.triggers);
 
     if (matchCount >= 2) {
       flags.push({
         name: rule.title,
         explanation: rule.rationale,
         boostDiagnoses: rule.boostDiagnoses,
+        triggeredFeatures,
         sourceBody: rule.sourceBody,
         sourceId: rule.sourceId,
         sourceCoverage: rule.sourceCoverage,
@@ -250,6 +256,14 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
       explanation:
         "This feature cluster should strongly raise concern for acute aortic pathology, but this rule is currently an internal WardBrain pattern rather than a fully NICE-derived rule.",
       boostDiagnoses: ["Acute aortic syndrome"],
+      triggeredFeatures: [
+        "chest_pain",
+        "sudden_onset",
+        "tearing_pain",
+        "back_radiation",
+        "collapse",
+        "hypertension",
+      ].filter((feature) => has(features, feature)),
       sourceBody: "NICE",
       sourceId: "coverage-gap",
       sourceCoverage: "gap",

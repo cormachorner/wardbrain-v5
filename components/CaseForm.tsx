@@ -1,4 +1,5 @@
 import type { CaseInput } from "../lib/types";
+import { SUPPORTED_PRESENTATION_BLOCKS } from "../lib/pilotStatus";
 import { Field, TextArea } from "./WardBrainCard";
 
 export function CaseForm({
@@ -17,6 +18,24 @@ export function CaseForm({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="mb-4 text-2xl font-semibold">Enter case</h2>
+
+      <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+        <div className="text-sm font-semibold text-blue-950">Pilot-supported presentations</div>
+        <p className="mt-1 text-sm text-blue-900">
+          WardBrain is currently calibrated for these blocks. Cases outside this scope may still run,
+          but should be treated as exploratory.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {SUPPORTED_PRESENTATION_BLOCKS.map((block) => (
+            <span
+              key={block.id}
+              className="rounded-full border border-blue-300 bg-white px-3 py-1 text-xs font-medium text-blue-950"
+            >
+              {block.label}
+            </span>
+          ))}
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">

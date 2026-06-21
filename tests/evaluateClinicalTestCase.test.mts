@@ -32,6 +32,18 @@ const baseAnalysis: AnalyzeCaseResponse = {
   },
   anchorWarning: "",
   presentation: "",
+  presentationSupport: {
+    supportedBlocks: [],
+    confidence: 0,
+    reasons: [],
+  },
+  diagnosisTraces: [],
+  uncertainty: {
+    level: "low",
+    summary: "",
+    reasons: [],
+    missingInformation: [],
+  },
   detectedFeatureSlugs: [],
   detectedFeatures: [],
   matchedPresentationBlock: null,

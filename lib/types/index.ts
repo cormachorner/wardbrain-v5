@@ -1,4 +1,5 @@
 import type { WardBrainPresentationBlockMatch } from "../../types/wardbrain";
+import type { SupportedPresentationBlock } from "../pilotStatus";
 
 export type CaseInput = {
   age: string;
@@ -26,6 +27,7 @@ export type RedFlag = {
   name: string;
   explanation: string;
   boostDiagnoses: string[];
+  triggeredFeatures?: string[];
   sourceBody?: "NICE" | "GMC" | "HSCNI";
   sourceId?: string;
   sourceCoverage?: "full" | "partial" | "gap";
@@ -128,6 +130,28 @@ export type AnalysisResult = {
   };
   anchorWarning: string;
   presentation: string;
+  presentationSupport: {
+    supportedBlocks: SupportedPresentationBlock[];
+    matchedBlockId?: string;
+    matchedBlockLabel?: string;
+    confidence: number;
+    reasons: string[];
+    warning?: string;
+  };
+  diagnosisTraces: Array<{
+    diagnosis: string;
+    rank: number;
+    score: number;
+    supportingFeatures: string[];
+    opposingFeatures: string[];
+    otherReasons: string[];
+  }>;
+  uncertainty: {
+    level: "low" | "moderate" | "high";
+    summary: string;
+    reasons: string[];
+    missingInformation: string[];
+  };
   detectedFeatures?: string[];
   detectedFeatureSlugs?: string[];
 };

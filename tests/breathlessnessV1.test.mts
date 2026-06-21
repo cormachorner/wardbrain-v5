@@ -30,6 +30,7 @@ function expectBreathlessnessCase({
   input,
   expectedLead,
   expectedFeatures,
+  forbiddenFeatures = [],
   expectedRedFlags = [],
   forbiddenRedFlags = [],
   forbiddenLeads = [],
@@ -39,6 +40,7 @@ function expectBreathlessnessCase({
   input: CaseInput;
   expectedLead: string;
   expectedFeatures: string[];
+  forbiddenFeatures?: string[];
   expectedRedFlags?: string[];
   forbiddenRedFlags?: string[];
   forbiddenLeads?: string[];
@@ -59,6 +61,10 @@ function expectBreathlessnessCase({
 
     assert.deepEqual(
       expectedFeatures.filter((feature) => !result.detectedFeatureSlugs.includes(feature)),
+      [],
+    );
+    assert.deepEqual(
+      forbiddenFeatures.filter((feature) => result.detectedFeatureSlugs.includes(feature)),
       [],
     );
     assert.deepEqual(
@@ -294,6 +300,23 @@ expectBreathlessnessCase({
   }),
   expectedLead: "Heart failure",
   expectedFeatures: ["sob", "orthopnoea", "raised_jvp", "bibasal_crackles", "peripheral_oedema"],
+  forbiddenFeatures: ["infection_source"],
+  expectedRedFlags: ["Acute heart failure / pulmonary oedema pattern"],
+  forbiddenLeads: ["Pneumonia"],
+});
+
+expectBreathlessnessCase({
+  name: "breathlessness-v1 admin hostile heart failure title does not negate breathlessness",
+  input: buildInput({
+    age: "",
+    presentingComplaint: "Hostile heart failure beats pneumonia without infective sputum",
+    history:
+      "An 82-year-old has breathlessness with orthopnoea, raised JVP, bibasal crackles and peripheral oedema. No fever and no productive cough.",
+    suspectedDiagnosis: "Pneumonia",
+  }),
+  expectedLead: "Heart failure",
+  expectedFeatures: ["sob", "orthopnoea", "raised_jvp", "bibasal_crackles", "peripheral_oedema", "older_age"],
+  forbiddenFeatures: ["infection_source"],
   expectedRedFlags: ["Acute heart failure / pulmonary oedema pattern"],
   forbiddenLeads: ["Pneumonia"],
 });

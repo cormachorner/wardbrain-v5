@@ -2122,7 +2122,7 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
 
   if (
     feature === "sob" &&
-    /\b(?:no|denies|denied|without)(?:\s+\w+){0,8}\s+(?:shortness\s+of\s+breath|sob|breathlessness|breathless)\b/.test(text)
+    /\b(?:no|denies|denied|without)(?:\s+\w+){0,3}\s+(?:shortness\s+of\s+breath|sob|breathlessness|breathless)\b/.test(text)
   ) {
     return true;
   }
@@ -2587,7 +2587,6 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["ankle_swelling", "peripheral_oedema"],
     ["peripheral_oedema", "ankle_swelling"],
     ["leg_swelling", "ankle_swelling"],
-    ["crackles", "infection_source"],
     ["productive_cough", "infection_source"],
     ["tingling", "panic_features"],
     ["perioral_paraesthesia", "panic_features"],
@@ -2598,6 +2597,16 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     if (matchedFeatures.includes(sourceFeature)) {
       addMatchedFeature(matchedFeatures, aliasFeature);
     }
+  }
+
+  if (
+    matchedFeatures.includes("crackles") &&
+    (matchedFeatures.includes("fever") ||
+      matchedFeatures.includes("productive_cough") ||
+      matchedFeatures.includes("sputum_change") ||
+      matchedFeatures.includes("rigors"))
+  ) {
+    addMatchedFeature(matchedFeatures, "infection_source");
   }
 
   if (

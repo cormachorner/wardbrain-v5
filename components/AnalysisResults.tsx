@@ -1,9 +1,51 @@
 import type { AnalyzeCaseResponse } from "../lib/types";
 import { Card, SecondaryCard, SimpleList } from "./WardBrainCard";
 
+function formatSlug(value: string) {
+  return value.replaceAll("_", " ").replaceAll("-", " ");
+}
+
 export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
   return (
     <section className="space-y-4">
+      <Card title="Pilot scope">
+        <div className="space-y-3 text-sm text-slate-700">
+          <div>
+            <span className="font-medium">Matched block: </span>
+            {result.presentationSupport.matchedBlockLabel ?? "No supported block matched"}
+            <span className="ml-2 text-slate-500">
+              confidence {result.presentationSupport.confidence}
+            </span>
+          </div>
+
+          {result.presentationSupport.warning ? (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900">
+              {result.presentationSupport.warning}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+              This case fits a pilot-supported presentation block.
+            </div>
+          )}
+
+          <details>
+            <summary className="cursor-pointer font-medium text-slate-800">
+              Supported blocks
+            </summary>
+            <div className="mt-2 grid gap-2">
+              {result.presentationSupport.supportedBlocks.map((block) => (
+                <div key={block.id} className="rounded-xl border border-slate-200 p-3">
+                  <div className="font-medium">{block.label}</div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {block.diagnoses.length} diagnoses currently represented
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        </div>
+      </Card>
+
       <Card title="Features detected">
         {result.detectedFeatures.length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -44,6 +86,34 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
                     {dx.reasonsAgainst.join(", ")}
                   </div>
                 )}
+
+                {result.diagnosisTraces[index] && (
+                  <details className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
+                    <summary className="cursor-pointer font-medium text-slate-800">
+                      Explain this ranking
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      <div>
+                        <span className="font-medium">Most supportive features: </span>
+                        {result.diagnosisTraces[index].supportingFeatures.length > 0
+                          ? result.diagnosisTraces[index].supportingFeatures.join(", ")
+                          : "None identified"}
+                      </div>
+                      <div>
+                        <span className="font-medium">Features against: </span>
+                        {result.diagnosisTraces[index].opposingFeatures.length > 0
+                          ? result.diagnosisTraces[index].opposingFeatures.join(", ")
+                          : "No major opposing features"}
+                      </div>
+                      {result.diagnosisTraces[index].otherReasons.length > 0 && (
+                        <div>
+                          <span className="font-medium">Composite/rule support: </span>
+                          {result.diagnosisTraces[index].otherReasons.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                )}
               </li>
             ))}
           </ol>
@@ -74,6 +144,13 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
                 </div>
 
                 <div className="mt-2 text-sm text-red-800">{flag.explanation}</div>
+
+                {flag.triggeredFeatures && flag.triggeredFeatures.length > 0 && (
+                  <div className="mt-2 text-sm text-red-900">
+                    <span className="font-medium">Triggered by: </span>
+                    {flag.triggeredFeatures.map(formatSlug).join(", ")}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -112,6 +189,21 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
 
       <Card title="Anchor warning">
         <p>{result.anchorWarning}</p>
+      </Card>
+
+      <Card title="Uncertainty">
+        <div className="mb-2 inline-flex rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm font-medium capitalize text-slate-800">
+          {result.uncertainty.level} uncertainty
+        </div>
+        <p className="text-slate-700">{result.uncertainty.summary}</p>
+
+        <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+          <SimpleList title="Why" items={result.uncertainty.reasons} />
+          <SimpleList
+            title="Missing information that would help"
+            items={result.uncertainty.missingInformation}
+          />
+        </div>
       </Card>
 
       <Card title="Present to the reg">

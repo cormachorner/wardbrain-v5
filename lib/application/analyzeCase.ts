@@ -25,6 +25,10 @@ import {
 import { routePresentationFamilies } from "../domain/presentationFamilies";
 import { detectRedFlags } from "../domain/redFlagRules";
 import { matchPresentationBlockForCase } from "../domain/wardbrainLookup";
+import {
+  getSupportedPresentationBlock,
+  SUPPORTED_PRESENTATION_BLOCKS,
+} from "../pilotStatus";
 import type {
   AnalysisResult,
   AnalyzeCaseResponse,
@@ -485,6 +489,163 @@ function buildPresentation(
 
   return presentationParts.join(" ");
 }
+
+function buildPresentationSupport(
+  route: ReturnType<typeof routePresentationFamilies>,
+): AnalysisResult["presentationSupport"] {
+  const matchedBlock = getSupportedPresentationBlock(route.primaryFamily);
+  const supportedBlockLabels = SUPPORTED_PRESENTATION_BLOCKS.map((block) => block.label).join(", ");
+  let warning: string | undefined;
+
+  if (!route.primaryFamily) {
+    warning = `This vignette does not clearly match a currently supported WardBrain pilot block. Supported blocks are: ${supportedBlockLabels}.`;
+  } else if (!matchedBlock) {
+    warning = `WardBrain routed this case outside the current pilot-supported blocks. Treat the result as exploratory. Supported blocks are: ${supportedBlockLabels}.`;
+  } else if (route.confidence < 6) {
+    warning = `This case only weakly matches ${matchedBlock.label}. Add more localisation, timing, examination findings, observations, and key negatives before relying on the ranking.`;
+  }
+
+  return {
+    supportedBlocks: SUPPORTED_PRESENTATION_BLOCKS,
+    matchedBlockId: matchedBlock?.id ?? route.primaryFamily,
+    matchedBlockLabel: matchedBlock?.label,
+    confidence: route.confidence,
+    reasons: route.reasons,
+    warning,
+  };
+}
+
+function buildDiagnosisTrace(
+  differential: DifferentialResult,
+  rank: number,
+  features: ExtractedFeatures,
+): AnalysisResult["diagnosisTraces"][number] {
+  const rule = findDiagnosisRule(differential.name);
+  const definition = findDiagnosisDefinition(differential.name);
+  const supportingFeatures = rule
+    ? getMatchedSupportiveFeatures(rule, features)
+    : definition
+      ? getMatchedDefinitionSupportiveFeatures(definition, features, {
+          age: "",
+          sex: "",
+          presentingComplaint: "",
+          history: "",
+          pmh: "",
+          meds: "",
+          social: "",
+          keyPositives: "",
+          keyNegatives: "",
+          observations: "",
+        })
+      : differential.reasonsFor.filter((reason) =>
+          features.matchedFeatures.map(formatFeatureLabel).includes(reason),
+        );
+  const opposingFeatures = rule
+    ? getMatchedConflictingFeatures(rule, features)
+    : definition
+      ? getMatchedDefinitionConflictingFeatures(definition, features, {
+          age: "",
+          sex: "",
+          presentingComplaint: "",
+          history: "",
+          pmh: "",
+          meds: "",
+          social: "",
+          keyPositives: "",
+          keyNegatives: "",
+          observations: "",
+        })
+      : differential.reasonsAgainst;
+  const featureReasonSet = new Set([...supportingFeatures, ...opposingFeatures]);
+
+  return {
+    diagnosis: differential.name,
+    rank,
+    score: differential.score,
+    supportingFeatures: supportingFeatures.slice(0, 6),
+    opposingFeatures: opposingFeatures.slice(0, 6),
+    otherReasons: differential.reasonsFor
+      .filter((reason) => !featureReasonSet.has(reason))
+      .slice(0, 4),
+  };
+}
+
+function buildUncertainty(
+  differentials: DifferentialResult[],
+  features: ExtractedFeatures,
+  presentationSupport: AnalysisResult["presentationSupport"],
+): AnalysisResult["uncertainty"] {
+  const top = differentials[0];
+  const second = differentials[1];
+  const reasons: string[] = [];
+  const missingInformation = new Set<string>();
+  let level: AnalysisResult["uncertainty"]["level"] = "low";
+
+  if (!top) {
+    return {
+      level: "high",
+      summary: "WardBrain does not yet have enough extracted evidence to rank this case safely.",
+      reasons: ["No differential reached the display threshold."],
+      missingInformation: [
+        "presenting complaint",
+        "onset and time course",
+        "vital signs",
+        "focused examination findings",
+        "key negatives for dangerous diagnoses",
+      ],
+    };
+  }
+
+  if (features.matchedFeatures.length < 4) {
+    level = "high";
+    reasons.push("Only a small number of usable clinical features were extracted.");
+    missingInformation.add("more symptom detail and key negatives");
+  }
+
+  if (top.score < 7) {
+    level = "high";
+    reasons.push("The leading diagnosis has limited positive support.");
+    missingInformation.add("specific discriminating features for the leading diagnosis");
+  }
+
+  if (second && top.score - second.score <= 2) {
+    level = level === "high" ? "high" : "moderate";
+    reasons.push(`${top.name} and ${second.name} are closely scored.`);
+    missingInformation.add(`features that separate ${top.name} from ${second.name}`);
+  }
+
+  if (top.reasonsAgainst.length > 0) {
+    level = level === "high" ? "high" : "moderate";
+    reasons.push(`The leading diagnosis has conflicting evidence: ${top.reasonsAgainst.slice(0, 2).join(", ")}.`);
+    missingInformation.add("clarifying history or examination for conflicting features");
+  }
+
+  if (presentationSupport.warning) {
+    level = "high";
+    reasons.push("The case does not strongly fit a supported presentation block.");
+    missingInformation.add("a clearer presenting syndrome or problem representation");
+  }
+
+  if (missingInformation.size === 0) {
+    missingInformation.add("observations and focused examination findings");
+    missingInformation.add("key negatives for the most dangerous alternatives");
+  }
+
+  return {
+    level,
+    summary:
+      level === "low"
+        ? "The extracted pattern is reasonably coherent for pilot use, but still needs clinical judgement."
+        : level === "moderate"
+          ? "There is some uncertainty because the evidence is incomplete or competing diagnoses are close."
+          : "Uncertainty is high. Treat the ranking as a prompt for safer questioning rather than a settled answer.",
+    reasons:
+      reasons.length > 0
+        ? reasons
+        : ["No major internal conflict detected in the extracted pattern."],
+    missingInformation: [...missingInformation].slice(0, 5),
+  };
+}
   
 
 export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
@@ -576,6 +737,11 @@ export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
   const reasoningComparison = buildReasoningComparison(validatedInput, scored, redFlags, fitCheck);
   const problemRepresentation = buildProblemRepresentation(validatedInput, features);
   const presentation = buildPresentation(validatedInput, displayedDifferentials, features);
+  const presentationSupport = buildPresentationSupport(initialFamilyRoute);
+  const diagnosisTraces = displayedDifferentials
+    .slice(0, 3)
+    .map((differential, index) => buildDiagnosisTrace(differential, index + 1, features));
+  const uncertainty = buildUncertainty(displayedDifferentials, features, presentationSupport);
   const nextSteps = displayedDifferentials[0]
     ? findNextStepsRule(displayedDifferentials[0].name)
     : undefined;
@@ -594,6 +760,9 @@ export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
     reasoningComparison,
     anchorWarning,
     presentation,
+    presentationSupport,
+    diagnosisTraces,
+    uncertainty,
     detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,
