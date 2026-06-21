@@ -6,6 +6,15 @@ function formatSlug(value: string) {
 }
 
 export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
+  const displayedDetectedFeatures = Array.from(
+    new Map(
+      result.detectedFeatures.map((feature, index) => [
+        result.detectedFeatureSlugs[index] ?? feature,
+        feature,
+      ]),
+    ),
+  );
+
   return (
     <section className="space-y-4">
       <Card title="Pilot scope">
@@ -49,9 +58,9 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
       <Card title="Features detected">
         {result.detectedFeatures.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {result.detectedFeatures.map((feature) => (
+            {displayedDetectedFeatures.map(([featureSlug, feature]) => (
               <span
-                key={feature}
+                key={featureSlug}
                 className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
               >
                 {feature}

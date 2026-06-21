@@ -10,6 +10,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "central chest pressure",
     "chest pressure",
     "chest heaviness",
+    "heavy feeling in the middle of his chest",
+    "heavy feeling in the middle of her chest",
+    "heavy feeling in the middle of the chest",
     "heavy chest pain",
     "crushing chest pain",
     "chest tightness",
@@ -110,6 +113,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "high blood pressure",
     "known hypertension",
   ],
+  hyperlipidaemia: [
+    "hyperlipidaemia",
+    "hyperlipidemia",
+    "high cholesterol",
+    "raised cholesterol",
+  ],
   jaw_pain: [
     "jaw pain",
     "pain to jaw",
@@ -124,6 +133,42 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "radiating to the jaw",
     "pain radiating to the jaw",
     "radiates to the jaw",
+    "spread into his jaw",
+    "spread into her jaw",
+    "spread into the jaw",
+    "spread a bit into his jaw",
+    "spread a bit into her jaw",
+    "spread a bit into the jaw",
+    "into his jaw",
+    "into her jaw",
+    "into the jaw",
+  ],
+  shoulder_pain: [
+    "shoulder pain",
+    "left shoulder",
+    "right shoulder",
+    "left shoulder pain",
+    "right shoulder pain",
+    "spread into his left shoulder",
+    "spread into her left shoulder",
+    "spread into the left shoulder",
+  ],
+  pain_radiates_to_shoulder: [
+    "radiating to the shoulder",
+    "radiates to the shoulder",
+    "spread into his shoulder",
+    "spread into her shoulder",
+    "spread into his left shoulder",
+    "spread into her left shoulder",
+    "spread into the left shoulder",
+    "spread a bit into his left shoulder",
+    "spread a bit into her left shoulder",
+    "spread a bit into the left shoulder",
+    "jaw and left shoulder",
+    "jaw and right shoulder",
+    "into his left shoulder",
+    "into her left shoulder",
+    "into the left shoulder",
   ],
   arm_pain: [
     "arm pain",
@@ -156,8 +201,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "nausea",
     "nauseated",
     "feeling sick",
+    "felt sick",
+    "clammy and sick",
   ],
   indigestion_like_chest_pain: [
+    "indigestion",
     "indigestion like chest pain",
     "indigestion-like chest pain",
     "indigestion like epigastric and chest heaviness",
@@ -179,6 +227,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "upper abdominal discomfort",
   ],
   acs_equivalent_pain: [
+    "indigestion",
     "epigastric discomfort",
     "indigestion like epigastric and chest heaviness",
     "indigestion-like epigastric and chest heaviness",
@@ -186,6 +235,24 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "upper abdominal heaviness",
     "indigestion like chest discomfort",
     "indigestion-like chest discomfort",
+  ],
+  chest_heaviness: [
+    "chest heaviness",
+    "heavy chest",
+    "heavy feeling in chest",
+    "heavy feeling in the middle of his chest",
+    "heavy feeling in the middle of her chest",
+    "heavy feeling in the middle of the chest",
+  ],
+  exertional_pain: [
+    "mowing the lawn",
+    "mowing lawn",
+    "walking uphill",
+    "climbing stairs",
+    "on exertion",
+    "with exertion",
+    "during exertion",
+    "exertional",
   ],
   heartburn: [
     "heartburn",
@@ -478,6 +545,9 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "became constant",
     "now become constant",
     "now became constant",
+    "pain has become more constant",
+    "became more constant",
+    "more constant",
     "pain has not settled",
     "ongoing constant pain",
   ],
@@ -564,6 +634,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   colicky_pain: [
     "colicky pain",
+    "colicky abdominal pain",
     "crampy colicky pain",
     "crampy colicky abdominal pain",
     "crampy pain",
@@ -653,6 +724,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened her bowels",
     "not opened their bowels",
     "not passed wind",
+    "hasn t passed stool",
+    "hasn't passed stool",
+    "not passed stool",
+    "passed stool or flatus",
+    "stool or flatus",
   ],
   unable_to_pass_flatus: [
     "unable to pass flatus",
@@ -663,6 +739,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "not opened her bowels or passed wind",
     "not opened their bowels or passed wind",
     "no flatus",
+    "hasn t passed flatus",
+    "hasn't passed flatus",
+    "not passed flatus",
+    "passed stool or flatus",
+    "stool or flatus",
     "cannot pass wind",
     "can't pass wind",
   ],
@@ -800,6 +881,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "guarded abdomen",
     "abdomen is guarded",
     "abdominal guarding",
+    "voluntary guarding",
   ],
   mild_tenderness: [
     "mildly tender",
@@ -888,6 +970,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "visibly swollen",
     "abdomen is visibly swollen",
     "swollen abdomen",
+    "abdominal swelling",
     "bloated abdomen",
   ],
   hernia_present: [
@@ -933,6 +1016,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "history of abdominal surgery",
     "laparotomy",
     "previous laparotomy",
+    "previous hysterectomy",
+    "prior hysterectomy",
   ],
   immobility: [
     "prolonged immobility",
@@ -980,6 +1065,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "absent breath sounds",
     "unilateral absent breath sounds",
     "hyperresonant hemithorax",
+    "left chest is very quiet",
+    "right chest is very quiet",
+    "quiet left chest",
+    "quiet right chest",
+    "quiet hemithorax",
   ],
   tall_thin_habitus: [
     "tall thin male",
@@ -1424,6 +1514,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "on insulin",
     "insulin dependent",
   ],
+  type_1_diabetes: [
+    "type 1 diabetes",
+    "type one diabetes",
+    "t1dm",
+  ],
   dehydration: [
     "dehydration",
     "dehydrated",
@@ -1434,6 +1529,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "polyuria",
     "passing lots of urine",
     "peeing a lot",
+    "peeing constantly",
     "passing urine frequently",
   ],
   polydipsia: [
@@ -1441,11 +1537,18 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "marked thirst",
     "very thirsty",
     "excessive thirst",
+    "thirsty for days",
   ],
   ketosis_breath: [
     "ketotic breath",
     "ketosis breath",
     "fruity breath",
+    "breath smells fruity",
+    "breath smelled fruity",
+    "smells fruity",
+    "smelled fruity",
+    "fruity smelling breath",
+    "fruity smell",
     "acetone breath",
   ],
   kussmaul_breathing: [
@@ -1453,6 +1556,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "kussmaul respirations",
     "deep rapid breathing",
     "deep and rapid breathing",
+    "breathing very deeply and quickly",
+    "breathing deeply and quickly",
     "acidotic breathing",
   ],
   hyperglycaemia: [
@@ -1507,6 +1612,11 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "chest is clear",
     "normal sats",
     "normal oxygen saturations",
+  ],
+  normal_oxygen_saturations: [
+    "normal sats",
+    "normal oxygen saturations",
+    "normal oxygenation",
   ],
   heavy_menstrual_bleeding: [
     "heavy menstrual bleeding",
@@ -1758,6 +1868,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "hyper resonant",
     "hyper-resonant",
   ],
+  tracheal_deviation: [
+    "tracheal deviation",
+    "trachea shifted",
+    "trachea seems slightly shifted",
+    "shifted trachea",
+  ],
   crackles: [
     "crackles",
     "crepitations",
@@ -1931,8 +2047,9 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
 
 const HIGH_RESPIRATORY_RATE_THRESHOLD = 22;
 const HIGH_HEART_RATE_THRESHOLD = 100;
-const LOW_SYSTOLIC_BP_THRESHOLD = 90;
+const LOW_SYSTOLIC_BP_THRESHOLD = 92;
 const LOW_SATS_THRESHOLD = 92;
+const NORMAL_SATS_THRESHOLD = 95;
 const HIGH_TEMPERATURE_THRESHOLD = 38;
 const LOW_TEMPERATURE_THRESHOLD = 36;
 const FEATURE_PHRASE_CACHE_TTL_MS = 30_000;
@@ -2327,6 +2444,10 @@ function getObservationFeatures(observations: string): string[] {
     observationFeatures.push("hypoxia");
   }
 
+  if (oxygenSaturations.some((sats) => sats >= NORMAL_SATS_THRESHOLD)) {
+    observationFeatures.push("normal_oxygen_saturations");
+  }
+
   if (temperatures.some((temperature) => temperature >= HIGH_TEMPERATURE_THRESHOLD)) {
     observationFeatures.push("fever");
   }
@@ -2497,6 +2618,19 @@ function getCompositeFeatures(allText: string, matchedFeatures: string[]): strin
   return dynamicFeatures.map(canonicalFeatureSlug);
 }
 
+function getMetabolicBreathFeatures(allText: string): string[] {
+  const ketosisBreathPatterns = [
+    /\bbreath\s+(?:smells?|smelled)\s+["'“”‘’]?\s*fruity\b/g,
+    /\bfruity\s+smell(?:ing)?\s+breath\b/g,
+  ];
+
+  if (ketosisBreathPatterns.some((pattern) => pattern.test(allText))) {
+    return ["ketosis_breath"];
+  }
+
+  return [];
+}
+
 function getDynamicFeatures(allText: string, matchedFeatures: string[], input: CaseInput): string[] {
   return [
     ...getAgeFeatures(allText, input.age, input.sex),
@@ -2504,6 +2638,7 @@ function getDynamicFeatures(allText: string, matchedFeatures: string[], input: C
     ...getDurationFeatures(allText),
     ...getTemporalRelationshipFeatures(allText),
     ...getCompositeFeatures(allText, matchedFeatures),
+    ...getMetabolicBreathFeatures(allText),
   ].map(canonicalFeatureSlug);
 }
 

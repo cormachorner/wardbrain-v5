@@ -198,6 +198,29 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
   }
 
+  if (rule.name === "Pulmonary embolism") {
+    const hasPeSpecificSupport =
+      has(features, "pleuritic_pain") ||
+      has(features, "hypoxia") ||
+      has(features, "haemoptysis") ||
+      has(features, "recent_surgery") ||
+      has(features, "immobility") ||
+      has(features, "long_haul_travel") ||
+      has(features, "dvt_history") ||
+      has(features, "oestrogen_use") ||
+      has(features, "pregnancy_possible") ||
+      has(features, "leg_swelling");
+    const hasDkaMetabolicSignature =
+      (has(features, "diabetic_context") || has(features, "type_1_diabetes")) &&
+      has(features, "kussmaul_breathing") &&
+      (has(features, "polyuria") || has(features, "polydipsia") || has(features, "ketosis_breath")) &&
+      !hasPeSpecificSupport;
+
+    if (hasDkaMetabolicSignature) {
+      return -6;
+    }
+  }
+
   if (rule.name === "Abdominal aortic aneurysm") {
     const hasUnstableAaaPattern =
       (has(features, "abdominal_pain") || has(features, "flank_pain")) &&

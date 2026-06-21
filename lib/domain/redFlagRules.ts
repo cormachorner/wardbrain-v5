@@ -75,10 +75,20 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "long_haul_travel") ||
         has(features, "oestrogen_use") ||
         has(features, "pregnancy_possible");
+      const hasPeSpecificSupport =
+        has(features, "pleuritic_pain") ||
+        has(features, "hypoxia") ||
+        has(features, "haemoptysis") ||
+        hasVteSpecificSignal;
       const hasMeaningfulPeSignal =
         has(features, "tachycardia") ||
         has(features, "hypoxia") ||
         hasVteSpecificSignal;
+      const hasDkaMetabolicSignature =
+        (has(features, "diabetic_context") || has(features, "type_1_diabetes")) &&
+        has(features, "kussmaul_breathing") &&
+        (has(features, "polyuria") || has(features, "polydipsia") || has(features, "ketosis_breath")) &&
+        !hasPeSpecificSupport;
       const hasStrongInfectivePulmonaryPattern =
         has(features, "productive_cough") &&
         has(features, "fever") &&
@@ -90,7 +100,7 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "unilateral_reduced_air_entry") ||
         has(features, "hyperresonance");
 
-      if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal) {
+      if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal || hasDkaMetabolicSignature) {
         continue;
       }
 
