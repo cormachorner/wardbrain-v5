@@ -160,4 +160,10 @@ export type AnalyzeCaseResponse = AnalysisResult & {
   detectedFeatureSlugs: string[];
   detectedFeatures: string[];
   matchedPresentationBlock: WardBrainPresentationBlockMatch | null;
+  llmExtraction?: {
+    attempted: boolean;
+    skippedReason?: string;
+    acceptedFeatures: string[];
+    invalidReasons: string[];
+  };
 };

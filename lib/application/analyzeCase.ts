@@ -25,6 +25,10 @@ import {
 import { routePresentationFamilies } from "../domain/presentationFamilies";
 import { detectRedFlags } from "../domain/redFlagRules";
 import { matchPresentationBlockForCase } from "../domain/wardbrainLookup";
+import { extractLlmFeatures } from "../llm/extractFeatures";
+import type { LlmCompletionClient } from "../llm/client";
+import type { LlmExtractionConfig } from "../llm/config";
+import { mergeLlmFeatures } from "../llm/mergeFeatures";
 import {
   getSupportedPresentationBlock,
   SUPPORTED_PRESENTATION_BLOCKS,
@@ -648,9 +652,10 @@ function buildUncertainty(
 }
   
 
-export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
-  const validatedInput = validateCaseInput(input);
-  const features = extractFeatures(validatedInput);
+function analyzeValidatedCaseWithFeatures(
+  validatedInput: CaseInput,
+  features: ExtractedFeatures,
+): AnalyzeCaseResponse {
   const redFlags = detectRedFlags(features);
   const parsedAge = Number.parseInt(validatedInput.age, 10);
   const age = Number.isNaN(parsedAge) ? undefined : parsedAge;
@@ -766,6 +771,60 @@ export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
     detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,
+  };
+}
+
+export function analyzeCase(input: CaseInput): AnalyzeCaseResponse {
+  const validatedInput = validateCaseInput(input);
+  const features = extractFeatures(validatedInput);
+
+  return analyzeValidatedCaseWithFeatures(validatedInput, features);
+}
+
+export async function analyzeCaseWithOptionalLlmExtraction(
+  input: CaseInput,
+  options: {
+    llmConfig?: LlmExtractionConfig;
+    llmClient?: LlmCompletionClient;
+  } = {},
+): Promise<AnalyzeCaseResponse> {
+  const validatedInput = validateCaseInput(input);
+  const deterministicFeatures = extractFeatures(validatedInput);
+  const deterministicResult = analyzeValidatedCaseWithFeatures(
+    validatedInput,
+    deterministicFeatures,
+  );
+
+  const llmResult = await extractLlmFeatures({
+    input: validatedInput,
+    blockId: deterministicResult.presentationSupport.matchedBlockId,
+    presentationConfidence: deterministicResult.presentationSupport.confidence,
+    config: options.llmConfig,
+    client: options.llmClient,
+  });
+
+  if (llmResult.features.length === 0) {
+    return process.env.WARDBRAIN_LLM_DEBUG === "1"
+      ? { ...deterministicResult, llmExtraction: llmResult.metadata }
+      : deterministicResult;
+  }
+
+  const merged = mergeLlmFeatures(deterministicFeatures, llmResult.features);
+
+  if (merged.acceptedFeatures.length === 0) {
+    return process.env.WARDBRAIN_LLM_DEBUG === "1"
+      ? { ...deterministicResult, llmExtraction: llmResult.metadata }
+      : deterministicResult;
+  }
+
+  const mergedResult = analyzeValidatedCaseWithFeatures(validatedInput, merged.features);
+
+  return {
+    ...mergedResult,
+    llmExtraction: {
+      ...llmResult.metadata,
+      acceptedFeatures: merged.acceptedFeatures.map((feature) => feature.slug),
+    },
   };
 }
 
