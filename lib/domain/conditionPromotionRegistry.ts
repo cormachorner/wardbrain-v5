@@ -351,6 +351,20 @@ export const CONDITION_PROMOTION_REGISTRY: WardBrainConditionPromotionEntry[] = 
     learnMoreKey: "heart-failure",
   },
   {
+    canonicalName: "Anaemia",
+    presentationFamilies: ["breathlessness-pleuritic-chest-pain"],
+    promotionStatus: LIVE_ENGINE,
+    aliases: ["anaemia", "anemia", "iron deficiency anaemia", "iron deficiency anemia"],
+    learnMoreKey: "anaemia",
+  },
+  {
+    canonicalName: "Diabetic ketoacidosis",
+    presentationFamilies: ["breathlessness-pleuritic-chest-pain", "acute-abdominal-pain"],
+    promotionStatus: LIVE_ENGINE,
+    aliases: ["DKA", "diabetic ketoacidosis", "metabolic acidosis"],
+    learnMoreKey: "diabetic-ketoacidosis",
+  },
+  {
     canonicalName: "Panic / anxiety",
     presentationFamilies: ["chest-pain", "breathlessness-pleuritic-chest-pain"],
     promotionStatus: LIVE_ENGINE,

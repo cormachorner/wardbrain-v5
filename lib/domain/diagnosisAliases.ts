@@ -270,7 +270,15 @@ const DIAGNOSIS_ALIAS_GROUPS = [
   },
   {
     diagnosis: "Heart failure",
-    aliases: ["heart failure", "ccf", "congestive heart failure", "congestive cardiac failure"],
+    aliases: ["heart failure", "acute heart failure", "pulmonary oedema", "pulmonary edema", "ccf", "congestive heart failure", "congestive cardiac failure"],
+  },
+  {
+    diagnosis: "Anaemia",
+    aliases: ["anaemia", "anemia", "iron deficiency anaemia", "iron deficiency anemia"],
+  },
+  {
+    diagnosis: "Diabetic ketoacidosis",
+    aliases: ["dka", "diabetic ketoacidosis", "metabolic acidosis", "ketoacidosis"],
   },
   {
     diagnosis: "Panic / anxiety",

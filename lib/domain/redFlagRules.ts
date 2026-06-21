@@ -60,6 +60,110 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
       }
     }
 
+    if (rule.id === "nice-ng158-pe-001") {
+      const hasDyspnoeaOrPleuriticPain = has(features, "sob") || has(features, "pleuritic_pain");
+      const hasVteSpecificSignal =
+        has(features, "haemoptysis") ||
+        has(features, "leg_swelling") ||
+        has(features, "dvt_history") ||
+        has(features, "recent_surgery") ||
+        has(features, "immobility") ||
+        has(features, "long_haul_travel") ||
+        has(features, "oestrogen_use") ||
+        has(features, "pregnancy_possible");
+      const hasMeaningfulPeSignal =
+        has(features, "tachycardia") ||
+        has(features, "hypoxia") ||
+        hasVteSpecificSignal;
+      const hasStrongInfectivePulmonaryPattern =
+        has(features, "productive_cough") &&
+        has(features, "fever") &&
+        (has(features, "crackles") || has(features, "sputum_change") || has(features, "rigors"));
+      const hasStrongObstructiveAirwayPattern =
+        has(features, "wheeze") &&
+        (has(features, "known_asthma") || has(features, "asthma_history") || has(features, "known_copd") || has(features, "copd_history"));
+      const hasStrongPneumothoraxPattern =
+        has(features, "unilateral_reduced_air_entry") ||
+        has(features, "hyperresonance");
+
+      if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal) {
+        continue;
+      }
+
+      if (
+        !hasVteSpecificSignal &&
+        (hasStrongInfectivePulmonaryPattern || hasStrongObstructiveAirwayPattern || hasStrongPneumothoraxPattern)
+      ) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-severe-asthma-001") {
+      const hasAsthmaOrWheeze =
+        has(features, "known_asthma") ||
+        has(features, "asthma_history") ||
+        has(features, "wheeze");
+      const hasSeverePhysiology =
+        has(features, "unable_to_speak_full_sentences") ||
+        has(features, "difficulty_speaking") ||
+        has(features, "hypoxia") ||
+        has(features, "silent_chest") ||
+        has(features, "poor_peak_flow") ||
+        has(features, "tachypnoea") ||
+        has(features, "severe_respiratory_distress");
+
+      if (!hasAsthmaOrWheeze || !hasSeverePhysiology) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-heart-failure-001") {
+      const overloadCount = [
+        has(features, "orthopnoea"),
+        has(features, "paroxysmal_nocturnal_dyspnoea"),
+        has(features, "bibasal_crackles"),
+        has(features, "raised_jvp"),
+        has(features, "peripheral_oedema"),
+        has(features, "ankle_swelling"),
+        has(features, "frothy_sputum"),
+      ].filter(Boolean).length;
+
+      if (!has(features, "sob") || overloadCount < 2) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-tension-pneumothorax-001") {
+      const hasSuddenDyspnoeaOrPleuriticPain =
+        has(features, "sudden_onset") &&
+        (has(features, "sob") || has(features, "pleuritic_pain"));
+      const hasInstability =
+        has(features, "hypoxia") ||
+        has(features, "hypotension") ||
+        has(features, "tachycardia") ||
+        has(features, "severe_respiratory_distress");
+
+      if (!hasSuddenDyspnoeaOrPleuriticPain || !has(features, "unilateral_reduced_air_entry") || !hasInstability) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-dka-breathlessness-001") {
+      const hasMetabolicContext = has(features, "diabetic_context") || has(features, "hyperglycaemia");
+      const metabolicFeatureCount = [
+        has(features, "kussmaul_breathing"),
+        has(features, "polyuria"),
+        has(features, "polydipsia"),
+        has(features, "vomiting"),
+        has(features, "abdominal_pain"),
+        has(features, "dehydration"),
+      ].filter(Boolean).length;
+
+      if (!hasMetabolicContext || metabolicFeatureCount < 2) {
+        continue;
+      }
+    }
+
     if (rule.id === "wardbrain-gap-bowel-obstruction-001") {
       const hasObstructionPattern =
         has(features, "abdominal_pain") &&

@@ -1381,6 +1381,41 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pitting oedema",
     "pitting edema",
   ],
+  leg_swelling: [
+    "leg swelling",
+    "swollen legs",
+    "calf swelling",
+    "unilateral leg swelling",
+    "one leg swollen",
+  ],
+  raised_jvp: [
+    "raised jvp",
+    "elevated jvp",
+    "raised jugular venous pressure",
+    "elevated jugular venous pressure",
+  ],
+  peripheral_oedema: [
+    "peripheral oedema",
+    "peripheral edema",
+    "leg oedema",
+    "leg edema",
+    "ankle oedema",
+    "ankle edema",
+    "pitting oedema",
+    "pitting edema",
+  ],
+  frothy_sputum: [
+    "frothy sputum",
+    "pink frothy sputum",
+    "pink frothy phlegm",
+  ],
+  paroxysmal_nocturnal_dyspnoea: [
+    "paroxysmal nocturnal dyspnoea",
+    "paroxysmal nocturnal dyspnea",
+    "wakes at night gasping",
+    "waking at night gasping",
+    "pnd",
+  ],
   diabetic_context: [
     "diabetic",
     "diabetes",
@@ -1389,10 +1424,17 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "on insulin",
     "insulin dependent",
   ],
+  dehydration: [
+    "dehydration",
+    "dehydrated",
+    "clinically dehydrated",
+    "dry mucous membranes",
+  ],
   polyuria: [
     "polyuria",
     "passing lots of urine",
     "peeing a lot",
+    "passing urine frequently",
   ],
   polydipsia: [
     "polydipsia",
@@ -1405,6 +1447,21 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "ketosis breath",
     "fruity breath",
     "acetone breath",
+  ],
+  kussmaul_breathing: [
+    "kussmaul breathing",
+    "kussmaul respirations",
+    "deep rapid breathing",
+    "deep and rapid breathing",
+    "acidotic breathing",
+  ],
+  hyperglycaemia: [
+    "hyperglycaemia",
+    "hyperglycemia",
+    "high blood glucose",
+    "high blood sugar",
+    "glucose high",
+    "blood sugar high",
   ],
   hypoglycaemia_cue: [
     "hypoglycaemia",
@@ -1425,6 +1482,37 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "sense of doom",
     "tingling in both hands",
     "tingling around the mouth",
+  ],
+  tingling: [
+    "tingling",
+    "tingling fingers",
+    "tingling in fingers",
+    "tingling in both hands",
+    "pins and needles",
+  ],
+  perioral_paraesthesia: [
+    "perioral paraesthesia",
+    "perioral paresthesia",
+    "tingling around the mouth",
+    "tingling around mouth",
+    "tingling lips",
+  ],
+  normal_exam: [
+    "normal exam",
+    "normal examination",
+    "normal chest exam",
+    "normal chest examination",
+    "clear chest",
+    "chest clear",
+    "chest is clear",
+    "normal sats",
+    "normal oxygen saturations",
+  ],
+  heavy_menstrual_bleeding: [
+    "heavy menstrual bleeding",
+    "heavy periods",
+    "very heavy periods",
+    "menorrhagia",
   ],
   hypoxia: [
     "hypoxia",
@@ -1545,6 +1633,10 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "cough with sputum",
     "cough productive of sputum",
   ],
+  cough: [
+    "cough",
+    "coughing",
+  ],
   progressive_course: [
     "worsening over days",
     "getting worse over days",
@@ -1562,14 +1654,30 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "audible wheeze",
   ],
   known_asthma: [
+    "asthma",
     "known asthma",
     "history of asthma",
     "asthmatic",
     "usually uses salbutamol",
   ],
+  asthma_history: [
+    "asthma",
+    "known asthma",
+    "history of asthma",
+    "asthma history",
+    "asthmatic",
+  ],
   known_copd: [
     "known copd",
     "history of copd",
+    "copd patient",
+    "emphysema",
+    "chronic obstructive pulmonary disease",
+  ],
+  copd_history: [
+    "known copd",
+    "history of copd",
+    "copd history",
     "copd patient",
     "emphysema",
     "chronic obstructive pulmonary disease",
@@ -1583,6 +1691,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "using blue inhaler more",
     "using reliever more",
   ],
+  inhaler_use: [
+    "inhaler",
+    "inhalers",
+    "salbutamol",
+    "blue inhaler",
+    "reliever inhaler",
+  ],
   difficulty_speaking: [
     "difficulty speaking full sentences",
     "cannot speak full sentences",
@@ -1592,6 +1707,102 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "too breathless to talk",
     "struggling to finish sentences",
     "unable to complete sentences",
+  ],
+  unable_to_speak_full_sentences: [
+    "difficulty speaking full sentences",
+    "cannot speak full sentences",
+    "can't speak full sentences",
+    "can t speak full sentences",
+    "unable to speak in full sentences",
+    "unable to speak full sentences",
+    "too breathless to speak full sentences",
+    "speaking in words only",
+    "speaking single words",
+    "too breathless to talk",
+    "struggling to finish sentences",
+    "unable to complete sentences",
+  ],
+  respiratory_distress: [
+    "respiratory distress",
+    "in respiratory distress",
+    "increased work of breathing",
+    "working hard to breathe",
+    "struggling to breathe",
+    "laboured breathing",
+    "labored breathing",
+  ],
+  severe_respiratory_distress: [
+    "severe respiratory distress",
+    "exhausted from breathing",
+    "respiratory exhaustion",
+    "tiring with breathing",
+    "cyanosed",
+    "cyanotic",
+  ],
+  accessory_muscle_use: [
+    "accessory muscle use",
+    "using accessory muscles",
+    "intercostal recession",
+    "subcostal recession",
+    "tracheal tug",
+  ],
+  reduced_air_entry: [
+    "reduced air entry",
+    "reduced breath sounds",
+    "decreased air entry",
+    "decreased breath sounds",
+  ],
+  hyperresonance: [
+    "hyperresonance",
+    "hyperresonant",
+    "hyper resonant",
+    "hyper-resonant",
+  ],
+  crackles: [
+    "crackles",
+    "crepitations",
+    "creps",
+    "focal crackles",
+  ],
+  bibasal_crackles: [
+    "bibasal crackles",
+    "bi basal crackles",
+    "bilateral basal crackles",
+    "basal crackles bilaterally",
+    "crackles at both bases",
+    "crepitations at both bases",
+  ],
+  dvt_history: [
+    "dvt history",
+    "history of dvt",
+    "previous dvt",
+    "previous deep vein thrombosis",
+    "deep vein thrombosis",
+  ],
+  oestrogen_use: [
+    "oestrogen use",
+    "estrogen use",
+    "combined pill",
+    "combined oral contraceptive",
+    "oral contraceptive pill",
+    "on the pill",
+    "hrt",
+    "hormone replacement therapy",
+  ],
+  poor_peak_flow: [
+    "poor peak flow",
+    "low peak flow",
+    "peak flow low",
+    "peak flow 40",
+    "peak flow 50",
+    "pefr 40",
+    "pefr 50",
+  ],
+  silent_chest: [
+    "silent chest",
+    "near silent chest",
+    "no wheeze despite severe asthma",
+    "very poor air movement",
   ],
   sputum_change: [
     "sputum volume increase",
@@ -1670,17 +1881,43 @@ const NEGATION_PREFIXES = [
   "nil",
 ];
 
+const BACKGROUND_CONTEXT_FEATURES = new Set([
+  "diabetic_context",
+  "hypertension",
+  "asthma_history",
+  "known_asthma",
+  "copd_history",
+  "known_copd",
+  "smoking_history",
+  "smoker",
+  "dehydration",
+]);
+
 const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
   fever: ["no fever", "not feverish", "without fever"],
   vomiting: ["no vomiting", "not vomiting", "without vomiting"],
   diarrhoea: ["no diarrhoea", "no diarrhea", "without diarrhoea", "without diarrhea"],
+  nausea: ["no nausea", "without nausea", "denies nausea"],
   sweating: ["no sweating", "without sweating", "denies sweating"],
+  chest_pain: ["no chest pain", "denies chest pain", "without chest pain"],
+  cough: ["no cough", "denies cough", "without cough"],
+  productive_cough: ["no productive cough", "denies productive cough", "without productive cough"],
+  wheeze: ["no wheeze", "no wheezing", "denies wheeze", "without wheeze"],
+  diabetic_context: ["no diabetes", "not diabetic", "without diabetes"],
+  hypertension: ["no hypertension", "no high blood pressure", "without hypertension"],
+  asthma_history: ["no asthma", "without asthma"],
+  known_asthma: ["no asthma", "without asthma"],
+  known_copd: ["no copd", "without copd"],
+  copd_history: ["no copd", "without copd"],
+  dehydration: ["no dehydration", "not dehydrated", "without dehydration"],
   sob: [
     "no shortness of breath",
     "no sob",
     "not short of breath",
     "without shortness of breath",
     "denies shortness of breath",
+    "no breathlessness",
+    "denies breathlessness",
   ],
   pleuritic_pain: ["no pleuritic pain", "denies pleuritic pain", "without pleuritic pain"],
   focal_neurology: [
@@ -1883,15 +2120,15 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
     return true;
   }
 
-  if (patterns.some((pattern) => hasNegatedListItem(text, pattern))) {
-    return true;
-  }
-
   if (
     feature === "sob" &&
     /\b(?:no|denies|denied|without)(?:\s+\w+){0,8}\s+(?:shortness\s+of\s+breath|sob|breathlessness|breathless)\b/.test(text)
   ) {
     return true;
+  }
+
+  if (BACKGROUND_CONTEXT_FEATURES.has(feature)) {
+    return false;
   }
 
   return patterns.some((pattern) => {
@@ -1906,29 +2143,6 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
       return negatedPattern.test(text);
     });
   });
-}
-
-function hasNegatedListItem(text: string, pattern: string) {
-  const normalizedPattern = normaliseText(pattern);
-
-  if (!normalizedPattern) {
-    return false;
-  }
-
-  if (/\b(?:no|not|without|denies|denied|nil|unable|cannot|can t|can’t)\b/.test(normalizedPattern)) {
-    return false;
-  }
-
-  return text
-    .split(/[.!?;:\n]/)
-    .some((clause) => {
-      if (!/\b(?:no|not|denies|denied|without|nil)\b/.test(clause)) {
-        return false;
-      }
-
-      const negationPrefix = clause.match(/\b(?:no|not|denies|denied|without|nil)\b(?:\s+\w+){0,10}/)?.[0] ?? "";
-      return negationPrefix.includes(normalizedPattern);
-    });
 }
 
 function normaliseClauseText(text: string): string {
@@ -2211,6 +2425,21 @@ function getDurationFeatures(allText: string): string[] {
     }
   }
 
+  const leadingDurationPattern =
+    /\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|several|few)\s+(hours?|days?|weeks?|months?|years?)\s+of\s+(?:worsening|progressive|progressively|deteriorating)\b/g;
+
+  for (const match of allText.matchAll(leadingDurationPattern)) {
+    const unit = match[2] ?? "";
+
+    if (unit.startsWith("day") || unit.startsWith("week")) {
+      features.push("progressive_course");
+    }
+
+    if (unit.startsWith("month") || unit.startsWith("year")) {
+      features.push("chronic_course");
+    }
+  }
+
   return features;
 }
 
@@ -2348,6 +2577,21 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["frequency", "urinary_frequency"],
     ["guarding_rigidity", "guarding"],
     ["smoker", "smoking_history"],
+    ["asthma_history", "known_asthma"],
+    ["known_asthma", "asthma_history"],
+    ["copd_history", "known_copd"],
+    ["known_copd", "copd_history"],
+    ["inhaler_use", "increased_inhaler_use"],
+    ["unable_to_speak_full_sentences", "difficulty_speaking"],
+    ["difficulty_speaking", "unable_to_speak_full_sentences"],
+    ["ankle_swelling", "peripheral_oedema"],
+    ["peripheral_oedema", "ankle_swelling"],
+    ["leg_swelling", "ankle_swelling"],
+    ["crackles", "infection_source"],
+    ["productive_cough", "infection_source"],
+    ["tingling", "panic_features"],
+    ["perioral_paraesthesia", "panic_features"],
+    ["kussmaul_breathing", "tachypnoea"],
   ];
 
   for (const [sourceFeature, aliasFeature] of aliasFeatures) {

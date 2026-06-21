@@ -47,15 +47,6 @@ export const TRAP_CASES: TrapCase[] = [
           sourceCoverage: "full",
         },
         {
-          name: "PE suspicion pattern",
-          explanation:
-            "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
-          boostDiagnoses: ["Pulmonary embolism"],
-          sourceBody: "NICE",
-          sourceId: "NG158",
-          sourceCoverage: "full",
-        },
-        {
           name: "Acute aortic syndrome pattern",
           explanation:
             "This feature cluster should strongly raise concern for acute aortic pathology, but this rule is currently an internal WardBrain pattern rather than a fully NICE-derived rule.",
@@ -458,17 +449,7 @@ export const TRAP_CASES: TrapCase[] = [
     expected: {
       problemRepresentation:
         "56yo female Chest pain and breathlessness with chest pain, sudden onset, shortness of breath, hypoxia, pleuritic pain",
-      redFlags: [
-        {
-          name: "PE suspicion pattern",
-          explanation:
-            "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
-          boostDiagnoses: ["Pulmonary embolism"],
-          sourceBody: "NICE",
-          sourceId: "NG158",
-          sourceCoverage: "full",
-        },
-      ],
+      redFlags: [],
       differentials: [
         {
           name: "Pneumothorax",
@@ -636,17 +617,7 @@ export const TRAP_CASES: TrapCase[] = [
     expected: {
       problemRepresentation:
         "29yo male Chest pain and shortness of breath with chest pain, sudden onset, unilateral reduced air entry, shortness of breath, pleuritic pain",
-      redFlags: [
-        {
-          name: "PE suspicion pattern",
-          explanation:
-            "Chest pain or shortness of breath, especially with collapse or pleuritic features, should prompt formal PE assessment rather than casual exclusion.",
-          boostDiagnoses: ["Pulmonary embolism"],
-          sourceBody: "NICE",
-          sourceId: "NG158",
-          sourceCoverage: "full",
-        },
-      ],
+      redFlags: [],
       differentials: [
         {
           name: "Pneumothorax",

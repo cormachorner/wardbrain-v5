@@ -10,7 +10,8 @@
     "lint": "eslint",
     "test": "node scripts/run-tests.mjs",
     "import:clinical-content": "tsx scripts/import-clinical-content.ts",
-    "import:chest-pain-tests": "tsx scripts/import-chest-pain-v1-test-cases.ts"
+    "import:chest-pain-tests": "tsx scripts/import-chest-pain-v1-test-cases.ts",
+    "import:breathlessness-tests": "tsx scripts/import-breathlessness-v1-test-cases.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

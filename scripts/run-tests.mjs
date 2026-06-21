@@ -24,6 +24,8 @@ function run(command, args) {
   }
 }
 
+run("node", ["scripts/check-admin-test-import-coverage.mjs"]);
+
 run("./node_modules/.bin/tsc", [
   "--outDir",
   buildDir,
@@ -86,6 +88,7 @@ run("./node_modules/.bin/tsc", [
   "tests/diagnosisAliases.test.mts",
   "tests/conditionPromotionRegistry.test.mts",
   "tests/acuteAbdominalPainDefinitions.test.mts",
+  "tests/breathlessnessV1.test.mts",
   "tests/chestPainV1.test.mts",
   "tests/diagnosisDefinitionEvaluator.test.mts",
   "tests/finalCalibration.test.mts",
@@ -108,6 +111,7 @@ run("node", [
   join(buildDir, "tests", "diagnosisAliases.test.mjs"),
   join(buildDir, "tests", "conditionPromotionRegistry.test.mjs"),
   join(buildDir, "tests", "acuteAbdominalPainDefinitions.test.mjs"),
+  join(buildDir, "tests", "breathlessnessV1.test.mjs"),
   join(buildDir, "tests", "chestPainV1.test.mjs"),
   join(buildDir, "tests", "diagnosisDefinitionEvaluator.test.mjs"),
   join(buildDir, "tests", "domain.featureExtractor.test.mjs"),

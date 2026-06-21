@@ -29,7 +29,16 @@ const PNEUMOTHORAX_YOUNG_SIGNATURE_FEATURES = [
   "sob",
   "smoker",
 ] as const;
-const PE_VTE_CONTEXT_FEATURES = ["recent_surgery", "immobility", "long_haul_travel", "haemoptysis"] as const;
+const PE_VTE_CONTEXT_FEATURES = [
+  "recent_surgery",
+  "immobility",
+  "long_haul_travel",
+  "haemoptysis",
+  "dvt_history",
+  "oestrogen_use",
+  "pregnancy_possible",
+  "leg_swelling",
+] as const;
 
 type AgeBand = "under30" | "30to49" | "50to64" | "65plus" | "unknown";
 
@@ -348,8 +357,36 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   }
 
   if (rule.name === "Heart failure") {
-    if (has(features, "sob") && has(features, "orthopnoea") && has(features, "ankle_swelling")) {
+    const overloadCount = [
+      has(features, "orthopnoea"),
+      has(features, "paroxysmal_nocturnal_dyspnoea"),
+      has(features, "bibasal_crackles"),
+      has(features, "raised_jvp"),
+      has(features, "peripheral_oedema"),
+      has(features, "ankle_swelling"),
+      has(features, "frothy_sputum"),
+    ].filter(Boolean).length;
+
+    if (has(features, "sob") && overloadCount >= 2) {
       return 4;
+    }
+  }
+
+  if (rule.name === "Asthma exacerbation") {
+    const hasStrongInfectivePulmonaryPattern =
+      has(features, "productive_cough") &&
+      has(features, "fever") &&
+      (has(features, "crackles") || has(features, "sputum_change") || has(features, "rigors") || has(features, "infection_source"));
+    const hasAsthmaSpecificSupport =
+      has(features, "known_asthma") ||
+      has(features, "asthma_history") ||
+      has(features, "increased_inhaler_use") ||
+      has(features, "poor_peak_flow") ||
+      has(features, "unable_to_speak_full_sentences") ||
+      has(features, "silent_chest");
+
+    if (hasStrongInfectivePulmonaryPattern && !hasAsthmaSpecificSupport) {
+      return -5;
     }
   }
 
@@ -480,11 +517,40 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   if (rule.name === "Diabetic ketoacidosis") {
     if (
       !has(features, "diabetic_context") &&
+      !has(features, "hyperglycaemia") &&
       !has(features, "polyuria") &&
       !has(features, "polydipsia") &&
-      !has(features, "ketosis_breath")
+      !has(features, "ketosis_breath") &&
+      !has(features, "kussmaul_breathing")
     ) {
       return -5;
+    }
+
+    if (
+      (has(features, "diabetic_context") || has(features, "hyperglycaemia")) &&
+      has(features, "kussmaul_breathing") &&
+      (has(features, "polyuria") || has(features, "polydipsia") || has(features, "vomiting") || has(features, "dehydration"))
+    ) {
+      return 5;
+    }
+  }
+
+  if (rule.name === "Anaemia") {
+    if (
+      has(features, "sob") &&
+      has(features, "pallor") &&
+      (has(features, "fatigue") || has(features, "heavy_menstrual_bleeding"))
+    ) {
+      return 4;
+    }
+
+    if (
+      has(features, "hypoxia") ||
+      has(features, "wheeze") ||
+      has(features, "bibasal_crackles") ||
+      has(features, "raised_jvp")
+    ) {
+      return -2;
     }
   }
 
