@@ -14,71 +14,46 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
       ]),
     ),
   );
+  const leadDiagnosis = result.differentials[0];
 
   return (
     <section className="space-y-4">
-      <Card title="Pilot scope">
-        <div className="space-y-3 text-sm text-slate-700">
-          <div>
-            <span className="font-medium">Matched block: </span>
-            {result.presentationSupport.matchedBlockLabel ?? "No supported block matched"}
-            <span className="ml-2 text-slate-500">
-              confidence {result.presentationSupport.confidence}
-            </span>
+      <Card
+        title="Most likely diagnosis / ranked differentials"
+        className="border-[var(--brand-border)]"
+        titleClassName="text-slate-950"
+      >
+        {leadDiagnosis && (
+          <div className="mb-4 rounded-2xl border border-[var(--brand-border)] bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Most likely
+            </div>
+            <div className="mt-1 flex flex-wrap items-baseline justify-between gap-3">
+              <div className="text-2xl font-bold tracking-tight text-[var(--brand-navy)]">
+                {leadDiagnosis.name}
+              </div>
+              <div className="text-sm font-medium text-slate-500">Score {leadDiagnosis.score}</div>
+            </div>
+            <div className="mt-2 text-sm text-slate-700">
+              <span className="font-medium">Why it fits: </span>
+              {leadDiagnosis.reasonsFor.length > 0 ? leadDiagnosis.reasonsFor.join(", ") : "Limited support"}
+            </div>
           </div>
-
-          {result.presentationSupport.warning ? (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900">
-              {result.presentationSupport.warning}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
-              This case fits a pilot-supported presentation block.
-            </div>
-          )}
-
-          <details>
-            <summary className="cursor-pointer font-medium text-slate-800">
-              Supported blocks
-            </summary>
-            <div className="mt-2 grid gap-2">
-              {result.presentationSupport.supportedBlocks.map((block) => (
-                <div key={block.id} className="rounded-xl border border-slate-200 p-3">
-                  <div className="font-medium">{block.label}</div>
-                  <div className="mt-1 text-xs text-slate-500">
-                    {block.diagnoses.length} diagnoses currently represented
-                  </div>
-                </div>
-              ))}
-            </div>
-          </details>
-        </div>
-      </Card>
-
-      <Card title="Features detected">
-        {result.detectedFeatures.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {displayedDetectedFeatures.map(([featureSlug, feature]) => (
-              <span
-                key={featureSlug}
-                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm text-slate-700"
-              >
-                {feature}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-slate-600">No features detected yet.</p>
         )}
-      </Card>
 
-      <Card title="Ranked differentials">
         {result.differentials.length > 0 ? (
           <ol className="space-y-2">
             {result.differentials.map((dx, index) => (
-              <li key={dx.name} className="rounded-xl border border-slate-200 p-3">
+              <li
+                key={dx.name}
+                className={`rounded-xl border p-3 ${
+                  index === 0
+                    ? "border-[var(--brand-border)] bg-white"
+                    : "border-slate-200 bg-white/70"
+                }`}
+              >
                 <div className="flex items-center justify-between gap-4">
-                  <div className="font-semibold">
+                  <div className={index === 0 ? "font-bold text-slate-950" : "font-semibold"}>
                     {index + 1}. {dx.name}
                   </div>
                   <div className="text-sm text-slate-500">Score {dx.score}</div>
@@ -131,7 +106,7 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         )}
       </Card>
 
-      <Card title="Red-flag pattern detection">
+      <Card title="Red-flag pattern detection" className="border-red-200">
         {result.redFlags.length > 0 ? (
           <ul className="space-y-2">
             {result.redFlags.map((flag) => (
@@ -168,36 +143,38 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         )}
       </Card>
 
-      <Card title="Does your lead diagnosis fit?">
-        <div className="mb-2 text-lg font-semibold">{result.fitCheck.label}</div>
-        <p className="mb-3 text-slate-700">{result.fitCheck.summary}</p>
-
-        <div className="space-y-2 text-sm">
-          <div>
-            <span className="font-medium">Supporting: </span>
-            {result.fitCheck.supporting.length > 0
-              ? result.fitCheck.supporting.join(", ")
-              : "None identified"}
-          </div>
-          <div>
-            <span className="font-medium">Conflicting: </span>
-            {result.fitCheck.conflicting.length > 0
-              ? result.fitCheck.conflicting.join(", ")
-              : "No major conflicts detected"}
-          </div>
-        </div>
-      </Card>
-
       <Card title="Dangerous diagnoses to exclude / comparison">
         <div className="space-y-3 text-sm text-slate-700">
           <p>{result.reasoningComparison.leadAssessment}</p>
           <p>{result.reasoningComparison.differentialAssessment}</p>
           <p>{result.reasoningComparison.dangerAssessment}</p>
-        </div>
-      </Card>
 
-      <Card title="Anchor warning">
-        <p>{result.anchorWarning}</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-1 text-base font-semibold text-slate-900">
+              {result.fitCheck.label}
+            </div>
+            <p>{result.fitCheck.summary}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div>
+                <span className="font-medium">Supporting: </span>
+                {result.fitCheck.supporting.length > 0
+                  ? result.fitCheck.supporting.join(", ")
+                  : "None identified"}
+              </div>
+              <div>
+                <span className="font-medium">Conflicting: </span>
+                {result.fitCheck.conflicting.length > 0
+                  ? result.fitCheck.conflicting.join(", ")
+                  : "No major conflicts detected"}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
+            <span className="font-medium">Anchor warning: </span>
+            {result.anchorWarning}
+          </div>
+        </div>
       </Card>
 
       <Card title="Uncertainty">
@@ -223,8 +200,64 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         <p>{result.presentation}</p>
       </Card>
 
+      <SecondaryCard title="Case summary">
+        <div className="space-y-4 text-sm text-slate-700">
+          <div>
+            <span className="font-medium">Matched block: </span>
+            {result.presentationSupport.matchedBlockLabel ?? "No supported block matched"}
+            <span className="ml-2 text-slate-500">
+              confidence {result.presentationSupport.confidence}
+            </span>
+          </div>
+
+          {result.presentationSupport.warning ? (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900">
+              {result.presentationSupport.warning}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+              This case fits a pilot-supported presentation block.
+            </div>
+          )}
+
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-500">Features detected</div>
+            {result.detectedFeatures.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {displayedDetectedFeatures.map(([featureSlug, feature]) => (
+                  <span
+                    key={featureSlug}
+                    className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700"
+                  >
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-600">No features detected yet.</p>
+            )}
+          </div>
+
+          <details>
+            <summary className="cursor-pointer font-medium text-slate-800">
+              Supported blocks
+            </summary>
+            <div className="mt-2 grid gap-2">
+              {result.presentationSupport.supportedBlocks.map((block) => (
+                <div key={block.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="font-medium">{block.label}</div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {block.diagnoses.length} diagnoses currently represented
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        </div>
+      </SecondaryCard>
+
       {result.nextSteps && (
-        <Card title="Investigations and immediate next steps">
+        <SecondaryCard title="Investigations and immediate next steps">
           <div className="flex flex-wrap items-center gap-2">
             <div className="font-semibold text-slate-900">{result.nextSteps.diagnosis}</div>
 
@@ -268,7 +301,7 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
               {result.nextSteps.notes.join(" ")}
             </div>
           )}
-        </Card>
+        </SecondaryCard>
       )}
 
       <SecondaryCard title="Presentation teaching scaffold">

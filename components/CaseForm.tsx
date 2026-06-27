@@ -1,6 +1,27 @@
 import type { CaseInput } from "../lib/types";
+import type { ReactNode } from "react";
 import { SUPPORTED_PRESENTATION_BLOCKS } from "../lib/pilotStatus";
 import { Field, TextArea } from "./WardBrainCard";
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+      <div className="mb-3">
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+        {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export function CaseForm({
   caseInput,
@@ -17,7 +38,12 @@ export function CaseForm({
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-2xl font-semibold">Enter case</h2>
+      <div className="mb-5">
+        <h2 className="text-2xl font-semibold">Case input</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Add the messy case details. WardBrain will keep the payload exactly as entered.
+        </p>
+      </div>
 
       <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
         <div className="text-sm font-semibold text-blue-950">Pilot-supported presentations</div>
@@ -37,93 +63,98 @@ export function CaseForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium">Age</span>
-          <input
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none ring-0"
-            value={caseInput.age}
-            onChange={(e) => onFieldChange("age", e.target.value)}
-            placeholder="68"
+      <div className="space-y-4">
+        <FormSection title="Patient">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">Age</span>
+              <input
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none ring-0 focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                value={caseInput.age}
+                onChange={(e) => onFieldChange("age", e.target.value)}
+                placeholder="68"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">Sex</span>
+              <select
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                value={caseInput.sex}
+                onChange={(e) => onFieldChange("sex", e.target.value)}
+              >
+                <option value="">Select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+          </div>
+        </FormSection>
+
+        <FormSection title="Presentation">
+          <Field
+            label="Presenting complaint"
+            value={caseInput.presentingComplaint}
+            onChange={(v) => onFieldChange("presentingComplaint", v)}
+            placeholder="Tearing chest pain"
           />
-        </label>
 
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium">Sex</span>
-          <select
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 outline-none"
-            value={caseInput.sex}
-            onChange={(e) => onFieldChange("sex", e.target.value)}
-          >
-            <option value="">Select</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </label>
-      </div>
+          <TextArea
+            label="History of presenting complaint"
+            value={caseInput.history}
+            onChange={(v) => onFieldChange("history", v)}
+            placeholder="Sudden onset, radiating to the back, collapse..."
+          />
 
-      <Field
-        label="Presenting complaint"
-        value={caseInput.presentingComplaint}
-        onChange={(v) => onFieldChange("presentingComplaint", v)}
-        placeholder="Tearing chest pain"
-      />
+          <TextArea
+            label="Observations"
+            value={caseInput.observations}
+            onChange={(v) => onFieldChange("observations", v)}
+            placeholder="BP, HR, sats, RR..."
+          />
+        </FormSection>
 
-      <TextArea
-        label="History of presenting complaint"
-        value={caseInput.history}
-        onChange={(v) => onFieldChange("history", v)}
-        placeholder="Sudden onset, radiating to the back, collapse..."
-      />
+        <FormSection title="Background">
+          <TextArea
+            label="PMH / PSH"
+            value={caseInput.pmh}
+            onChange={(v) => onFieldChange("pmh", v)}
+            placeholder="Untreated hypertension..."
+          />
 
-      <TextArea
-        label="PMH / PSH"
-        value={caseInput.pmh}
-        onChange={(v) => onFieldChange("pmh", v)}
-        placeholder="Untreated hypertension..."
-      />
+          <TextArea
+            label="Drugs / allergies"
+            value={caseInput.meds}
+            onChange={(v) => onFieldChange("meds", v)}
+            placeholder="Any regular meds, anticoagulation, allergies..."
+          />
 
-      <TextArea
-        label="Drugs / allergies"
-        value={caseInput.meds}
-        onChange={(v) => onFieldChange("meds", v)}
-        placeholder="Any regular meds, anticoagulation, allergies..."
-      />
+          <TextArea
+            label="Social / risk factors"
+            value={caseInput.social}
+            onChange={(v) => onFieldChange("social", v)}
+            placeholder="Smoker, alcohol, independent baseline..."
+          />
 
-      <TextArea
-        label="Social / risk factors"
-        value={caseInput.social}
-        onChange={(v) => onFieldChange("social", v)}
-        placeholder="Smoker, alcohol, independent baseline..."
-      />
+          <TextArea
+            label="Key positives"
+            value={caseInput.keyPositives}
+            onChange={(v) => onFieldChange("keyPositives", v)}
+            placeholder="Radiates to back, loss of consciousness, pulsatile abdomen..."
+          />
 
-      <TextArea
-        label="Key positives"
-        value={caseInput.keyPositives}
-        onChange={(v) => onFieldChange("keyPositives", v)}
-        placeholder="Radiates to back, loss of consciousness, pulsatile abdomen..."
-      />
+          <TextArea
+            label="Key negatives"
+            value={caseInput.keyNegatives}
+            onChange={(v) => onFieldChange("keyNegatives", v)}
+            placeholder="No fever, no pleuritic pain..."
+          />
+        </FormSection>
 
-      <TextArea
-        label="Key negatives"
-        value={caseInput.keyNegatives}
-        onChange={(v) => onFieldChange("keyNegatives", v)}
-        placeholder="No fever, no pleuritic pain..."
-      />
-
-      <TextArea
-        label="Observations"
-        value={caseInput.observations}
-        onChange={(v) => onFieldChange("observations", v)}
-        placeholder="BP, HR, sats, RR..."
-      />
-
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="text-base font-semibold text-slate-900">Your current reasoning</div>
-        <p className="mt-1 text-sm text-slate-600">
-          Optional. These fields help compare your thinking with WardBrain&apos;s output.
-        </p>
-
+        <FormSection
+          title="Your current reasoning"
+          description="Optional. These fields help compare your thinking with WardBrain's output."
+        >
         <Field
           label="Lead diagnosis"
           helper="What do you think is the single most likely diagnosis right now?"
@@ -147,6 +178,7 @@ export function CaseForm({
           onChange={(v) => onFieldChange("dangerousDiagnoses", v)}
           placeholder="Acute aortic syndrome, PE, GI bleed"
         />
+        </FormSection>
       </div>
 
       <div className="mt-6 flex gap-3">

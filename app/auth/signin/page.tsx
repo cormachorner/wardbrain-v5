@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react"
 import { useState } from "react"
+import { WardBrainLogo } from "../../../components/brand/WardBrainLogo"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -35,8 +36,11 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900">Sign in to WardBrain</h2>
-          <p className="mt-2 text-slate-600">Access your medical reasoning coach</p>
+          <WardBrainLogo size="md" className="justify-center" />
+          <p className="mt-4 text-slate-600">Access your medical reasoning coach</p>
+          <p className="mx-auto mt-4 inline-flex rounded-full border border-[var(--brand-border)] bg-white px-3 py-1 text-xs font-medium text-slate-600">
+            Educational use only • De-identified cases only
+          </p>
         </div>
 
         <form onSubmit={handleCredentialsSignIn} className="space-y-6">
@@ -71,7 +75,7 @@ export default function SignIn() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[var(--brand-navy)] hover:bg-[#0b2340] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-navy)] disabled:opacity-50"
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </button>

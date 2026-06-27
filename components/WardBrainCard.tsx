@@ -1,17 +1,35 @@
 import type { ReactNode } from "react";
 
-export function Card({ title, children }: { title: string; children: ReactNode }) {
+export function Card({
+  title,
+  children,
+  className = "",
+  titleClassName = "",
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+  titleClassName?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="mb-3 text-xl font-semibold">{title}</h3>
+    <div className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}>
+      <h3 className={`mb-3 text-xl font-semibold ${titleClassName}`}>{title}</h3>
       {children}
     </div>
   );
 }
 
-export function SecondaryCard({ title, children }: { title: string; children: ReactNode }) {
+export function SecondaryCard({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+    <div className={`rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm ${className}`}>
       <h3 className="mb-2 text-lg font-semibold text-slate-800">{title}</h3>
       {children}
     </div>

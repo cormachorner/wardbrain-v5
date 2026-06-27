@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "WardBrain v5",
+  title: "WardBrain",
   description: "A clinical reasoning coach for medical students",
 };
 

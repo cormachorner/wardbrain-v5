@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react"
 import { AnalysisResults } from "../components/AnalysisResults";
+import { WardBrainLogo } from "../components/brand/WardBrainLogo";
 import { CaseForm } from "../components/CaseForm";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
 
@@ -45,13 +46,16 @@ export default function Home() {
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">WardBrain v5</h1>
-          <p className="text-xl text-slate-600 mb-8">A clinical reasoning coach for medical students</p>
-          <p className="text-slate-600 mb-6">Please sign in to access the application.</p>
+        <div className="mx-auto max-w-xl px-6 text-center">
+          <WardBrainLogo size="lg" className="justify-center" />
+          <p className="mt-5 text-xl text-slate-600">A clinical reasoning coach for medical students</p>
+          <p className="mx-auto mt-4 inline-flex rounded-full border border-[var(--brand-border)] bg-white px-3 py-1 text-xs font-medium text-slate-600">
+            Educational use only • De-identified cases only
+          </p>
+          <p className="mb-6 mt-6 text-slate-600">Please sign in to access the application.</p>
           <a
             href="/auth/signin"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center rounded-md border border-transparent bg-[var(--brand-navy)] px-6 py-3 text-base font-medium text-white hover:bg-[#0b2340]"
           >
             Sign In
           </a>
@@ -111,48 +115,50 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-7xl px-6 py-10">
         <header className="mb-8">
-          <div className="flex justify-between items-start mb-3">
-            <div className="inline-flex rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-              Educational use only • De-identified cases only
+          <div className="flex flex-col gap-6 rounded-3xl border border-[var(--brand-border)] bg-white/80 p-5 shadow-sm md:flex-row md:items-start md:justify-between md:p-6">
+            <div>
+              <WardBrainLogo size="md" />
+              <p className="mt-4 max-w-3xl text-slate-600">
+                A clinical reasoning coach for medical students that detects anchoring,
+                surfaces dangerous differentials, and helps turn a messy case into a safer,
+                sharper presentation.
+              </p>
+              <div className="mt-4 inline-flex rounded-full border border-[var(--brand-border)] bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                Educational use only • De-identified cases only
+              </div>
             </div>
-            <div className="flex gap-2">
+            <nav aria-label="Primary" className="flex flex-wrap gap-2 md:justify-end">
               <a
                 href="/status"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md border border-[var(--brand-border)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-navy)]"
               >
                 Status
               </a>
               {session.user.role === "ADMIN" && (
                 <a
                   href="/admin"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center rounded-md border border-[var(--brand-border)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-navy)]"
                 >
                   Admin
                 </a>
               )}
               <a
                 href="/profile"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md border border-[var(--brand-border)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-navy)]"
               >
                 Profile
               </a>
               <button
                 onClick={() => signOut()}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center rounded-md border border-[var(--brand-border)] bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-navy)]"
               >
                 Sign Out
               </button>
-            </div>
+            </nav>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">WardBrain v5</h1>
-          <p className="mt-3 max-w-3xl text-slate-600">
-            A clinical reasoning coach for medical students that detects anchoring,
-            surfaces dangerous differentials, and helps turn a messy case into a safer,
-            sharper presentation.
-          </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
           <CaseForm
             caseInput={caseInput}
             onFieldChange={updateField}
@@ -161,7 +167,7 @@ export default function Home() {
             isAnalyzing={isAnalyzing}
           />
 
-          <div>
+          <div className="lg:sticky lg:top-6 lg:self-start">
             {error && (
               <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {error}

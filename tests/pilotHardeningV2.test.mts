@@ -230,3 +230,65 @@ test("pilot hardening v2: supported delirium routing remains intact", () => {
   assert.equal(canonicalDiagnosisSlug(result.differentials[0]?.name ?? ""), "delirium-secondary-to-infection");
   assertNoFeatures(result, ["chest_pain", "abdominal_pain"]);
 });
+
+test("pilot hardening v2 residual: neck and jaw radiation plus haemoptysis variants are extracted", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "59",
+    sex: "male",
+    presentingComplaint: "Chest discomfort",
+    history:
+      "Central chest tightness spread to his neck and jaw while walking uphill. Separately, he coughed up small amounts of blood after a recent flight.",
+    observations: "HR 112",
+  }));
+
+  assertFeatures(result, [
+    "chest_pain",
+    "pain_radiates_to_jaw",
+    "jaw_pain",
+    "exertional_pain",
+    "haemoptysis",
+    "long_haul_travel",
+    "tachycardia",
+  ]);
+});
+
+test("pilot hardening v2 residual: no clear chest pain or breathlessness history is negation-safe", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "82",
+    sex: "female",
+    presentingComplaint: "Confusion",
+    history:
+      "Acute confusion with fever and foul-smelling urine. There is no clear chest pain or breathlessness history, and no haemoptysis.",
+    observations: "Temp 38.4",
+  }));
+
+  assert.equal(result.presentationSupport.matchedBlockId, "confusion-delirium");
+  assertNoFeatures(result, ["chest_pain", "sob", "haemoptysis"]);
+  assertNoRedFlags(result, ["ACS suspicion pattern", "PE suspicion pattern"]);
+});
+
+test("pilot hardening v2 residual: delirium urinary infection context is not hijacked by ACS", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "88",
+    sex: "male",
+    presentingComplaint: "Delirium",
+    history:
+      "He is acutely confused and incontinent of urine with fever and cloudy foul-smelling urine. The family report no clear chest pain or breathlessness history.",
+    observations: "Temp 38.7, HR 104",
+  }));
+
+  const top3 = result.differentials.slice(0, 3).map((item) => canonicalDiagnosisSlug(item.name));
+
+  assert.equal(result.presentationSupport.matchedBlockId, "confusion-delirium");
+  assert.notEqual(canonicalDiagnosisSlug(result.differentials[0]?.name ?? ""), "acute-coronary-syndrome");
+  assert.ok(top3.includes("delirium-secondary-to-infection") || top3.includes("sepsis") || top3.includes("uti-urosepsis"));
+  assertFeatures(result, ["confusion", "fever", "infection_source", "urinary_symptoms"]);
+  assertNoFeatures(result, ["chest_pain", "sob"]);
+  assertNoRedFlags(result, ["ACS suspicion pattern"]);
+});

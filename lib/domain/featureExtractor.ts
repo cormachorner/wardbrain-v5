@@ -133,33 +133,62 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "pain to jaw",
     "pain to the jaw",
     "pain in the jaw",
+    "neck pain",
+    "pain to neck",
+    "pain to the neck",
+    "pain in the neck",
     "radiating to the jaw",
+    "radiating to the neck",
     "pain radiating to the jaw",
+    "pain radiating to the neck",
     "radiates to the jaw",
+    "radiates to the neck",
     "jaw discomfort",
+    "neck discomfort",
   ],
   pain_radiates_to_jaw: [
     "radiating to the jaw",
+    "radiating to the neck",
     "pain radiating to the jaw",
+    "pain radiating to the neck",
     "radiates to the jaw",
+    "radiates to the neck",
     "spread into his jaw",
     "spread into her jaw",
     "spread into the jaw",
+    "spread into his neck",
+    "spread into her neck",
+    "spread into the neck",
     "went into his jaw",
     "went into her jaw",
     "went into the jaw",
+    "went into his neck",
+    "went into her neck",
+    "went into the neck",
     "spread to his jaw",
     "spread to her jaw",
     "spread to the jaw",
+    "spread to his neck",
+    "spread to her neck",
+    "spread to the neck",
     "travels to his jaw",
     "travels to her jaw",
     "travels to the jaw",
+    "travels to his neck",
+    "travels to her neck",
+    "travels to the neck",
     "spread a bit into his jaw",
     "spread a bit into her jaw",
     "spread a bit into the jaw",
+    "spread a bit into his neck",
+    "spread a bit into her neck",
+    "spread a bit into the neck",
     "into his jaw",
     "into her jaw",
     "into the jaw",
+    "into his neck",
+    "into her neck",
+    "into the neck",
   ],
   shoulder_pain: [
     "shoulder pain",
@@ -857,11 +886,30 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "coughing blood",
     "coughing up blood",
     "coughed up blood",
+    "coughs up blood",
+    "coughing small amounts of blood",
+    "coughed small amounts of blood",
+    "coughing up small amounts of blood",
+    "coughs up small amounts of blood",
+    "coughed up small amounts of blood",
+    "coughed up a small amount of blood",
+    "coughing up a small amount of blood",
     "blood in sputum",
+    "blood in his sputum",
+    "blood in her sputum",
+    "blood in the sputum",
     "blood streaked sputum",
     "blood-streaked sputum",
     "blood stained sputum",
     "blood-stained sputum",
+    "blood streaked phlegm",
+    "blood-streaked phlegm",
+    "blood stained phlegm",
+    "blood-stained phlegm",
+    "bloody sputum",
+    "bloody phlegm",
+    "spitting blood",
+    "spat blood",
   ],
   rigors: [
     "rigors",
@@ -879,6 +927,13 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "purulent sputum",
     "dysuria",
     "urinary frequency",
+    "urinary incontinence",
+    "incontinent of urine",
+    "new incontinence",
+    "new urinary incontinence",
+    "wet himself",
+    "wet herself",
+    "foul-smelling urine",
     "cloudy urine",
     "cellulitis",
     "infected wound",
@@ -1467,6 +1522,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "burning urine",
     "burning when passing urine",
     "uti symptoms",
+    "urinary incontinence",
+    "incontinent of urine",
+    "new urinary incontinence",
+    "new incontinence",
+    "wet himself",
+    "wet herself",
     "foul-smelling urine",
     "cloudy urine",
   ],
@@ -2886,6 +2947,7 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["af", "atrial_fibrillation"],
     ["frequency", "urinary_frequency"],
     ["guarding_rigidity", "guarding"],
+    ["pain_radiates_to_jaw", "jaw_pain"],
     ["pain_radiates_to_left_arm", "arm_pain"],
     ["smoker", "smoking_history"],
     ["asthma_history", "known_asthma"],
@@ -2938,6 +3000,32 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
 
   if (/\b(?:no|not|without|denies|rather than looking)\s+(?:\w+\s+){0,3}wheez(?:e|y|ing)\b/.test(allText)) {
     removeMatchedFeature(matchedFeatures, "wheeze");
+  }
+
+  if (
+    /\b(?:no|not|without|denies|denied|no\s+clear)\s+(?:\w+\s+){0,4}(?:chest\s+pain|chest\s+discomfort|chest\s+heaviness|chest\s+tightness|chest\s+pressure|breathlessness|shortness\s+of\s+breath|sob)\s+(?:or|and)\s+(?:\w+\s+){0,4}(?:chest\s+pain|chest\s+discomfort|chest\s+heaviness|chest\s+tightness|chest\s+pressure|breathlessness|shortness\s+of\s+breath|sob)\b/.test(allText) ||
+    /\bno\s+clear\s+(?:chest\s+pain|chest\s+discomfort|chest\s+heaviness|chest\s+tightness|chest\s+pressure|breathlessness|shortness\s+of\s+breath|sob)\s+or\s+(?:breathlessness|shortness\s+of\s+breath|sob|chest\s+pain|chest\s+discomfort|chest\s+heaviness|chest\s+tightness|chest\s+pressure)\s+history\b/.test(allText)
+  ) {
+    removeMatchedFeature(matchedFeatures, "chest_pain");
+    removeMatchedFeature(matchedFeatures, "chest_heaviness");
+    removeMatchedFeature(matchedFeatures, "acs_equivalent_pain");
+    removeMatchedFeature(matchedFeatures, "indigestion_like_chest_pain");
+    removeMatchedFeature(matchedFeatures, "sob");
+  }
+
+  if (/\b(?:no|not|without|denies|denied|no\s+clear)\s+(?:\w+\s+){0,4}(?:chest\s+pain|chest\s+discomfort|chest\s+heaviness|chest\s+tightness|chest\s+pressure)\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "chest_pain");
+    removeMatchedFeature(matchedFeatures, "chest_heaviness");
+    removeMatchedFeature(matchedFeatures, "acs_equivalent_pain");
+    removeMatchedFeature(matchedFeatures, "indigestion_like_chest_pain");
+  }
+
+  if (/\b(?:no|not|without|denies|denied|no\s+clear)\s+(?:\w+\s+){0,4}(?:breathlessness|shortness\s+of\s+breath|sob)\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "sob");
+  }
+
+  if (/\b(?:no|not|without|denies|denied)\s+(?:\w+\s+){0,3}(?:haemoptysis|hemoptysis|coughing\s+(?:up\s+)?blood|blood(?:-|\s+)streaked\s+(?:sputum|phlegm)|bloody\s+(?:sputum|phlegm))\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "haemoptysis");
   }
 
   if (/\b(?:no|not|without|denies)\s+(?:\w+\s+){0,3}(?:leg|calf|ankle)\s+swelling\b/.test(allText)) {
