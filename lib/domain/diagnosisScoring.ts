@@ -198,24 +198,6 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
   }
 
-  if (rule.name === "Acute coronary syndrome") {
-    const hasTrueChestOrSobContext =
-      has(features, "chest_pain") ||
-      has(features, "chest_heaviness") ||
-      has(features, "indigestion_like_chest_pain") ||
-      has(features, "acs_equivalent_pain") ||
-      has(features, "sob") ||
-      has(features, "epigastric_pain") ||
-      has(features, "upper_abdominal_pain");
-    const hasDeliriumInfectiveContext =
-      has(features, "confusion") &&
-      (has(features, "fever") || has(features, "infection_source") || has(features, "urinary_symptoms"));
-
-    if (!hasTrueChestOrSobContext && hasDeliriumInfectiveContext) {
-      return -8;
-    }
-  }
-
   if (rule.name === "Pulmonary embolism") {
     const hasPeSpecificSupport =
       has(features, "pleuritic_pain") ||
@@ -634,16 +616,8 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     const hasStrongLocalizedUrinarySource =
       has(features, "urinary_symptoms") &&
       (has(features, "flank_pain") || has(features, "cva_tenderness"));
-    const hasConfusedFebrileUrinaryPattern =
-      has(features, "confusion") &&
-      has(features, "fever") &&
-      (has(features, "urinary_symptoms") || has(features, "infection_source"));
     const hasStrongLocalizedBiliarySource =
       has(features, "ruq_pain") && has(features, "jaundice");
-
-    if (hasConfusedFebrileUrinaryPattern) {
-      return 3;
-    }
 
     if (
       (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&
