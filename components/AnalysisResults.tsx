@@ -1,11 +1,233 @@
+"use client";
+
+import { useState } from "react";
+import type { ReactNode } from "react";
 import type { AnalyzeCaseResponse } from "../lib/types";
-import { Card, SecondaryCard, SimpleList } from "./WardBrainCard";
+import { SimpleList } from "./WardBrainCard";
 
 function formatSlug(value: string) {
   return value.replaceAll("_", " ").replaceAll("-", " ");
 }
 
+function Icon({
+  name,
+  className = "h-4 w-4",
+}: {
+  name: "brain" | "shield" | "alert" | "clipboard" | "search" | "info" | "check";
+  className?: string;
+}) {
+  const common = {
+    className,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  if (name === "brain") {
+    return (
+      <svg {...common}>
+        <path d="M9 4.5a3 3 0 0 0-3 3v.2a3.5 3.5 0 0 0-1 6.2 3.3 3.3 0 0 0 3.2 4.6H9" />
+        <path d="M15 4.5a3 3 0 0 1 3 3v.2a3.5 3.5 0 0 1 1 6.2 3.3 3.3 0 0 1-3.2 4.6H15" />
+        <path d="M12 5v14" />
+        <path d="M8.5 10.5c1.4.3 2.3 1.1 2.7 2.4" />
+        <path d="M15.5 10.5c-1.4.3-2.3 1.1-2.7 2.4" />
+      </svg>
+    );
+  }
+
+  if (name === "shield") {
+    return (
+      <svg {...common}>
+        <path d="M12 3 5 6v5c0 4.5 2.8 8.2 7 10 4.2-1.8 7-5.5 7-10V6l-7-3Z" />
+      </svg>
+    );
+  }
+
+  if (name === "alert") {
+    return (
+      <svg {...common}>
+        <path d="m12 3 9 16H3L12 3Z" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </svg>
+    );
+  }
+
+  if (name === "clipboard") {
+    return (
+      <svg {...common}>
+        <path d="M9 4h6l1 2h2v15H6V6h2l1-2Z" />
+        <path d="M9 10h6" />
+        <path d="M9 14h6" />
+      </svg>
+    );
+  }
+
+  if (name === "search") {
+    return (
+      <svg {...common}>
+        <circle cx="11" cy="11" r="6" />
+        <path d="m16 16 4 4" />
+      </svg>
+    );
+  }
+
+  if (name === "check") {
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8 12 2.5 2.5L16 9" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 20 20"
+      fill="none"
+      className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+    >
+      <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Section({
+  title,
+  icon,
+  children,
+  defaultOpen = true,
+  tone = "default",
+  actions,
+}: {
+  title: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  tone?: "default" | "danger" | "amber" | "secondary" | "primary";
+  actions?: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const toneClasses = {
+    default: "border-slate-200 bg-white",
+    danger: "border-red-200 bg-white",
+    amber: "border-amber-200 bg-white",
+    secondary: "border-slate-200 bg-slate-50",
+    primary: "border-[var(--brand-border)] bg-white",
+  };
+
+  return (
+    <section className={`rounded-2xl border p-5 shadow-sm transition-colors hover:border-slate-300 ${toneClasses[tone]}`}>
+      <div className="flex items-start justify-between gap-3">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+          className="group flex min-w-0 flex-1 items-center gap-2 text-left text-xl font-semibold text-slate-950 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
+        >
+          {icon && <span className="shrink-0 text-slate-500" aria-hidden="true">{icon}</span>}
+          <span>{title}</span>
+          <span className="ml-1 text-slate-400 group-hover:text-slate-600">
+            <Chevron open={open} />
+          </span>
+        </button>
+        {actions}
+      </div>
+      {open && <div className="mt-3">{children}</div>}
+    </section>
+  );
+}
+
+function ChipList({
+  items,
+  empty = "None identified",
+  tone = "slate",
+}: {
+  items: string[];
+  empty?: string;
+  tone?: "slate" | "red" | "amber";
+}) {
+  if (items.length === 0) {
+    return <span className="text-slate-500">{empty}</span>;
+  }
+
+  const toneClasses = {
+    slate: "border-slate-200 bg-slate-50 text-slate-700",
+    red: "border-red-200 bg-red-50 text-red-900",
+    amber: "border-amber-200 bg-amber-50 text-amber-900",
+  };
+
+  return (
+    <span className="inline-flex flex-wrap gap-1.5 align-middle">
+      {items.map((item) => (
+        <span key={item} className={`rounded-full border px-2 py-0.5 text-xs ${toneClasses[tone]}`}>
+          {item}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function DiagnosisTraceDisclosure({
+  trace,
+}: {
+  trace: AnalyzeCaseResponse["diagnosisTraces"][number];
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between gap-3 text-left font-medium text-slate-800 outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
+      >
+        <span className="flex items-center gap-2">
+          <Icon name="info" />
+          Explain this ranking
+        </span>
+        <Chevron open={open} />
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          <div>
+            <span className="font-medium">Most supportive features: </span>
+            <ChipList items={trace.supportingFeatures} />
+          </div>
+          <div>
+            <span className="font-medium">Features against: </span>
+            <ChipList items={trace.opposingFeatures} />
+          </div>
+          {trace.otherReasons.length > 0 && (
+            <div>
+              <span className="font-medium">Composite/rule support: </span>
+              <ChipList items={trace.otherReasons} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
+  const [copied, setCopied] = useState(false);
   const displayedDetectedFeatures = Array.from(
     new Map(
       result.detectedFeatures.map((feature, index) => [
@@ -16,13 +238,19 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
   );
   const leadDiagnosis = result.differentials[0];
 
+  async function copyPresentation() {
+    try {
+      await navigator.clipboard.writeText(result.presentation);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <section className="space-y-4">
-      <Card
-        title="Most likely diagnosis / ranked differentials"
-        className="border-[var(--brand-border)]"
-        titleClassName="text-slate-950"
-      >
+      <Section title="Most likely diagnosis / ranked differentials" icon={<Icon name="brain" />} tone="primary">
         {leadDiagnosis && (
           <div className="mb-4 rounded-2xl border border-[var(--brand-border)] bg-slate-50 p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -32,11 +260,13 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
               <div className="text-2xl font-bold tracking-tight text-[var(--brand-navy)]">
                 {leadDiagnosis.name}
               </div>
-              <div className="text-sm font-medium text-slate-500">Score {leadDiagnosis.score}</div>
+              <div className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-medium text-slate-600">
+                Score {leadDiagnosis.score}
+              </div>
             </div>
-            <div className="mt-2 text-sm text-slate-700">
+            <div className="mt-3 text-sm text-slate-700">
               <span className="font-medium">Why it fits: </span>
-              {leadDiagnosis.reasonsFor.length > 0 ? leadDiagnosis.reasonsFor.join(", ") : "Limited support"}
+              <ChipList items={leadDiagnosis.reasonsFor} />
             </div>
           </div>
         )}
@@ -46,14 +276,14 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             {result.differentials.map((dx, index) => (
               <li
                 key={dx.name}
-                className={`rounded-xl border p-3 ${
+                className={`rounded-xl border p-3 transition-colors hover:border-slate-300 ${
                   index === 0
                     ? "border-[var(--brand-border)] bg-white"
                     : "border-slate-200 bg-white/70"
                 }`}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <div className={index === 0 ? "font-bold text-slate-950" : "font-semibold"}>
+                  <div className={index === 0 ? "text-lg font-bold text-slate-950" : "font-semibold"}>
                     {index + 1}. {dx.name}
                   </div>
                   <div className="text-sm text-slate-500">Score {dx.score}</div>
@@ -61,42 +291,18 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
 
                 <div className="mt-2 text-sm text-slate-700">
                   <span className="font-medium">Why it fits: </span>
-                  {dx.reasonsFor.length > 0 ? dx.reasonsFor.join(", ") : "Limited support"}
+                  <ChipList items={dx.reasonsFor} empty="Limited support" />
                 </div>
 
                 {dx.reasonsAgainst.length > 0 && (
-                  <div className="mt-1 text-sm text-slate-700">
+                  <div className="mt-2 text-sm text-slate-700">
                     <span className="font-medium">Why against: </span>
-                    {dx.reasonsAgainst.join(", ")}
+                    <ChipList items={dx.reasonsAgainst} tone="amber" />
                   </div>
                 )}
 
                 {result.diagnosisTraces[index] && (
-                  <details className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
-                    <summary className="cursor-pointer font-medium text-slate-800">
-                      Explain this ranking
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      <div>
-                        <span className="font-medium">Most supportive features: </span>
-                        {result.diagnosisTraces[index].supportingFeatures.length > 0
-                          ? result.diagnosisTraces[index].supportingFeatures.join(", ")
-                          : "None identified"}
-                      </div>
-                      <div>
-                        <span className="font-medium">Features against: </span>
-                        {result.diagnosisTraces[index].opposingFeatures.length > 0
-                          ? result.diagnosisTraces[index].opposingFeatures.join(", ")
-                          : "No major opposing features"}
-                      </div>
-                      {result.diagnosisTraces[index].otherReasons.length > 0 && (
-                        <div>
-                          <span className="font-medium">Composite/rule support: </span>
-                          {result.diagnosisTraces[index].otherReasons.join(", ")}
-                        </div>
-                      )}
-                    </div>
-                  </details>
+                  <DiagnosisTraceDisclosure trace={result.diagnosisTraces[index]} />
                 )}
               </li>
             ))}
@@ -104,9 +310,9 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         ) : (
           <p className="text-slate-600">No differential met the current display threshold.</p>
         )}
-      </Card>
+      </Section>
 
-      <Card title="Red-flag pattern detection" className="border-red-200">
+      <Section title="Red-flag pattern detection" icon={<Icon name="alert" />} tone="danger">
         {result.redFlags.length > 0 ? (
           <ul className="space-y-2">
             {result.redFlags.map((flag) => (
@@ -132,7 +338,7 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
                 {flag.triggeredFeatures && flag.triggeredFeatures.length > 0 && (
                   <div className="mt-2 text-sm text-red-900">
                     <span className="font-medium">Triggered by: </span>
-                    {flag.triggeredFeatures.map(formatSlug).join(", ")}
+                    <ChipList items={flag.triggeredFeatures.map(formatSlug)} tone="red" />
                   </div>
                 )}
               </li>
@@ -141,9 +347,9 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         ) : (
           <p className="text-slate-600">No major red-flag override pattern detected yet.</p>
         )}
-      </Card>
+      </Section>
 
-      <Card title="Dangerous diagnoses to exclude / comparison">
+      <Section title="Dangerous diagnoses to exclude / comparison" icon={<Icon name="shield" />}>
         <div className="space-y-3 text-sm text-slate-700">
           <p>{result.reasoningComparison.leadAssessment}</p>
           <p>{result.reasoningComparison.differentialAssessment}</p>
@@ -157,15 +363,11 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div>
                 <span className="font-medium">Supporting: </span>
-                {result.fitCheck.supporting.length > 0
-                  ? result.fitCheck.supporting.join(", ")
-                  : "None identified"}
+                <ChipList items={result.fitCheck.supporting} />
               </div>
               <div>
                 <span className="font-medium">Conflicting: </span>
-                {result.fitCheck.conflicting.length > 0
-                  ? result.fitCheck.conflicting.join(", ")
-                  : "No major conflicts detected"}
+                <ChipList items={result.fitCheck.conflicting} tone="amber" empty="No major conflicts detected" />
               </div>
             </div>
           </div>
@@ -175,10 +377,10 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             {result.anchorWarning}
           </div>
         </div>
-      </Card>
+      </Section>
 
-      <Card title="Uncertainty">
-        <div className="mb-2 inline-flex rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-sm font-medium capitalize text-slate-800">
+      <Section title="Uncertainty / missing information" icon={<Icon name="search" />} tone="amber">
+        <div className="mb-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium capitalize text-amber-950">
           {result.uncertainty.level} uncertainty
         </div>
         <p className="text-slate-700">{result.uncertainty.summary}</p>
@@ -190,17 +392,34 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             items={result.uncertainty.missingInformation}
           />
         </div>
-      </Card>
+      </Section>
 
-      <Card title="Present to the reg">
+      <Section
+        title="Present to the reg"
+        icon={<Icon name="clipboard" />}
+        tone="primary"
+        actions={
+          <button
+            type="button"
+            onClick={copyPresentation}
+            aria-label="Copy presentation summary"
+            className="rounded-lg border border-[var(--brand-border)] bg-white px-3 py-1.5 text-xs font-medium text-slate-700 outline-none transition-colors hover:bg-slate-50 active:bg-slate-100 focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
+          >
+            {copied ? "Copied" : "Copy"}
+          </button>
+        }
+      >
         <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
           <span className="font-medium">Problem representation: </span>
           {result.problemRepresentation}
         </div>
-        <p>{result.presentation}</p>
-      </Card>
+        <div>
+          <div className="mb-1 text-sm font-medium text-slate-500">Presentation summary</div>
+          <p className="text-slate-800">{result.presentation}</p>
+        </div>
+      </Section>
 
-      <SecondaryCard title="Case summary">
+      <Section title="Case summary" icon={<Icon name="check" />} defaultOpen={false} tone="secondary">
         <div className="space-y-4 text-sm text-slate-700">
           <div>
             <span className="font-medium">Matched block: </span>
@@ -238,11 +457,9 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             )}
           </div>
 
-          <details>
-            <summary className="cursor-pointer font-medium text-slate-800">
-              Supported blocks
-            </summary>
-            <div className="mt-2 grid gap-2">
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-500">Supported blocks</div>
+            <div className="grid gap-2">
               {result.presentationSupport.supportedBlocks.map((block) => (
                 <div key={block.id} className="rounded-xl border border-slate-200 bg-white p-3">
                   <div className="font-medium">{block.label}</div>
@@ -252,12 +469,12 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
                 </div>
               ))}
             </div>
-          </details>
+          </div>
         </div>
-      </SecondaryCard>
+      </Section>
 
       {result.nextSteps && (
-        <SecondaryCard title="Investigations and immediate next steps">
+        <Section title="Investigations and immediate next steps" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
           <div className="flex flex-wrap items-center gap-2">
             <div className="font-semibold text-slate-900">{result.nextSteps.diagnosis}</div>
 
@@ -301,90 +518,85 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
               {result.nextSteps.notes.join(" ")}
             </div>
           )}
-        </SecondaryCard>
+        </Section>
       )}
 
-      <SecondaryCard title="Presentation teaching scaffold">
+      <Section title="Presentation teaching scaffold" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
         {result.matchedPresentationBlock ? (
-          <details>
-            <summary className="cursor-pointer list-none text-sm font-medium text-slate-700">
-              Show the broader presentation framework WardBrain thinks this case belongs to
-            </summary>
-            <div className="mt-3 space-y-4 border-t border-slate-200 pt-3">
-              <p className="text-sm text-slate-600">
-                A presentation-based teaching framework relevant to this case. This is a
-                secondary educational scaffold, not the main case-specific reasoning output.
-              </p>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600">
+              A presentation-based teaching framework relevant to this case. This is a
+              secondary educational scaffold, not the main case-specific reasoning output.
+            </p>
 
-              <div>
-                <div className="text-sm font-medium text-slate-500">Presentation</div>
-                <div className="text-lg font-semibold text-slate-900">
-                  {result.matchedPresentationBlock.block.presentation}
-                </div>
-              </div>
-
-              {result.matchedPresentationBlock.emphasis && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                  <div className="text-sm font-medium text-amber-900">
-                    {result.matchedPresentationBlock.emphasis.title}
-                  </div>
-                  <p className="mt-1 text-sm text-amber-900">
-                    {result.matchedPresentationBlock.emphasis.summary}
-                  </p>
-                  <SimpleList
-                    title="Case-relevant emphasis"
-                    items={result.matchedPresentationBlock.emphasis.highlightedDifferentials}
-                  />
-                </div>
-              )}
-
-              <div>
-                <div className="text-sm font-medium text-slate-500">Lead pattern</div>
-                <p className="text-slate-700">{result.matchedPresentationBlock.block.leadPattern}</p>
-              </div>
-
-              <SimpleList
-                title="Ranked differentials"
-                items={result.matchedPresentationBlock.block.differentials}
-                ordered
-              />
-              <SimpleList
-                title="Features for the lead"
-                items={result.matchedPresentationBlock.block.featuresForLead}
-              />
-              <SimpleList
-                title="Features against the lead"
-                items={result.matchedPresentationBlock.block.featuresAgainstLead}
-              />
-              <SimpleList
-                title="Worst-case diagnoses to exclude"
-                items={result.matchedPresentationBlock.block.worstCaseToExclude}
-              />
-              <SimpleList
-                title="Red-flag override triggers"
-                items={result.matchedPresentationBlock.block.redFlags}
-              />
-              <SimpleList
-                title="First-line tests"
-                items={result.matchedPresentationBlock.block.firstLineTests}
-              />
-              <SimpleList
-                title="Immediate actions"
-                items={result.matchedPresentationBlock.block.immediateActions}
-              />
-
-              <div>
-                <div className="text-sm font-medium text-slate-500">Escalation</div>
-                <p className="text-slate-700">{result.matchedPresentationBlock.block.escalation}</p>
+            <div>
+              <div className="text-sm font-medium text-slate-500">Presentation</div>
+              <div className="text-lg font-semibold text-slate-900">
+                {result.matchedPresentationBlock.block.presentation}
               </div>
             </div>
-          </details>
+
+            {result.matchedPresentationBlock.emphasis && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <div className="text-sm font-medium text-amber-900">
+                  {result.matchedPresentationBlock.emphasis.title}
+                </div>
+                <p className="mt-1 text-sm text-amber-900">
+                  {result.matchedPresentationBlock.emphasis.summary}
+                </p>
+                <SimpleList
+                  title="Case-relevant emphasis"
+                  items={result.matchedPresentationBlock.emphasis.highlightedDifferentials}
+                />
+              </div>
+            )}
+
+            <div>
+              <div className="text-sm font-medium text-slate-500">Lead pattern</div>
+              <p className="text-slate-700">{result.matchedPresentationBlock.block.leadPattern}</p>
+            </div>
+
+            <SimpleList
+              title="Ranked differentials"
+              items={result.matchedPresentationBlock.block.differentials}
+              ordered
+            />
+            <SimpleList
+              title="Features for the lead"
+              items={result.matchedPresentationBlock.block.featuresForLead}
+            />
+            <SimpleList
+              title="Features against the lead"
+              items={result.matchedPresentationBlock.block.featuresAgainstLead}
+            />
+            <SimpleList
+              title="Worst-case diagnoses to exclude"
+              items={result.matchedPresentationBlock.block.worstCaseToExclude}
+            />
+            <SimpleList
+              title="Red-flag override triggers"
+              items={result.matchedPresentationBlock.block.redFlags}
+            />
+            <SimpleList
+              title="First-line tests"
+              items={result.matchedPresentationBlock.block.firstLineTests}
+            />
+            <SimpleList
+              title="Immediate actions"
+              items={result.matchedPresentationBlock.block.immediateActions}
+            />
+
+            <div>
+              <div className="text-sm font-medium text-slate-500">Escalation</div>
+              <p className="text-slate-700">{result.matchedPresentationBlock.block.escalation}</p>
+            </div>
+          </div>
         ) : (
           <p className="text-sm text-slate-600">
             No closely matching presentation teaching scaffold is available for this case yet.
           </p>
         )}
-      </SecondaryCard>
+      </Section>
     </section>
   );
 }

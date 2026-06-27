@@ -174,7 +174,24 @@ export default function Home() {
               </div>
             )}
 
+            {isAnalyzing && (
+              <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm">
+                <div className="font-semibold text-slate-900">Analysing case...</div>
+                <p className="mt-1">WardBrain is extracting features, checking red flags, and ranking differentials.</p>
+              </div>
+            )}
+
             {submittedCase && result ? <AnalysisResults result={result} /> : null}
+
+            {!isAnalyzing && !submittedCase && !result && !error && (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-600">
+                <div className="text-lg font-semibold text-slate-900">Enter a case to begin</div>
+                <p className="mt-2">
+                  Add the presentation, observations, and your current reasoning on the left.
+                  WardBrain will show ranked differentials, red flags, uncertainty, and a reg-ready presentation here.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
