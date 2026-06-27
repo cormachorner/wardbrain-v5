@@ -1,6 +1,5 @@
 import type { CaseInput } from "../lib/types";
 import type { ReactNode } from "react";
-import { SUPPORTED_PRESENTATION_BLOCKS } from "../lib/pilotStatus";
 import { Field, TextArea } from "./WardBrainCard";
 
 function FormSection({
@@ -13,8 +12,8 @@ function FormSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-      <div className="mb-3">
+    <section className="border-t border-slate-200 pt-3 first:border-t-0 first:pt-0">
+      <div className="mb-2">
         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
         {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
       </div>
@@ -37,33 +36,15 @@ export function CaseForm({
   isAnalyzing: boolean;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4">
         <h2 className="text-2xl font-semibold">Case input</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-0.5 text-sm text-slate-600">
           Add the messy case details. WardBrain will keep the payload exactly as entered.
         </p>
       </div>
 
-      <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-        <div className="text-sm font-semibold text-blue-950">Pilot-supported presentations</div>
-        <p className="mt-1 text-sm text-blue-900">
-          WardBrain is currently calibrated for these blocks. Cases outside this scope may still run,
-          but should be treated as exploratory.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SUPPORTED_PRESENTATION_BLOCKS.map((block) => (
-            <span
-              key={block.id}
-              className="rounded-full border border-blue-300 bg-white px-3 py-1 text-xs font-medium text-blue-950"
-            >
-              {block.label}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
+      <div className="space-y-3">
         <FormSection title="Patient">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">

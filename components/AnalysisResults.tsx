@@ -157,11 +157,15 @@ function ChipList({
   items,
   empty = "None identified",
   tone = "slate",
+  limit = 4,
 }: {
   items: string[];
   empty?: string;
   tone?: "slate" | "red" | "amber";
+  limit?: number;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (items.length === 0) {
     return <span className="text-slate-500">{empty}</span>;
   }
@@ -171,15 +175,64 @@ function ChipList({
     red: "border-red-200 bg-red-50 text-red-900",
     amber: "border-amber-200 bg-amber-50 text-amber-900",
   };
+  const visibleItems = expanded ? items : items.slice(0, limit);
+  const hiddenCount = items.length - visibleItems.length;
 
   return (
     <span className="inline-flex flex-wrap gap-1.5 align-middle">
-      {items.map((item) => (
+      {visibleItems.map((item) => (
         <span key={item} className={`rounded-full border px-2 py-0.5 text-xs ${toneClasses[tone]}`}>
           {item}
         </span>
       ))}
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-500 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-1"
+        >
+          +{hiddenCount} more
+        </button>
+      )}
     </span>
+  );
+}
+
+function WhyItFitsDisclosure({
+  reasonsFor,
+  reasonsAgainst,
+}: {
+  reasonsFor: string[];
+  reasonsAgainst: string[];
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-2 text-sm text-slate-700">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex items-center gap-1 rounded-lg text-sm font-medium text-slate-600 outline-none hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
+      >
+        Why it fits
+        <Chevron open={open} />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-3">
+          <div>
+            <span className="font-medium">Why it fits: </span>
+            {reasonsFor.length > 0 ? reasonsFor.join(", ") : "Limited support"}
+          </div>
+          {reasonsAgainst.length > 0 && (
+            <div>
+              <span className="font-medium">Why against: </span>
+              {reasonsAgainst.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -200,7 +253,7 @@ function DiagnosisTraceDisclosure({
       >
         <span className="flex items-center gap-2">
           <Icon name="info" />
-          Explain this ranking
+          Scoring detail
         </span>
         <Chevron open={open} />
       </button>
@@ -265,50 +318,48 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
               </div>
             </div>
             <div className="mt-3 text-sm text-slate-700">
-              <span className="font-medium">Why it fits: </span>
+              <span className="font-medium">Key support: </span>
               <ChipList items={leadDiagnosis.reasonsFor} />
             </div>
+            <WhyItFitsDisclosure
+              reasonsFor={leadDiagnosis.reasonsFor}
+              reasonsAgainst={leadDiagnosis.reasonsAgainst}
+            />
           </div>
         )}
 
-        {result.differentials.length > 0 ? (
+        {result.differentials.length > 1 ? (
           <ol className="space-y-2">
-            {result.differentials.map((dx, index) => (
+            {result.differentials.slice(1).map((dx, index) => (
               <li
                 key={dx.name}
-                className={`rounded-xl border p-3 transition-colors hover:border-slate-300 ${
-                  index === 0
-                    ? "border-[var(--brand-border)] bg-white"
-                    : "border-slate-200 bg-white/70"
-                }`}
+                className="rounded-xl border border-slate-200 bg-white/70 p-3 transition-colors hover:border-slate-300"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <div className={index === 0 ? "text-lg font-bold text-slate-950" : "font-semibold"}>
-                    {index + 1}. {dx.name}
+                  <div className="font-semibold">
+                    {index + 2}. {dx.name}
                   </div>
                   <div className="text-sm text-slate-500">Score {dx.score}</div>
                 </div>
 
                 <div className="mt-2 text-sm text-slate-700">
-                  <span className="font-medium">Why it fits: </span>
+                  <span className="font-medium">Key support: </span>
                   <ChipList items={dx.reasonsFor} empty="Limited support" />
                 </div>
 
-                {dx.reasonsAgainst.length > 0 && (
-                  <div className="mt-2 text-sm text-slate-700">
-                    <span className="font-medium">Why against: </span>
-                    <ChipList items={dx.reasonsAgainst} tone="amber" />
-                  </div>
-                )}
+                <WhyItFitsDisclosure
+                  reasonsFor={dx.reasonsFor}
+                  reasonsAgainst={dx.reasonsAgainst}
+                />
 
-                {result.diagnosisTraces[index] && (
-                  <DiagnosisTraceDisclosure trace={result.diagnosisTraces[index]} />
+                {result.diagnosisTraces[index + 1] && (
+                  <DiagnosisTraceDisclosure trace={result.diagnosisTraces[index + 1]} />
                 )}
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-slate-600">No differential met the current display threshold.</p>
+          <p className="text-sm text-slate-500">No additional ranked differentials met the current display threshold.</p>
         )}
       </Section>
 
@@ -441,20 +492,7 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
 
           <div>
             <div className="mb-2 text-sm font-medium text-slate-500">Features detected</div>
-            {result.detectedFeatures.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {displayedDetectedFeatures.map(([featureSlug, feature]) => (
-                  <span
-                    key={featureSlug}
-                    className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700"
-                  >
-                    {feature}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-slate-600">No features detected yet.</p>
-            )}
+            <ChipList items={displayedDetectedFeatures.map(([, feature]) => feature)} empty="No features detected yet." />
           </div>
 
           <div>

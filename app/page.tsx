@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react"
 import { AnalysisResults } from "../components/AnalysisResults";
 import { WardBrainLogo } from "../components/brand/WardBrainLogo";
 import { CaseForm } from "../components/CaseForm";
+import { SUPPORTED_PRESENTATION_BLOCKS } from "../lib/pilotStatus";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
 
 const initialCase: CaseInput = {
@@ -126,6 +127,18 @@ export default function Home() {
               <div className="mt-4 inline-flex rounded-full border border-[var(--brand-border)] bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
                 Educational use only • De-identified cases only
               </div>
+              <details className="mt-2 text-xs text-slate-500">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-600 hover:bg-slate-50">
+                  Supported presentations ▸
+                </summary>
+                <div className="mt-2 flex max-w-3xl flex-wrap gap-1.5">
+                  {SUPPORTED_PRESENTATION_BLOCKS.map((block) => (
+                    <span key={block.id} className="rounded-full bg-slate-100 px-2 py-0.5">
+                      {block.label}
+                    </span>
+                  ))}
+                </div>
+              </details>
             </div>
             <nav aria-label="Primary" className="flex flex-wrap gap-2 md:justify-end">
               <a
@@ -167,7 +180,7 @@ export default function Home() {
             isAnalyzing={isAnalyzing}
           />
 
-          <div className="lg:sticky lg:top-6 lg:self-start">
+          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
             {error && (
               <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                 {error}

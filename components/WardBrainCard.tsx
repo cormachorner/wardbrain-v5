@@ -92,7 +92,7 @@ export function Field({
   placeholder?: string;
 }) {
   return (
-    <label className="mt-4 block">
+    <label className="mt-3 block">
       <span className="mb-1 block text-sm font-medium">{label}</span>
       {helper && <span className="mb-2 block text-xs text-slate-500">{helper}</span>}
       <input
@@ -119,11 +119,11 @@ export function TextArea({
   placeholder?: string;
 }) {
   return (
-    <label className="mt-4 block">
+    <label className="mt-3 block">
       <span className="mb-1 block text-sm font-medium">{label}</span>
       {helper && <span className="mb-2 block text-xs text-slate-500">{helper}</span>}
       <textarea
-        className="min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+        className="min-h-20 w-full rounded-xl border border-slate-300 px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
