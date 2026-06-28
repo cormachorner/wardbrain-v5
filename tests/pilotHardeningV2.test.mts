@@ -148,6 +148,78 @@ test("pilot hardening v2: acute heart failure overload pattern does not overfire
   ]);
 });
 
+test("pilot hardening v2: generic swollen ankles do not trigger PE red flag in heart failure", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "82",
+    sex: "female",
+    presentingComplaint: "Breathlessness",
+    history:
+      "She is acutely breathless, cannot lie flat, wakes gasping at night and has swollen ankles. Raised JVP and bibasal crackles are present. No fever, no productive cough, no pleuritic pain and no haemoptysis.",
+    keyNegatives: "no fever no productive cough no pleuritic pain no haemoptysis",
+    suspectedDiagnosis: "Pulmonary embolism",
+  }));
+
+  assert.equal(canonicalDiagnosisSlug(result.differentials[0]?.name ?? ""), "heart-failure");
+  assertRedFlags(result, ["Acute heart failure / pulmonary oedema pattern"]);
+  assertNoRedFlags(result, ["PE suspicion pattern"]);
+  assertFeatures(result, [
+    "sob",
+    "orthopnoea",
+    "paroxysmal_nocturnal_dyspnoea",
+    "ankle_swelling",
+    "raised_jvp",
+    "bibasal_crackles",
+  ]);
+});
+
+test("pilot hardening v2: PE red flag fires with unilateral calf swelling and recent surgery", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "54",
+    sex: "female",
+    presentingComplaint: "Shortness of breath",
+    history:
+      "She has sudden shortness of breath after recent knee surgery. Her left calf is swollen and tender. HR 118 and sats 90% on air. No fever or productive cough.",
+    observations: "HR 118 sats 90%",
+    keyNegatives: "no fever no productive cough",
+    suspectedDiagnosis: "Pneumonia",
+  }));
+
+  assertRedFlags(result, ["PE suspicion pattern"]);
+  assertFeatures(result, [
+    "sob",
+    "sudden_onset",
+    "recent_surgery",
+    "calf_swelling",
+    "dvt_signs",
+    "leg_swelling",
+    "tachycardia",
+    "hypoxia",
+  ]);
+});
+
+test("pilot hardening v2: generic swollen legs without PE-specific support does not fire PE red flag", () => {
+  setDbFeaturePhrasePatternsForTest({});
+
+  const result = analyzeCase(buildInput({
+    age: "66",
+    sex: "male",
+    presentingComplaint: "Breathlessness",
+    history:
+      "He has mild shortness of breath and says his legs are swollen. No chest pain, no pleuritic pain, no haemoptysis, no recent surgery, no immobility and no long-haul travel.",
+    keyNegatives:
+      "no chest pain no pleuritic pain no haemoptysis no recent surgery no immobility no long-haul travel",
+    suspectedDiagnosis: "Pulmonary embolism",
+  }));
+
+  assertFeatures(result, ["sob", "leg_swelling"]);
+  assertNoFeatures(result, ["calf_swelling", "unilateral_leg_swelling", "dvt_signs"]);
+  assertNoRedFlags(result, ["PE suspicion pattern"]);
+});
+
 test("pilot hardening v2: obstruction with voluntary guarding and no rigidity does not become perforation", () => {
   setDbFeaturePhrasePatternsForTest({});
 

@@ -5,6 +5,8 @@ import { join } from "node:path";
 
 import {
   evaluateBulkCase,
+  filterBulkEvalCases,
+  parseBulkEvalCliArgs,
   parseBulkEvalCases,
   summarizeByPresentation,
   summarizeByTag,
@@ -37,4 +39,27 @@ test("bulk evaluation fixture contains the initial labelled case set", async () 
 
   assert.ok(summarizeByPresentation([result]).length > 0);
   assert.ok(summarizeByTag([result]).length > 0);
+});
+
+test("bulk evaluation CLI --case filters to a single case", () => {
+  const raw = JSON.parse(
+    readFileSync(join(process.cwd(), "tests", "fixtures", "evalCases.json"), "utf8"),
+  ) as unknown;
+  const cases = parseBulkEvalCases(raw);
+  const args = parseBulkEvalCliArgs([
+    "--case",
+    "bulk-heart-failure-001-overload",
+    "--verbose",
+  ]);
+  const filtered = filterBulkEvalCases(cases, args);
+
+  assert.equal(args.verbose, true);
+  assert.deepEqual(filtered.map((testCase) => testCase.id), [
+    "bulk-heart-failure-001-overload",
+  ]);
+  assert.throws(
+    () => filterBulkEvalCases(cases, { caseId: "missing-case" }),
+    /Evaluation case not found: missing-case/,
+  );
+  assert.throws(() => parseBulkEvalCliArgs(["--case"]), /Missing case id/);
 });

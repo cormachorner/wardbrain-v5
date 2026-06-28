@@ -199,3 +199,24 @@ test("low-confidence LLM feature is dropped", () => {
   assert.deepEqual(validation.features, []);
   assert.ok(validation.invalidReasons.includes("low_confidence:hyperlipidaemia"));
 });
+
+test("LLM schema validation keeps clinical evidence checks out of the JSON shape layer", () => {
+  const validation = validateLlmFeatureExtractionResponse(
+    JSON.stringify({
+      features: [
+        { slug: "leg_swelling", evidence: "swollen ankles", confidence: 0.95 },
+        { slug: "unilateral_leg_swelling", evidence: "swollen ankles", confidence: 0.95 },
+        { slug: "unilateral_leg_swelling", evidence: "left calf is swollen", confidence: 0.95 },
+      ],
+    }),
+    ["leg_swelling", "unilateral_leg_swelling"],
+    0.8,
+  );
+
+  assert.deepEqual(validation.features.map((feature) => feature.slug), [
+    "leg_swelling",
+    "unilateral_leg_swelling",
+    "unilateral_leg_swelling",
+  ]);
+  assert.deepEqual(validation.invalidReasons, []);
+});

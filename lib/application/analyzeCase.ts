@@ -813,7 +813,13 @@ export async function analyzeCaseWithOptionalLlmExtraction(
 
   if (merged.acceptedFeatures.length === 0) {
     return process.env.WARDBRAIN_LLM_DEBUG === "1"
-      ? { ...deterministicResult, llmExtraction: llmResult.metadata }
+      ? {
+          ...deterministicResult,
+          llmExtraction: {
+            ...llmResult.metadata,
+            rejectedFeatures: merged.rejectedFeatures,
+          },
+        }
       : deterministicResult;
   }
 
@@ -824,6 +830,7 @@ export async function analyzeCaseWithOptionalLlmExtraction(
     llmExtraction: {
       ...llmResult.metadata,
       acceptedFeatures: merged.acceptedFeatures.map((feature) => feature.slug),
+      rejectedFeatures: merged.rejectedFeatures,
     },
   };
 }

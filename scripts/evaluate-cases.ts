@@ -4,6 +4,9 @@ import { join } from "node:path";
 import { analyzeCase, analyzeCaseWithOptionalLlmExtraction } from "../lib/application/analyzeCase";
 import { canonicalDiagnosisSlug } from "../lib/domain/diagnosisSlug";
 import { canonicalFeatureSlug } from "../lib/domain/featureSlug";
+import { getAllowedLlmFeatureSlugsForBlock } from "../lib/llm/blockFeatureSets";
+import { filterLlmFeaturesForClinicalSanity } from "../lib/llm/clinicalSanityFilter";
+import { openAiLlmCompletionClient, type LlmCompletionClient } from "../lib/llm/client";
 import { getLlmExtractionConfig, type LlmExtractionConfig } from "../lib/llm/config";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
 
@@ -59,6 +62,40 @@ type AggregateSummary = {
   casesWithLlmHarmfulAdditions: number;
 };
 
+export type BulkEvalCliArgs = {
+  caseId?: string;
+  verbose?: boolean;
+};
+
+export function parseBulkEvalCliArgs(args: readonly string[]): BulkEvalCliArgs {
+  const parsed: BulkEvalCliArgs = { verbose: false };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--case") {
+      const caseId = args[index + 1];
+
+      if (!caseId || caseId.startsWith("--")) {
+        throw new Error("Missing case id after --case.");
+      }
+
+      parsed.caseId = caseId;
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--verbose") {
+      parsed.verbose = true;
+      continue;
+    }
+
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  return parsed;
+}
+
 function asStringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
@@ -105,6 +142,27 @@ export function parseBulkEvalCases(raw: unknown): BulkEvalCase[] {
   });
 }
 
+export function filterBulkEvalCases(
+  cases: readonly BulkEvalCase[],
+  args: BulkEvalCliArgs,
+): BulkEvalCase[] {
+  if (!args.caseId) {
+    return [...cases];
+  }
+
+  const matchedCase = cases.find((testCase) => testCase.id === args.caseId);
+
+  if (!matchedCase) {
+    throw new Error(
+      `Evaluation case not found: ${args.caseId}. Available case ids: ${cases
+        .map((testCase) => testCase.id)
+        .join(", ")}`,
+    );
+  }
+
+  return [matchedCase];
+}
+
 function buildInput(testCase: BulkEvalCase): CaseInput {
   return {
     age: "",
@@ -123,6 +181,23 @@ function buildInput(testCase: BulkEvalCase): CaseInput {
     suspectedDiagnosis: "",
   };
 }
+
+type LlmFeatureDecision = {
+  slug: string;
+  evidence: string;
+  confidence: number | null;
+  reason?: string;
+  source?: string;
+  suggestedAlternative?: string;
+};
+
+type BulkEvalRun = {
+  result: BulkEvalResult;
+  input: CaseInput;
+  deterministic: AnalyzeCaseResponse;
+  llmAnalysis: AnalyzeCaseResponse;
+  llmRawResponse?: string;
+};
 
 function leadSlug(analysis: AnalyzeCaseResponse) {
   return canonicalDiagnosisSlug(analysis.differentials[0]?.name ?? "");
@@ -174,13 +249,41 @@ export async function evaluateBulkCase(
   options: {
     liveLlm: boolean;
     llmConfig?: LlmExtractionConfig;
+    llmClient?: LlmCompletionClient;
   },
 ): Promise<BulkEvalResult> {
+  return (await runBulkEvalCase(testCase, options)).result;
+}
+
+async function runBulkEvalCase(
+  testCase: BulkEvalCase,
+  options: {
+    liveLlm: boolean;
+    llmConfig?: LlmExtractionConfig;
+    llmClient?: LlmCompletionClient;
+    captureLlmRawResponse?: boolean;
+  },
+): Promise<BulkEvalRun> {
   const input = buildInput(testCase);
   const deterministic = analyzeCase(input);
+  let llmRawResponse: string | undefined;
+  const llmClient =
+    options.captureLlmRawResponse && options.liveLlm
+      ? {
+          async completeJson(prompt: string, config: LlmExtractionConfig) {
+            const raw = await (options.llmClient ?? openAiLlmCompletionClient).completeJson(
+              prompt,
+              config,
+            );
+            llmRawResponse = raw;
+            return raw;
+          },
+        }
+      : options.llmClient;
   const llmAnalysis = options.liveLlm
     ? await analyzeCaseWithOptionalLlmExtraction(input, {
         llmConfig: options.llmConfig ?? getLlmExtractionConfig(),
+        llmClient,
       })
     : deterministic;
   const expectedLead = canonicalDiagnosisSlug(testCase.expectedLeadDiagnosisSlug);
@@ -223,7 +326,7 @@ export async function evaluateBulkCase(
       : "",
   ].filter(Boolean);
 
-  return {
+  const result = {
     id: testCase.id,
     title: testCase.title,
     presentation: testCase.presentation,
@@ -255,6 +358,14 @@ export async function evaluateBulkCase(
     acceptedLlmFeatureSlugs,
     llmUsefulAddedFeatures,
     llmHarmfulAdditions,
+  };
+
+  return {
+    result,
+    input,
+    deterministic,
+    llmAnalysis,
+    llmRawResponse,
   };
 }
 
@@ -367,6 +478,242 @@ function printCase(result: BulkEvalResult) {
   );
 }
 
+function formatList(values: readonly string[]) {
+  return values.length > 0 ? values.join(", ") : "None";
+}
+
+function formatRawJson(raw?: string) {
+  if (!raw?.trim()) {
+    return "None";
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+}
+
+function getRawLlmFeatureItems(raw?: string): Array<Record<string, unknown>> {
+  if (!raw?.trim()) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { features?: unknown };
+    return Array.isArray(parsed.features)
+      ? parsed.features.filter((item): item is Record<string, unknown> =>
+          Boolean(item && typeof item === "object"),
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function getLlmFeatureDecisions(params: {
+  rawResponse?: string;
+  deterministicFeatureSlugs: readonly string[];
+  acceptedFeatureSlugs: readonly string[];
+  allowedFeatureSlugs: readonly string[];
+  confidenceThreshold: number;
+}) {
+  const allowed = new Set(params.allowedFeatureSlugs.map(canonicalFeatureSlug));
+  const deterministic = new Set(params.deterministicFeatureSlugs.map(canonicalFeatureSlug));
+  const acceptedRemaining = new Map<string, number>();
+  const proposed: LlmFeatureDecision[] = [];
+  const accepted: LlmFeatureDecision[] = [];
+  const rejected: LlmFeatureDecision[] = [];
+
+  for (const slug of params.acceptedFeatureSlugs.map(canonicalFeatureSlug)) {
+    acceptedRemaining.set(slug, (acceptedRemaining.get(slug) ?? 0) + 1);
+  }
+
+  if (params.rawResponse?.trim()) {
+    try {
+      JSON.parse(params.rawResponse);
+    } catch {
+      rejected.push({
+        slug: "response",
+        evidence: "",
+        confidence: null,
+        reason: "invalid_json",
+      });
+      return { proposed, accepted, rejected };
+    }
+  }
+
+  for (const item of getRawLlmFeatureItems(params.rawResponse)) {
+    const rawSlug = typeof item.slug === "string" ? item.slug : "";
+    const slug = canonicalFeatureSlug(rawSlug);
+    const evidence = typeof item.evidence === "string" ? item.evidence : "";
+    const confidence = typeof item.confidence === "number" ? item.confidence : null;
+    const decision: LlmFeatureDecision = {
+      slug: slug || rawSlug || "missing_slug",
+      evidence,
+      confidence,
+    };
+
+    proposed.push(decision);
+
+    if (!slug || !allowed.has(slug)) {
+      rejected.push({ ...decision, reason: "disallowed_slug" });
+      continue;
+    }
+
+    if (confidence === null || !Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+      rejected.push({ ...decision, reason: "invalid_confidence" });
+      continue;
+    }
+
+    if (confidence < params.confidenceThreshold) {
+      rejected.push({ ...decision, reason: "low_confidence" });
+      continue;
+    }
+
+    const sanity = filterLlmFeaturesForClinicalSanity(
+      [{ slug, evidence, confidence }],
+      {
+        allText: "",
+        matchedFeatures: [...params.deterministicFeatureSlugs],
+      },
+    );
+    const sanityRejection = sanity.rejectedFeatures[0];
+
+    if (sanityRejection) {
+      rejected.push({
+        ...decision,
+        reason: sanityRejection.reason,
+        source: sanityRejection.source,
+        suggestedAlternative: sanityRejection.suggestedAlternative,
+      });
+      continue;
+    }
+
+    const remainingAcceptedCount = acceptedRemaining.get(slug) ?? 0;
+
+    if (remainingAcceptedCount > 0) {
+      acceptedRemaining.set(slug, remainingAcceptedCount - 1);
+      accepted.push(decision);
+      continue;
+    }
+
+    rejected.push({
+      ...decision,
+      reason: deterministic.has(slug)
+        ? "already_present_deterministically"
+        : "duplicate_or_not_merged",
+    });
+  }
+
+  return { proposed, accepted, rejected };
+}
+
+function formatFeatureDecision(decision: LlmFeatureDecision) {
+  const confidence = decision.confidence === null ? "n/a" : decision.confidence.toFixed(2);
+  const evidence = decision.evidence ? ` | evidence: ${decision.evidence}` : "";
+  const reason = decision.reason ? ` | reason: ${decision.reason}` : "";
+  const source = decision.source ? ` | source: ${decision.source}` : "";
+  const alternative = decision.suggestedAlternative
+    ? ` | suggested alternative: ${decision.suggestedAlternative}`
+    : "";
+  return `- ${decision.slug} | confidence: ${confidence}${evidence}${reason}${source}${alternative}`;
+}
+
+function printVerboseCase(run: BulkEvalRun, testCase: BulkEvalCase, llmConfig: LlmExtractionConfig) {
+  const { result, deterministic, llmAnalysis } = run;
+  const allowedFeatureSlugs = getAllowedLlmFeatureSlugsForBlock(
+    deterministic.presentationSupport.matchedBlockId,
+  );
+  const decisions = getLlmFeatureDecisions({
+    rawResponse: run.llmRawResponse,
+    deterministicFeatureSlugs: deterministic.detectedFeatureSlugs,
+    acceptedFeatureSlugs: result.acceptedLlmFeatureSlugs,
+    allowedFeatureSlugs,
+    confidenceThreshold: llmConfig.confidenceThreshold,
+  });
+  const deterministicRedFlags = redFlagNames(deterministic);
+  const finalRedFlags = llmAnalysis.redFlags;
+  const newlyForbiddenRedFlags = result.llmForbiddenRedFlagsPresent.filter(
+    (flag) => !result.deterministicForbiddenRedFlagsPresent.includes(flag),
+  );
+  const acceptedLlmFeatureSet = new Set(result.acceptedLlmFeatureSlugs.map(canonicalFeatureSlug));
+
+  console.log("\n==================================================");
+  console.log(result.id);
+  console.log(result.title);
+  console.log("\nOriginal vignette\n");
+  console.log(testCase.vignette);
+
+  console.log("\nExpected:");
+  console.log(`- Lead diagnosis: ${testCase.expectedLeadDiagnosisSlug}`);
+  console.log(`- Expected features: ${formatList(testCase.expectedFeatureSlugs)}`);
+  console.log(`- Expected red flags: ${formatList(testCase.expectedRedFlagSlugs ?? [])}`);
+  console.log(`- Forbidden red flags: ${formatList(testCase.forbiddenRedFlagSlugs ?? [])}`);
+
+  console.log("\nDeterministic extraction:");
+  console.log(`- Feature slugs: ${formatList(deterministic.detectedFeatureSlugs)}`);
+  console.log(`- Lead diagnosis: ${result.deterministicLeadDiagnosisSlug}`);
+  console.log(`- Red flags: ${formatList(deterministicRedFlags)}`);
+
+  console.log("\nLLM raw response (JSON only)");
+  console.log(formatRawJson(run.llmRawResponse));
+
+  console.log("\nLLM proposed features");
+  console.log(decisions.proposed.length > 0 ? decisions.proposed.map(formatFeatureDecision).join("\n") : "None");
+
+  console.log("\nAccepted LLM features");
+  console.log(decisions.accepted.length > 0 ? decisions.accepted.map(formatFeatureDecision).join("\n") : "None");
+
+  console.log("\nRejected LLM features");
+  console.log(decisions.rejected.length > 0 ? decisions.rejected.map(formatFeatureDecision).join("\n") : "None");
+
+  console.log("\nMerged features");
+  console.log(formatList(llmAnalysis.detectedFeatureSlugs));
+
+  console.log("\nFinal lead diagnosis");
+  console.log(result.llmLeadDiagnosisSlug);
+
+  console.log("\nFinal red flags");
+  if (finalRedFlags.length === 0) {
+    console.log("None");
+  } else {
+    for (const flag of finalRedFlags) {
+      console.log(`- ${flag.name}`);
+      console.log(`  Triggered by feature(s): ${formatList(flag.triggeredFeatures ?? [])}`);
+    }
+  }
+
+  if (result.llmHarmfulAdditions.length > 0) {
+    console.log("\n*** HARM DETECTED ***");
+    console.log("Reason:");
+
+    if (newlyForbiddenRedFlags.length > 0) {
+      for (const flagName of newlyForbiddenRedFlags) {
+        const flag = finalRedFlags.find((candidate) => candidate.name === flagName);
+        const triggerFeatures = flag?.triggeredFeatures ?? [];
+        const responsibleFeatures = triggerFeatures.filter((feature) =>
+          acceptedLlmFeatureSet.has(canonicalFeatureSlug(feature)),
+        );
+
+        console.log(`Forbidden red flag added:\n${flagName}`);
+        console.log(`\nTrigger features:\n${formatList(triggerFeatures)}`);
+        console.log(`\nNew LLM feature(s) responsible:\n${formatList(responsibleFeatures)}`);
+      }
+    }
+
+    const otherHarms = result.llmHarmfulAdditions.filter(
+      (harm) => harm !== "forbidden_red_flag_added",
+    );
+
+    if (otherHarms.length > 0) {
+      console.log(formatList(otherHarms));
+    }
+  }
+
+  console.log("==================================================\n");
+}
+
 function printAggregate(title: string, summaries: readonly AggregateSummary[]) {
   console.log(`\n# ${title}`);
 
@@ -390,7 +737,8 @@ async function main() {
   const rawCases = JSON.parse(
     readFileSync(join(process.cwd(), "tests", "fixtures", "evalCases.json"), "utf8"),
   ) as unknown;
-  const cases = parseBulkEvalCases(rawCases);
+  const cliArgs = parseBulkEvalCliArgs(process.argv.slice(2));
+  const cases = filterBulkEvalCases(parseBulkEvalCases(rawCases), cliArgs);
   const shouldRunLlm = liveLlm && llmConfig.usable;
   const results: BulkEvalResult[] = [];
 
@@ -399,13 +747,19 @@ async function main() {
   console.log("No database writes. No UI changes.\n");
 
   for (const testCase of cases) {
-    const result = await evaluateBulkCase(testCase, {
+    const run = await runBulkEvalCase(testCase, {
       liveLlm: shouldRunLlm,
       llmConfig,
+      captureLlmRawResponse: cliArgs.verbose,
     });
+    const { result } = run;
 
     results.push(result);
     printCase(result);
+
+    if (cliArgs.verbose) {
+      printVerboseCase(run, testCase, llmConfig);
+    }
   }
 
   const aggregate = {
@@ -441,7 +795,7 @@ async function main() {
 
 if (process.argv[1]?.includes("evaluate-cases")) {
   main().catch((error) => {
-    console.error(error);
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });
 }

@@ -80,8 +80,8 @@ test("LLM evaluation detects harm when forbidden red flags appear after augmenta
     forbiddenRedFlags: ["PE suspicion pattern"],
     expectedUsefulLlmAddedFeatures: [],
     mockLlmFeatures: [
-      { slug: "pleuritic_pain", evidence: "bad mock", confidence: 0.95 },
-      { slug: "hypoxia", evidence: "bad mock", confidence: 0.95 },
+      { slug: "pleuritic_pain", evidence: "pleuritic pain", confidence: 0.95 },
+      { slug: "hypoxia", evidence: "sats 88% on air", confidence: 0.95 },
     ],
   };
 

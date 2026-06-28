@@ -13,6 +13,14 @@ export type LlmExtractionDebugMetadata = {
   skippedReason?: string;
   acceptedFeatures: string[];
   invalidReasons: string[];
+  rejectedFeatures?: Array<{
+    slug: string;
+    evidence: string;
+    confidence: number;
+    reason: string;
+    source: string;
+    suggestedAlternative?: string;
+  }>;
 };
 
 export type LlmFeatureExtractionResult = {

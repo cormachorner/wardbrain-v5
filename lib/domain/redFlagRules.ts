@@ -68,7 +68,9 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
       const hasDyspnoeaOrPleuriticPain = has(features, "sob") || has(features, "pleuritic_pain");
       const hasVteSpecificSignal =
         has(features, "haemoptysis") ||
-        has(features, "leg_swelling") ||
+        has(features, "unilateral_leg_swelling") ||
+        has(features, "calf_swelling") ||
+        has(features, "dvt_signs") ||
         has(features, "dvt_history") ||
         has(features, "recent_surgery") ||
         has(features, "immobility") ||
@@ -102,6 +104,15 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
       const hasStrongPneumothoraxPattern =
         has(features, "unilateral_reduced_air_entry") ||
         has(features, "hyperresonance");
+      const hasStrongHeartFailurePattern =
+        [
+          has(features, "orthopnoea"),
+          has(features, "paroxysmal_nocturnal_dyspnoea"),
+          has(features, "raised_jvp"),
+          has(features, "bibasal_crackles"),
+          has(features, "peripheral_oedema"),
+          has(features, "ankle_swelling"),
+        ].filter(Boolean).length >= 2;
 
       if (!hasDyspnoeaOrPleuriticPain || !hasMeaningfulPeSignal || !hasPeCompatibleSignature || hasDkaMetabolicSignature) {
         continue;
@@ -109,7 +120,10 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
 
       if (
         !hasVteSpecificSignal &&
-        (hasStrongInfectivePulmonaryPattern || hasStrongObstructiveAirwayPattern || hasStrongPneumothoraxPattern)
+        (hasStrongInfectivePulmonaryPattern ||
+          hasStrongObstructiveAirwayPattern ||
+          hasStrongPneumothoraxPattern ||
+          hasStrongHeartFailurePattern)
       ) {
         continue;
       }
