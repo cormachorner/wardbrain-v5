@@ -13,6 +13,8 @@
     "eval:cases:live": "WARDBRAIN_LLM_EVAL_LIVE=1 WARDBRAIN_LLM_TIMEOUT_MS=30000 node scripts/evaluate-cases.mjs",
     "eval:llm": "node scripts/evaluate-llm-extraction.mjs",
     "eval:llm:live": "WARDBRAIN_LLM_EVAL_LIVE=1 WARDBRAIN_LLM_TIMEOUT_MS=30000 node scripts/evaluate-llm-extraction.mjs",
+    "eval:presentation": "node scripts/evaluate-presentation-rewrite.mjs",
+    "eval:presentation:live": "WARDBRAIN_LLM_PRESENTATION_EVAL_LIVE=1 WARDBRAIN_LLM_PRESENTATION_ENABLED=1 WARDBRAIN_LLM_ENABLED=1 WARDBRAIN_LLM_TIMEOUT_MS=30000 node scripts/evaluate-presentation-rewrite.mjs",
     "import:clinical-content": "tsx scripts/import-clinical-content.ts",
     "import:chest-pain-tests": "tsx scripts/import-chest-pain-v1-test-cases.ts",
     "import:breathlessness-tests": "tsx scripts/import-breathlessness-v1-test-cases.ts"

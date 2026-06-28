@@ -281,6 +281,7 @@ function DiagnosisTraceDisclosure({
 
 export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
   const [copied, setCopied] = useState(false);
+  const showPresentationDebug = process.env.NODE_ENV !== "production";
   const displayedDetectedFeatures = Array.from(
     new Map(
       result.detectedFeatures.map((feature, index) => [
@@ -467,6 +468,17 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         <div>
           <div className="mb-1 text-sm font-medium text-slate-500">Presentation summary</div>
           <p className="text-slate-800">{result.presentation}</p>
+          {showPresentationDebug && result.llmPresentation ? (
+            <p className="mt-2 text-xs text-slate-500">
+              Presentation source: {result.llmPresentation.presentationSource}
+              {" · "}Attempted: {result.llmPresentation.llmPresentationAttempted ? "yes" : "no"}
+              {" · "}Used: {result.llmPresentation.llmPresentationUsed ? "yes" : "no"}
+              {" · "}Fallback: {result.llmPresentation.llmPresentationFallbackReason ?? "none"}
+              {result.llmPresentation.llmPresentationFallbackTrigger
+                ? ` (${result.llmPresentation.llmPresentationFallbackTrigger})`
+                : ""}
+            </p>
+          ) : null}
         </div>
       </Section>
 

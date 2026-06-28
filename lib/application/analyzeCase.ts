@@ -27,8 +27,12 @@ import { detectRedFlags } from "../domain/redFlagRules";
 import { matchPresentationBlockForCase } from "../domain/wardbrainLookup";
 import { extractLlmFeatures } from "../llm/extractFeatures";
 import type { LlmCompletionClient } from "../llm/client";
-import type { LlmExtractionConfig } from "../llm/config";
+import type { LlmExtractionConfig, LlmPresentationConfig } from "../llm/config";
 import { mergeLlmFeatures } from "../llm/mergeFeatures";
+import {
+  rewritePresentationWithLlm,
+  type LlmPresentationRewriteMetadata,
+} from "../llm/presentationRewrite";
 import {
   getSupportedPresentationBlock,
   SUPPORTED_PRESENTATION_BLOCKS,
@@ -832,6 +836,37 @@ export async function analyzeCaseWithOptionalLlmExtraction(
       acceptedFeatures: merged.acceptedFeatures.map((feature) => feature.slug),
       rejectedFeatures: merged.rejectedFeatures,
     },
+  };
+}
+
+export async function analyzeCaseWithOptionalLlmPresentation(
+  input: CaseInput,
+  options: {
+    llmConfig?: LlmExtractionConfig;
+    llmClient?: LlmCompletionClient;
+    llmPresentationConfig?: LlmPresentationConfig;
+    llmPresentationClient?: LlmCompletionClient;
+  } = {},
+): Promise<AnalyzeCaseResponse> {
+  const analysis = await analyzeCaseWithOptionalLlmExtraction(input, {
+    llmConfig: options.llmConfig,
+    llmClient: options.llmClient,
+  });
+  const rewrite = await rewritePresentationWithLlm({
+    analysis,
+    config: options.llmPresentationConfig,
+    client: options.llmPresentationClient,
+  });
+  const metadata: LlmPresentationRewriteMetadata = rewrite.metadata;
+
+  if (!metadata.llmPresentationAttempted && process.env.NODE_ENV === "production") {
+    return analysis;
+  }
+
+  return {
+    ...analysis,
+    presentation: rewrite.presentation,
+    llmPresentation: metadata,
   };
 }
 

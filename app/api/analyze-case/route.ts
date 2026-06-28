@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { analyzeCaseWithOptionalLlmExtraction } from '../../../lib/application/analyzeCase';
+import { analyzeCaseWithOptionalLlmPresentation } from '../../../lib/application/analyzeCase';
 import type { CaseInput } from '../../../lib/types';
 import { z } from "zod"
 import { prisma } from "../../../lib/prisma";
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const caseInput: CaseInput = caseInputSchema.parse(body);
 
-    const result = await analyzeCaseWithOptionalLlmExtraction(caseInput);
+    const result = await analyzeCaseWithOptionalLlmPresentation(caseInput);
     const sessionUserId =
       session?.user &&
       "id" in session.user &&

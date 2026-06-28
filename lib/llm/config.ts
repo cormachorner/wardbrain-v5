@@ -9,6 +9,10 @@ export type LlmExtractionConfig = {
   skipReason?: string;
 };
 
+export type LlmPresentationConfig = LlmExtractionConfig & {
+  presentationEnabled: boolean;
+};
+
 type EnvLike = Record<string, string | undefined>;
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.8;
@@ -98,5 +102,26 @@ export function getLlmExtractionConfig(
     apiKey,
     confidenceThreshold,
     timeoutMs,
+  };
+}
+
+export function getLlmPresentationConfig(
+  env: EnvLike = process.env,
+): LlmPresentationConfig {
+  const extractionConfig = getLlmExtractionConfig(env);
+  const presentationEnabled = env.WARDBRAIN_LLM_PRESENTATION_ENABLED === "1";
+
+  if (!presentationEnabled) {
+    return {
+      ...extractionConfig,
+      presentationEnabled,
+      usable: false,
+      skipReason: "presentation_disabled",
+    };
+  }
+
+  return {
+    ...extractionConfig,
+    presentationEnabled,
   };
 }

@@ -174,4 +174,11 @@ export type AnalyzeCaseResponse = AnalysisResult & {
       suggestedAlternative?: string;
     }>;
   };
+  llmPresentation?: {
+    llmPresentationAttempted: boolean;
+    llmPresentationUsed: boolean;
+    presentationSource: "deterministic" | "llm" | "fallback";
+    llmPresentationFallbackReason?: string;
+    llmPresentationFallbackTrigger?: string;
+  };
 };
