@@ -10,7 +10,7 @@ export const openAiLlmCompletionClient: LlmCompletionClient = {
       throw new Error("OpenAI config is incomplete");
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         authorization: `Bearer ${config.apiKey}`,
@@ -18,8 +18,10 @@ export const openAiLlmCompletionClient: LlmCompletionClient = {
       },
       body: JSON.stringify({
         model: config.model,
-        response_format: { type: "json_object" },
-        messages: [
+        text: {
+          format: { type: "json_object" },
+        },
+        input: [
           {
             role: "system",
             content: "Return valid JSON only. Do not include markdown.",
@@ -37,9 +39,19 @@ export const openAiLlmCompletionClient: LlmCompletionClient = {
     }
 
     const payload = await response.json() as {
-      choices?: Array<{ message?: { content?: string } }>;
+      output_text?: string;
+      output?: Array<{
+        content?: Array<{ type?: string; text?: string }>;
+      }>;
     };
 
-    return payload.choices?.[0]?.message?.content ?? "";
+    if (payload.output_text) {
+      return payload.output_text;
+    }
+
+    return payload.output
+      ?.flatMap((item) => item.content ?? [])
+      .find((content) => content.type === "output_text" && content.text)
+      ?.text ?? "";
   },
 };

@@ -6,7 +6,7 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const tsxCli = join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
-const result = spawnSync(process.execPath, [tsxCli, "scripts/evaluate-llm-extraction.ts"], {
+const result = spawnSync(process.execPath, [tsxCli, "scripts/evaluate-cases.ts"], {
   cwd: process.cwd(),
   env: process.env,
   stdio: "inherit",

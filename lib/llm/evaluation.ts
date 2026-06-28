@@ -14,6 +14,7 @@ export type LlmEvaluationCase = {
   expectedKeyFeatures: string[];
   expectedRedFlags?: string[];
   forbiddenRedFlags?: string[];
+  forbiddenLeadDiagnosisSlugs?: string[];
   expectedUsefulLlmAddedFeatures?: string[];
   mockLlmFeatures: LlmProposedFeature[];
 };
@@ -29,6 +30,8 @@ export type LlmEvaluationCaseResult = {
   missingExpectedFeaturesAugmented: string[];
   forbiddenRedFlagsDeterministic: string[];
   forbiddenRedFlagsAugmented: string[];
+  forbiddenLeadDeterministic: boolean;
+  forbiddenLeadAugmented: boolean;
   expectedRedFlagsMissingDeterministic: string[];
   expectedRedFlagsMissingAugmented: string[];
   leadImproved: boolean;
@@ -98,6 +101,9 @@ export async function evaluateLlmExtractionCase(
   const expectedLead = canonicalDiagnosisSlug(evaluationCase.expectedLeadDiagnosisSlug);
   const deterministicLead = getLeadSlug(deterministic);
   const augmentedLead = getLeadSlug(augmented);
+  const forbiddenLeads = new Set(
+    (evaluationCase.forbiddenLeadDiagnosisSlugs ?? []).map(canonicalDiagnosisSlug),
+  );
   const missingExpectedFeaturesDeterministic = missingFeatures(
     deterministic,
     evaluationCase.expectedKeyFeatures,
@@ -122,23 +128,27 @@ export async function evaluateLlmExtractionCase(
     augmented,
     evaluationCase.forbiddenRedFlags,
   );
-  const expectedUseful = new Set(
-    (evaluationCase.expectedUsefulLlmAddedFeatures ?? []).map(canonicalFeatureSlug),
-  );
-  const usefulFeaturesAdded = acceptedLlmFeatureSlugs
-    .map(canonicalFeatureSlug)
-    .some((feature) => expectedUseful.has(feature));
+  const forbiddenLeadDeterministic = forbiddenLeads.has(deterministicLead);
+  const forbiddenLeadAugmented = forbiddenLeads.has(augmentedLead);
   const leadImproved = deterministicLead !== expectedLead && augmentedLead === expectedLead;
   const redFlagsImproved =
     expectedRedFlagsMissingAugmented.length < expectedRedFlagsMissingDeterministic.length;
+  const recoveredExpectedFeatures = missingExpectedFeaturesDeterministic.filter(
+    (feature) => !missingExpectedFeaturesAugmented.includes(feature),
+  );
+  const usefulFeaturesAdded =
+    recoveredExpectedFeatures.length > 0 ||
+    (acceptedLlmFeatureSlugs.length > 0 && (leadImproved || redFlagsImproved));
   const causedHarm =
     (deterministicLead === expectedLead && augmentedLead !== expectedLead) ||
+    (!forbiddenLeadDeterministic && forbiddenLeadAugmented) ||
     forbiddenRedFlagsAugmented.length > forbiddenRedFlagsDeterministic.length ||
     missingExpectedFeaturesAugmented.length > missingExpectedFeaturesDeterministic.length;
   const unchanged =
-    acceptedLlmFeatureSlugs.length === 0 &&
-    deterministicLead === augmentedLead &&
-    redFlagNames(deterministic).join("|") === redFlagNames(augmented).join("|");
+    !usefulFeaturesAdded &&
+    !leadImproved &&
+    !redFlagsImproved &&
+    !causedHarm;
 
   return {
     id: evaluationCase.id,
@@ -151,6 +161,8 @@ export async function evaluateLlmExtractionCase(
     missingExpectedFeaturesAugmented,
     forbiddenRedFlagsDeterministic,
     forbiddenRedFlagsAugmented,
+    forbiddenLeadDeterministic,
+    forbiddenLeadAugmented,
     expectedRedFlagsMissingDeterministic,
     expectedRedFlagsMissingAugmented,
     leadImproved,

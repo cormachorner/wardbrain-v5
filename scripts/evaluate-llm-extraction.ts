@@ -1,4 +1,7 @@
-import { messyPilotLlmEvaluationFixtures } from "../tests/fixtures/messyPilotVignettes";
+import {
+  allLlmEvaluationFixtures,
+  llmEvaluationFixtureSections,
+} from "../tests/fixtures/messyPilotVignettes";
 import {
   buildMockLlmClientForCase,
   evaluateLlmExtractionCase,
@@ -48,6 +51,9 @@ function printCaseResult(result: LlmEvaluationCaseResult) {
   console.log(
     `Forbidden red flags present: ${formatList(result.forbiddenRedFlagsAugmented)}`,
   );
+  if (result.forbiddenLeadAugmented) {
+    console.log("Forbidden lead diagnosis present: yes");
+  }
   console.log(
     `Assessment: ${
       result.causedHarm
@@ -68,7 +74,7 @@ function getEvaluationMode():
       mode: "mock",
       config: MOCK_CONFIG,
       clientForCase(caseId) {
-        const evaluationCase = messyPilotLlmEvaluationFixtures.find((fixture) => fixture.id === caseId);
+        const evaluationCase = allLlmEvaluationFixtures.find((fixture) => fixture.id === caseId);
         if (!evaluationCase) {
           throw new Error(`Unknown evaluation case: ${caseId}`);
         }
@@ -116,14 +122,18 @@ async function main() {
 
   const results: LlmEvaluationCaseResult[] = [];
 
-  for (const evaluationCase of messyPilotLlmEvaluationFixtures) {
-    const result = await evaluateLlmExtractionCase(evaluationCase, {
-      llmConfig: mode.config,
-      llmClient: mode.clientForCase(evaluationCase.id),
-    });
+  for (const section of llmEvaluationFixtureSections) {
+    console.log(`\n# ${section.label}`);
 
-    results.push(result);
-    printCaseResult(result);
+    for (const evaluationCase of section.fixtures) {
+      const result = await evaluateLlmExtractionCase(evaluationCase, {
+        llmConfig: mode.config,
+        llmClient: mode.clientForCase(evaluationCase.id),
+      });
+
+      results.push(result);
+      printCaseResult(result);
+    }
   }
 
   const summary = summarizeLlmEvaluation(results);

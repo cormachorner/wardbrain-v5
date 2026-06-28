@@ -5,6 +5,7 @@ import {
   evaluateLlmExtractionCase,
   summarizeLlmEvaluation,
 } from "../lib/llm/evaluation.js";
+import { hardUnseenLlmEvaluationFixtures } from "./fixtures/messyPilotVignettes.js";
 import type { LlmEvaluationCase } from "../lib/llm/evaluation.js";
 import type { LlmExtractionConfig } from "../lib/llm/config.js";
 import type { CaseInput } from "../lib/types.js";
@@ -92,6 +93,41 @@ test("LLM evaluation detects harm when forbidden red flags appear after augmenta
   assert.equal(result.causedHarm, true);
 });
 
+test("LLM evaluation treats accepted non-recovering synonym features as unchanged", async () => {
+  const evaluationCase: LlmEvaluationCase = {
+    id: "unit-panic-synonym-unchanged",
+    title: "Unit panic synonym unchanged",
+    input: buildInput({
+      age: "27",
+      presentingComplaint: "Breathlessness",
+      history:
+        "Shortness of breath during a panic attack with hyperventilation and tingling fingers. Normal sats and normal chest exam.",
+      suspectedDiagnosis: "Panic attack",
+    }),
+    expectedLeadDiagnosisSlug: "panic-anxiety",
+    expectedKeyFeatures: ["sob", "panic_features"],
+    expectedUsefulLlmAddedFeatures: [],
+    mockLlmFeatures: [
+      { slug: "dyspnoea", evidence: "shortness of breath", confidence: 0.95 },
+    ],
+  };
+
+  const result = await evaluateLlmExtractionCase(evaluationCase, {
+    llmConfig: mockConfig,
+  });
+
+  assert.deepEqual(result.acceptedLlmFeatureSlugs, ["dyspnoea"]);
+  assert.equal(result.usefulFeaturesAdded, false);
+  assert.equal(result.leadImproved, false);
+  assert.equal(result.redFlagsImproved, false);
+  assert.equal(result.causedHarm, false);
+  assert.equal(result.unchanged, true);
+
+  const summary = summarizeLlmEvaluation([result]);
+  assert.equal(summary.casesWhereLlmAddedUsefulFeatures, 0);
+  assert.equal(summary.casesUnchanged, 1);
+});
+
 test("LLM evaluation summary counts useful features harm and unchanged cases", async () => {
   const baseCase: LlmEvaluationCase = {
     id: "unit-unchanged",
@@ -120,4 +156,19 @@ test("LLM evaluation summary counts useful features harm and unchanged cases", a
   assert.equal(summary.casesWhereLlmAddedUsefulFeatures, 1);
   assert.equal(summary.casesWhereLlmCausedHarm, 1);
   assert.equal(summary.casesUnchanged, 1);
+});
+
+test("LLM evaluation includes hard unseen mock fixtures without live API access", async () => {
+  assert.equal(hardUnseenLlmEvaluationFixtures.length, 5);
+
+  const results = await Promise.all(
+    hardUnseenLlmEvaluationFixtures.map((evaluationCase) =>
+      evaluateLlmExtractionCase(evaluationCase, { llmConfig: mockConfig }),
+    ),
+  );
+  const summary = summarizeLlmEvaluation(results);
+
+  assert.equal(summary.totalCases, 5);
+  assert.equal(summary.casesWhereLlmCausedHarm, 0);
+  assert.ok(summary.casesWhereLlmAddedUsefulFeatures >= 1);
 });

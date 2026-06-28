@@ -9,6 +9,7 @@ export type LlmEvaluationFixture = {
   expectedKeyFeatures: string[];
   expectedRedFlags?: string[];
   forbiddenRedFlags?: string[];
+  forbiddenLeadDiagnosisSlugs?: string[];
   expectedUsefulLlmAddedFeatures: string[];
   mockLlmFeatures: LlmProposedFeature[];
 };
@@ -232,3 +233,230 @@ export const messyPilotLlmEvaluationFixtures: LlmEvaluationFixture[] = [
     ],
   },
 ];
+
+export const hardUnseenLlmEvaluationFixtures: LlmEvaluationFixture[] = [
+  {
+    id: "hard-unseen-acs-no-pain-sitting-on-chest",
+    title: "Hard unseen ACS without the word pain",
+    input: buildInput({
+      age: "62",
+      sex: "male",
+      presentingComplaint: "Chest pressure",
+      history:
+        "A 62-year-old man says it feels like someone is sitting on his chest when he walks uphill. It settles when he stops and rests, but came back today with clamminess and feeling sick. The tightness seems to go up into his throat. He has type 2 diabetes and high cholesterol.",
+      suspectedDiagnosis: "Indigestion",
+    }),
+    expectedLeadDiagnosisSlug: "acute-coronary-syndrome",
+    expectedKeyFeatures: [
+      "chest_pain",
+      "chest_heaviness",
+      "exertional_pain",
+      "sweating",
+      "nausea",
+      "diabetic_context",
+      "hyperlipidaemia",
+    ],
+    expectedRedFlags: ["ACS suspicion pattern"],
+    forbiddenRedFlags: ["PE suspicion pattern"],
+    forbiddenLeadDiagnosisSlugs: ["gord", "panic-anxiety"],
+    expectedUsefulLlmAddedFeatures: [
+      "chest_pain",
+      "chest_heaviness",
+      "exertional_pain",
+      "sweating",
+      "nausea",
+      "diabetic_context",
+      "hyperlipidaemia",
+    ],
+    mockLlmFeatures: [
+      mockFeature("chest_pain", "someone is sitting on his chest"),
+      mockFeature("chest_heaviness", "someone is sitting on his chest"),
+      mockFeature("exertional_pain", "when he walks uphill"),
+      mockFeature("sweating", "clamminess"),
+      mockFeature("nausea", "feeling sick"),
+      mockFeature("diabetic_context", "type 2 diabetes"),
+      mockFeature("hyperlipidaemia", "high cholesterol"),
+    ],
+  },
+  {
+    id: "hard-unseen-pe-pulled-rib-muscle",
+    title: "Hard unseen PE disguised as pulled rib muscle",
+    input: buildInput({
+      age: "44",
+      sex: "female",
+      presentingComplaint: "Rib pain and breathlessness",
+      history:
+        "She thinks she has pulled a rib muscle, but the sharp right-sided pain is worse when she breathes in and she is short of breath. She had a knee operation ten days ago and her left calf is swollen. HR 122 and sats are 88% on air. No fever and no productive cough.",
+      observations: "HR 122, sats 88% on air",
+      suspectedDiagnosis: "Pulled muscle",
+    }),
+    expectedLeadDiagnosisSlug: "pulmonary-embolism",
+    expectedKeyFeatures: [
+      "pleuritic_pain",
+      "sob",
+      "recent_surgery",
+      "leg_swelling",
+      "tachycardia",
+      "hypoxia",
+    ],
+    expectedRedFlags: ["PE suspicion pattern"],
+    forbiddenRedFlags: ["Pneumonia with sepsis risk pattern"],
+    forbiddenLeadDiagnosisSlugs: ["musculoskeletal-chest-pain", "pneumonia"],
+    expectedUsefulLlmAddedFeatures: [
+      "pleuritic_pain",
+      "sob",
+      "recent_surgery",
+      "leg_swelling",
+      "tachycardia",
+      "hypoxia",
+    ],
+    mockLlmFeatures: [
+      mockFeature("pleuritic_pain", "worse when she breathes in"),
+      mockFeature("sob", "short of breath"),
+      mockFeature("recent_surgery", "knee operation ten days ago"),
+      mockFeature("leg_swelling", "left calf is swollen"),
+      mockFeature("tachycardia", "HR 122"),
+      mockFeature("hypoxia", "sats are 88% on air"),
+    ],
+  },
+  {
+    id: "hard-unseen-pneumonia-explicit-pe-negatives",
+    title: "Hard unseen pneumonia with explicit PE negatives",
+    input: buildInput({
+      age: "57",
+      sex: "male",
+      presentingComplaint: "Breathlessness and cough",
+      history:
+        "Five days of worsening breathlessness with fever, productive cough bringing up green sputum, and focal crackles at the left base. He has no pleuritic chest pain, no haemoptysis, no calf swelling, no recent surgery and no long-haul travel.",
+      keyNegatives:
+        "no pleuritic chest pain no haemoptysis no calf swelling no recent surgery no long-haul travel",
+    }),
+    expectedLeadDiagnosisSlug: "pneumonia",
+    expectedKeyFeatures: [
+      "sob",
+      "fever",
+      "productive_cough",
+      "sputum_change",
+      "crackles",
+      "progressive_course",
+    ],
+    forbiddenRedFlags: ["PE suspicion pattern"],
+    forbiddenLeadDiagnosisSlugs: ["pulmonary-embolism"],
+    expectedUsefulLlmAddedFeatures: [
+      "sob",
+      "fever",
+      "productive_cough",
+      "sputum_change",
+      "crackles",
+      "progressive_course",
+    ],
+    mockLlmFeatures: [
+      mockFeature("sob", "breathlessness"),
+      mockFeature("fever", "fever"),
+      mockFeature("productive_cough", "productive cough"),
+      mockFeature("sputum_change", "green sputum"),
+      mockFeature("crackles", "focal crackles at the left base"),
+      mockFeature("progressive_course", "Five days of worsening"),
+    ],
+  },
+  {
+    id: "hard-unseen-dka-deep-sighing-breaths",
+    title: "Hard unseen DKA without saying Kussmaul",
+    input: buildInput({
+      age: "19",
+      sex: "female",
+      presentingComplaint: "Breathlessness and vomiting",
+      history:
+        "A 19-year-old with type 1 diabetes missed her insulin and has been vomiting all night. She is taking big deep sighing breaths and her mum says her breath smells of pear drops. She has been drinking constantly and passing lots of urine. Sats are 99% on air. No wheeze and no cough.",
+      observations: "Sats 99% on air",
+    }),
+    expectedLeadDiagnosisSlug: "diabetic-ketoacidosis",
+    expectedKeyFeatures: [
+      "diabetic_context",
+      "type_1_diabetes",
+      "vomiting",
+      "kussmaul_breathing",
+      "ketosis_breath",
+      "polydipsia",
+      "polyuria",
+      "normal_oxygen_saturations",
+    ],
+    expectedRedFlags: ["DKA / metabolic acidosis pattern"],
+    forbiddenRedFlags: ["PE suspicion pattern", "Severe asthma pattern"],
+    forbiddenLeadDiagnosisSlugs: ["pulmonary-embolism", "asthma-exacerbation"],
+    expectedUsefulLlmAddedFeatures: [
+      "diabetic_context",
+      "type_1_diabetes",
+      "vomiting",
+      "kussmaul_breathing",
+      "ketosis_breath",
+      "polydipsia",
+      "polyuria",
+      "normal_oxygen_saturations",
+    ],
+    mockLlmFeatures: [
+      mockFeature("diabetic_context", "type 1 diabetes"),
+      mockFeature("type_1_diabetes", "type 1 diabetes"),
+      mockFeature("vomiting", "vomiting all night"),
+      mockFeature("kussmaul_breathing", "big deep sighing breaths"),
+      mockFeature("ketosis_breath", "breath smells of pear drops"),
+      mockFeature("polydipsia", "drinking constantly"),
+      mockFeature("polyuria", "passing lots of urine"),
+      mockFeature("normal_oxygen_saturations", "Sats are 99% on air"),
+    ],
+  },
+  {
+    id: "hard-unseen-bowel-obstruction-nontextbook",
+    title: "Hard unseen bowel obstruction without textbook wording",
+    input: buildInput({
+      age: "71",
+      sex: "male",
+      presentingComplaint: "Abdominal pain and vomiting",
+      history:
+        "A 71-year-old with previous bowel surgery says his belly feels tight and ballooned. The pain comes in waves and he has vomited repeatedly. He says there has been nothing out either end since yesterday. There is mild tenderness but no board-like rigidity.",
+      keyNegatives: "no board-like rigidity",
+    }),
+    expectedLeadDiagnosisSlug: "bowel-obstruction",
+    expectedKeyFeatures: [
+      "older_age",
+      "previous_abdominal_surgery",
+      "distension",
+      "colicky_pain",
+      "vomiting",
+      "obstipation",
+      "unable_to_pass_flatus",
+    ],
+    forbiddenRedFlags: ["Perforated viscus / peritonitis pattern"],
+    forbiddenLeadDiagnosisSlugs: ["perforated-viscus", "gastroenteritis"],
+    expectedUsefulLlmAddedFeatures: [
+      "previous_abdominal_surgery",
+      "distension",
+      "colicky_pain",
+      "vomiting",
+      "obstipation",
+      "unable_to_pass_flatus",
+    ],
+    mockLlmFeatures: [
+      mockFeature("previous_abdominal_surgery", "previous bowel surgery"),
+      mockFeature("distension", "belly feels tight and ballooned"),
+      mockFeature("colicky_pain", "pain comes in waves"),
+      mockFeature("vomiting", "vomited repeatedly"),
+      mockFeature("obstipation", "nothing out either end"),
+      mockFeature("unable_to_pass_flatus", "nothing out either end"),
+    ],
+  },
+];
+
+export const llmEvaluationFixtureSections = [
+  {
+    label: "baseline messy pilot cases",
+    fixtures: messyPilotLlmEvaluationFixtures,
+  },
+  {
+    label: "hard unseen cases",
+    fixtures: hardUnseenLlmEvaluationFixtures,
+  },
+] as const;
+
+export const allLlmEvaluationFixtures: LlmEvaluationFixture[] =
+  llmEvaluationFixtureSections.flatMap((section) => section.fixtures);
