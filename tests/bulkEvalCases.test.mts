@@ -12,6 +12,10 @@ import {
   summarizeByTag,
   toCsv,
 } from "../scripts/evaluate-cases.js";
+import {
+  getFeatureImportanceLevel,
+  getFeatureImportanceWeight,
+} from "../lib/llm/featureImportance.js";
 
 test("bulk evaluation fixture contains the initial labelled case set", async () => {
   const raw = JSON.parse(
@@ -33,12 +37,25 @@ test("bulk evaluation fixture contains the initial labelled case set", async () 
   assert.equal(result.acceptedLlmFeatureSlugs.length, 0);
   assert.equal(result.llmUsefulAddedFeatures.length, 0);
   assert.equal(result.llmHarmfulAdditions.length, 0);
+  assert.ok(result.deterministicExpectedFeatureRecallWeighted >= 0);
+  assert.ok(result.deterministicExpectedFeatureRecallWeighted <= 1);
+  assert.equal(
+    result.deterministicExpectedFeatureRecallWeighted,
+    result.llmExpectedFeatureRecallWeighted,
+  );
 
   const csv = toCsv([result]);
   assert.ok(csv.includes("deterministicLeadCorrect"));
+  assert.ok(csv.includes("deterministicExpectedFeatureRecallWeighted"));
+  assert.ok(csv.includes("llmExpectedFeatureRecallWeighted"));
 
-  assert.ok(summarizeByPresentation([result]).length > 0);
-  assert.ok(summarizeByTag([result]).length > 0);
+  const presentationSummary = summarizeByPresentation([result]);
+  const tagSummary = summarizeByTag([result]);
+
+  assert.ok(presentationSummary.length > 0);
+  assert.ok(tagSummary.length > 0);
+  assert.ok(presentationSummary[0].averageDeterministicFeatureRecallWeighted >= 0);
+  assert.ok(tagSummary[0].averageLlmFeatureRecallWeighted >= 0);
 });
 
 test("bulk evaluation CLI --case filters to a single case", () => {
@@ -62,4 +79,13 @@ test("bulk evaluation CLI --case filters to a single case", () => {
     /Evaluation case not found: missing-case/,
   );
   assert.throws(() => parseBulkEvalCliArgs(["--case"]), /Missing case id/);
+});
+
+test("feature importance weights are slug-only and default to supporting", () => {
+  assert.equal(getFeatureImportanceLevel("hypoxia"), "critical");
+  assert.equal(getFeatureImportanceWeight("hypoxia"), 5);
+  assert.equal(getFeatureImportanceWeight("tachycardia"), 3);
+  assert.equal(getFeatureImportanceWeight("nausea"), 1);
+  assert.equal(getFeatureImportanceWeight("smoking-history"), 1);
+  assert.equal(getFeatureImportanceWeight("unknown_future_feature"), 1);
 });

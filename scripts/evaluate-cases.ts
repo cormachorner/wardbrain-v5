@@ -8,6 +8,7 @@ import { getAllowedLlmFeatureSlugsForBlock } from "../lib/llm/blockFeatureSets";
 import { filterLlmFeaturesForClinicalSanity } from "../lib/llm/clinicalSanityFilter";
 import { openAiLlmCompletionClient, type LlmCompletionClient } from "../lib/llm/client";
 import { getLlmExtractionConfig, type LlmExtractionConfig } from "../lib/llm/config";
+import { getFeatureImportanceWeight } from "../lib/llm/featureImportance";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
 
 export type BulkEvalCase = {
@@ -36,6 +37,8 @@ export type BulkEvalResult = {
   llmLeadCorrect: boolean;
   deterministicExpectedFeatureRecall: number;
   llmExpectedFeatureRecall: number;
+  deterministicExpectedFeatureRecallWeighted: number;
+  llmExpectedFeatureRecallWeighted: number;
   deterministicMissingFeatureSlugs: string[];
   llmMissingFeatureSlugs: string[];
   deterministicExpectedRedFlagsRecovered: string[];
@@ -58,6 +61,8 @@ type AggregateSummary = {
   llmLeadCorrect: number;
   averageDeterministicFeatureRecall: number;
   averageLlmFeatureRecall: number;
+  averageDeterministicFeatureRecallWeighted: number;
+  averageLlmFeatureRecallWeighted: number;
   casesWithLlmUsefulAddedFeatures: number;
   casesWithLlmHarmfulAdditions: number;
 };
@@ -220,6 +225,25 @@ function featureRecall(analysis: AnalyzeCaseResponse, expected: readonly string[
   return presentExpectedFeatures(analysis, expected).length / expected.length;
 }
 
+function weightedFeatureRecall(analysis: AnalyzeCaseResponse, expected: readonly string[]) {
+  if (expected.length === 0) {
+    return 1;
+  }
+
+  const actual = new Set(analysis.detectedFeatureSlugs.map(canonicalFeatureSlug));
+  const totalWeight = expected.reduce(
+    (sum, slug) => sum + getFeatureImportanceWeight(slug),
+    0,
+  );
+  const recoveredWeight = expected.reduce(
+    (sum, slug) =>
+      actual.has(canonicalFeatureSlug(slug)) ? sum + getFeatureImportanceWeight(slug) : sum,
+    0,
+  );
+
+  return totalWeight > 0 ? recoveredWeight / totalWeight : 1;
+}
+
 function missingFeatures(analysis: AnalyzeCaseResponse, expected: readonly string[]) {
   const actual = new Set(analysis.detectedFeatureSlugs.map(canonicalFeatureSlug));
   return expected.filter((slug) => !actual.has(slug));
@@ -339,6 +363,14 @@ async function runBulkEvalCase(
     llmLeadCorrect: llmLead === expectedLead,
     deterministicExpectedFeatureRecall: featureRecall(deterministic, testCase.expectedFeatureSlugs),
     llmExpectedFeatureRecall: featureRecall(llmAnalysis, testCase.expectedFeatureSlugs),
+    deterministicExpectedFeatureRecallWeighted: weightedFeatureRecall(
+      deterministic,
+      testCase.expectedFeatureSlugs,
+    ),
+    llmExpectedFeatureRecallWeighted: weightedFeatureRecall(
+      llmAnalysis,
+      testCase.expectedFeatureSlugs,
+    ),
     deterministicMissingFeatureSlugs,
     llmMissingFeatureSlugs,
     deterministicExpectedRedFlagsRecovered: recoveredRedFlags(
@@ -389,6 +421,12 @@ function summarizeGroup(group: string, results: readonly BulkEvalResult[]): Aggr
       results.map((result) => result.deterministicExpectedFeatureRecall),
     ),
     averageLlmFeatureRecall: average(results.map((result) => result.llmExpectedFeatureRecall)),
+    averageDeterministicFeatureRecallWeighted: average(
+      results.map((result) => result.deterministicExpectedFeatureRecallWeighted),
+    ),
+    averageLlmFeatureRecallWeighted: average(
+      results.map((result) => result.llmExpectedFeatureRecallWeighted),
+    ),
     casesWithLlmUsefulAddedFeatures: results.filter((result) => result.llmUsefulAddedFeatures.length > 0).length,
     casesWithLlmHarmfulAdditions: results.filter((result) => result.llmHarmfulAdditions.length > 0).length,
   };
@@ -439,6 +477,8 @@ export function toCsv(results: readonly BulkEvalResult[]) {
     "llmLeadCorrect",
     "deterministicExpectedFeatureRecall",
     "llmExpectedFeatureRecall",
+    "deterministicExpectedFeatureRecallWeighted",
+    "llmExpectedFeatureRecallWeighted",
     "deterministicMissingFeatureSlugs",
     "llmMissingFeatureSlugs",
     "deterministicMissingRedFlags",
@@ -468,6 +508,7 @@ function printCase(result: BulkEvalResult) {
       `det=${result.deterministicLeadDiagnosisSlug}`,
       `llm=${result.llmLeadDiagnosisSlug}`,
       `features=${pct(result.deterministicExpectedFeatureRecall)}->${pct(result.llmExpectedFeatureRecall)}`,
+      `weighted=${pct(result.deterministicExpectedFeatureRecallWeighted)}->${pct(result.llmExpectedFeatureRecallWeighted)}`,
       result.llmUsefulAddedFeatures.length > 0
         ? `useful+${result.llmUsefulAddedFeatures.length}`
         : "useful+0",
@@ -719,9 +760,11 @@ function printAggregate(title: string, summaries: readonly AggregateSummary[]) {
 
   for (const summary of summaries) {
     console.log(
-      `${summary.group}: ${summary.llmLeadCorrect}/${summary.total} lead correct, feature recall ${pct(
+      `${summary.group}: ${summary.llmLeadCorrect}/${summary.total} lead correct, unweighted ${pct(
         summary.averageDeterministicFeatureRecall,
-      )}->${pct(summary.averageLlmFeatureRecall)}, useful ${summary.casesWithLlmUsefulAddedFeatures}, harm ${summary.casesWithLlmHarmfulAdditions}`,
+      )}->${pct(summary.averageLlmFeatureRecall)}, weighted ${pct(
+        summary.averageDeterministicFeatureRecallWeighted,
+      )}->${pct(summary.averageLlmFeatureRecallWeighted)}, useful ${summary.casesWithLlmUsefulAddedFeatures}, harm ${summary.casesWithLlmHarmfulAdditions}`,
     );
   }
 }
@@ -783,9 +826,18 @@ async function main() {
 
   console.log("\n# Summary");
   console.log(
-    `All: ${aggregate.total.llmLeadCorrect}/${aggregate.total.total} lead correct, feature recall ${pct(
-      aggregate.total.averageDeterministicFeatureRecall,
-    )}->${pct(aggregate.total.averageLlmFeatureRecall)}, useful ${aggregate.total.casesWithLlmUsefulAddedFeatures}, harm ${aggregate.total.casesWithLlmHarmfulAdditions}`,
+    `All: ${aggregate.total.llmLeadCorrect}/${aggregate.total.total} lead correct, useful ${aggregate.total.casesWithLlmUsefulAddedFeatures}, harm ${aggregate.total.casesWithLlmHarmfulAdditions}`,
+  );
+  console.log("Feature recall:");
+  console.log(
+    `- Unweighted: ${pct(aggregate.total.averageDeterministicFeatureRecall)}->${pct(
+      aggregate.total.averageLlmFeatureRecall,
+    )}`,
+  );
+  console.log(
+    `- Weighted: ${pct(aggregate.total.averageDeterministicFeatureRecallWeighted)}->${pct(
+      aggregate.total.averageLlmFeatureRecallWeighted,
+    )}`,
   );
   printAggregate("By presentation", aggregate.byPresentation);
   printAggregate("By tag", aggregate.byTag);
