@@ -25,6 +25,7 @@ import {
 import { routePresentationFamilies } from "../domain/presentationFamilies";
 import { detectRedFlags } from "../domain/redFlagRules";
 import { matchPresentationBlockForCase } from "../domain/wardbrainLookup";
+import { guidelineSlug, lookupGuidelineSupport } from "../guidelines/guidelineRegistry";
 import { extractLlmFeatures } from "../llm/extractFeatures";
 import type { LlmCompletionClient } from "../llm/client";
 import type { LlmExtractionConfig, LlmPresentationConfig } from "../llm/config";
@@ -754,6 +755,16 @@ function analyzeValidatedCaseWithFeatures(
   const nextSteps = displayedDifferentials[0]
     ? findNextStepsRule(displayedDifferentials[0].name)
     : undefined;
+  const guidelineSupport = lookupGuidelineSupport({
+    diagnosisSlugs: displayedDifferentials.map((differential) =>
+      guidelineSlug(differential.name),
+    ),
+    redFlagSlugs: redFlags.map((flag) => guidelineSlug(flag.name)),
+    presentationBlocks: [
+      initialFamilyRoute.primaryFamily,
+      presentationSupport.matchedBlockId,
+    ].filter((block): block is string => Boolean(block)),
+  });
   const matchedPresentationBlock = matchPresentationBlockForCase(
     validatedInput,
     corePilotBlocks,
@@ -772,6 +783,7 @@ function analyzeValidatedCaseWithFeatures(
     presentationSupport,
     diagnosisTraces,
     uncertainty,
+    guidelineSupport,
     detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,

@@ -482,6 +482,67 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         </div>
       </Section>
 
+      <Section title="Guideline support" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
+        {result.guidelineSupport.sources.length > 0 ? (
+          <div className="space-y-3 text-sm text-slate-700">
+            <p>
+              Curated source links mapped to the matched diagnoses, red flags, or presentation
+              block. WardBrain summaries are educational and do not copy full guideline text.
+            </p>
+
+            <ul className="space-y-3">
+              {result.guidelineSupport.sources.map((match) => (
+                <li key={match.source.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={match.source.url}
+                      target={match.source.url.startsWith("http") ? "_blank" : undefined}
+                      rel={match.source.url.startsWith("http") ? "noreferrer" : undefined}
+                      className="font-semibold text-[var(--brand-navy)] underline-offset-2 hover:underline"
+                    >
+                      {match.source.title}
+                    </a>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+                      {match.source.source}
+                    </span>
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      {match.source.status}
+                    </span>
+                  </div>
+
+                  <p className="mt-2">{match.source.shortTeachingSummary}</p>
+
+                  <div className="mt-2 text-xs text-slate-500">
+                    Last reviewed: {match.source.lastReviewed}
+                    {" · "}
+                    {match.source.licenceStatus}
+                  </div>
+
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div>
+                      <span className="font-medium">Diagnoses: </span>
+                      <ChipList items={match.matchedDiagnosisSlugs.map(formatSlug)} />
+                    </div>
+                    <div>
+                      <span className="font-medium">Red flags: </span>
+                      <ChipList items={match.matchedRedFlagSlugs.map(formatSlug)} />
+                    </div>
+                    <div>
+                      <span className="font-medium">Blocks: </span>
+                      <ChipList items={match.matchedPresentationBlocks.map(formatSlug)} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-600">
+            No curated guideline source mapping is available for this exact output yet.
+          </p>
+        )}
+      </Section>
+
       <Section title="Case summary" icon={<Icon name="check" />} defaultOpen={false} tone="secondary">
         <div className="space-y-4 text-sm text-slate-700">
           <div>

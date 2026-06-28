@@ -44,6 +44,9 @@ const baseAnalysis: AnalyzeCaseResponse = {
     reasons: [],
     missingInformation: [],
   },
+  guidelineSupport: {
+    sources: [],
+  },
   detectedFeatureSlugs: [],
   detectedFeatures: [],
   matchedPresentationBlock: null,

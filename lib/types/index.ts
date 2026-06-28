@@ -1,4 +1,5 @@
 import type { WardBrainPresentationBlockMatch } from "../../types/wardbrain";
+import type { GuidelineSupport } from "../guidelines/guidelineRegistry";
 import type { SupportedPresentationBlock } from "../pilotStatus";
 
 export type CaseInput = {
@@ -152,6 +153,7 @@ export type AnalysisResult = {
     reasons: string[];
     missingInformation: string[];
   };
+  guidelineSupport: GuidelineSupport;
   detectedFeatures?: string[];
   detectedFeatureSlugs?: string[];
 };
