@@ -1688,17 +1688,147 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "delirium",
     "acutely confused",
     "new confusion",
+    "acute confusion",
+    "newly confused",
+    "suddenly confused",
+    "suddenly muddled",
+    "muddled",
+    "suddenly muddled",
+    "not himself",
+    "not herself",
+    "not themselves",
+    "not quite himself",
+    "not quite herself",
+    "family says this is new",
+    "family say this is new",
+    "acute change",
+    "acute deterioration",
+    "changed behaviour",
+    "change in behaviour",
+    "sudden change in behaviour",
+    "disorientated",
+    "disoriented",
+    "disorientation",
+  ],
+  drowsiness: [
     "drowsy",
+    "sleepy",
+    "somnolent",
+    "reduced alertness",
+    "less alert",
+    "hard to wake",
     "difficult to rouse",
     "hard to rouse",
-    "fluctuating confusion",
-    "fluctuating delirium",
+  ],
+  hallucinations: [
+    "hallucinations",
+    "hallucinating",
+    "seeing things",
+    "hearing voices",
+    "visual hallucinations",
+    "auditory hallucinations",
+  ],
+  off_legs: [
+    "off legs",
+    "off his legs",
+    "off her legs",
+    "unable to mobilise",
+    "unable to mobilize",
+    "not mobilising",
+    "not mobilizing",
+    "too weak to get up",
+  ],
+  urinary_incontinence: [
+    "incontinence",
+    "incontinent",
+    "urinary incontinence",
+    "new incontinence",
+    "wet himself",
+    "wet herself",
+    "wet the bed",
+  ],
+  poor_oral_intake: [
+    "poor oral intake",
+    "not eating",
+    "not drinking",
+    "poor intake",
+    "reduced intake",
+    "barely drinking",
+    "barely eating",
+  ],
+  medication_toxicity_context: [
+    "new medication",
+    "started morphine",
+    "started oxycodone",
+    "started codeine",
+    "opioid",
+    "opiates",
+    "benzodiazepine",
+    "diazepam",
+    "lorazepam",
+    "zopiclone",
+    "sedative",
+    "sedatives",
+    "anticholinergic",
+    "amitriptyline",
+    "oxybutynin",
+    "promethazine",
+    "cyclizine",
+  ],
+  alcohol_withdrawal_context: [
+    "alcohol withdrawal",
+    "withdrawal",
+    "stopped drinking",
+    "stopped alcohol",
+    "last drink",
+    "heavy drinker",
+    "alcohol dependence",
+    "dependent on alcohol",
+    "tremor",
+    "tremulous",
+    "shaking",
+  ],
+  metabolic_disturbance_context: [
+    "electrolyte disturbance",
+    "metabolic disturbance",
+    "hyponatraemia",
+    "hyponatremia",
+    "hypercalcaemia",
+    "hypercalcemia",
+    "renal failure",
+    "acute kidney injury",
+    "aki",
+    "uremia",
+    "uraemia",
+    "high calcium",
+    "low sodium",
+  ],
+  baseline_dementia: [
+    "dementia",
+    "baseline dementia",
+    "known dementia",
+    "chronic cognitive impairment",
+    "cognitive impairment",
+    "memory problems for months",
+    "memory problems for years",
+  ],
+  acute_on_chronic_confusion: [
+    "baseline dementia but now acutely worse",
+    "dementia but now acutely worse",
+    "known dementia but now acutely worse",
+    "usually confused but worse today",
+    "more confused than baseline",
+    "acute deterioration from baseline",
   ],
   fluctuation: [
     "fluctuating confusion",
     "fluctuating delirium",
+    "fluctuating confusion",
+    "fluctuating delirium",
     "fluctuating course",
     "waxing and waning",
+    "comes and goes",
+    "better and worse",
   ],
   focal_neurology: [
     "focal neurology",
@@ -1729,11 +1859,16 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "dysuria",
     "urinary frequency",
     "frequency of urination",
+    "passing urine frequently",
     "burning urine",
     "burning when passing urine",
     "uti symptoms",
     "foul-smelling urine",
+    "foul smelling urine",
     "cloudy urine",
+    "smelly urine",
+    "offensive urine",
+    "new incontinence",
   ],
   dysuria: [
     "dysuria",
@@ -1986,6 +2121,12 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "shaky and sweaty",
     "blood sugar low",
     "low blood sugar",
+    "low glucose",
+    "glucose low",
+    "capillary glucose low",
+    "bm low",
+    "missed meal",
+    "missed meals",
   ],
   panic_features: [
     "panic attack",
@@ -2407,6 +2548,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
 const NEGATION_PREFIXES = [
   "no",
   "not",
+  "deny",
   "denies",
   "denied",
   "without",
@@ -2431,7 +2573,7 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
   diarrhoea: ["no diarrhoea", "no diarrhea", "without diarrhoea", "without diarrhea"],
   nausea: ["no nausea", "without nausea", "denies nausea"],
   sweating: ["no sweating", "without sweating", "denies sweating"],
-  chest_pain: ["no chest pain", "denies chest pain", "without chest pain"],
+  chest_pain: ["no chest pain", "deny chest pain", "denies chest pain", "without chest pain"],
   cough: ["no cough", "denies cough", "without cough"],
   productive_cough: ["no productive cough", "denies productive cough", "without productive cough"],
   wheeze: ["no wheeze", "no wheezing", "denies wheeze", "without wheeze"],
@@ -2451,6 +2593,21 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
     "no breathlessness",
     "denies breathlessness",
   ],
+  urinary_symptoms: [
+    "no urinary symptoms",
+    "denies urinary symptoms",
+    "without urinary symptoms",
+    "no urinary complaints",
+  ],
+  dysuria: ["no dysuria", "denies dysuria", "without dysuria", "no burning urine"],
+  frequency: ["no urinary frequency", "denies urinary frequency", "without urinary frequency"],
+  urinary_incontinence: ["no incontinence", "not incontinent", "without incontinence"],
+  drowsiness: ["not drowsy", "not sleepy", "no drowsiness"],
+  hallucinations: ["no hallucinations", "denies hallucinations", "without hallucinations"],
+  baseline_dementia: ["no dementia", "no cognitive impairment", "without dementia"],
+  medication_toxicity_context: ["no new medication", "no new medications", "no sedatives", "no opioids"],
+  alcohol_withdrawal_context: ["no alcohol", "no alcohol dependence", "not alcohol dependent"],
+  metabolic_disturbance_context: ["normal electrolytes", "no electrolyte disturbance"],
   pleuritic_pain: ["no pleuritic pain", "denies pleuritic pain", "without pleuritic pain"],
   focal_neurology: [
     "no focal neurology",
@@ -3233,6 +3390,10 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["unilateral_testicular_pain", "testicular_pain"],
     ["af", "atrial_fibrillation"],
     ["frequency", "urinary_frequency"],
+    ["frequency", "urinary_symptoms"],
+    ["urinary_frequency", "urinary_symptoms"],
+    ["dysuria", "urinary_symptoms"],
+    ["urinary_incontinence", "urinary_symptoms"],
     ["guarding_rigidity", "guarding"],
     ["pain_radiates_to_left_arm", "arm_pain"],
     ["smoker", "smoking_history"],
@@ -3253,6 +3414,8 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     ["tingling", "panic_features"],
     ["perioral_paraesthesia", "panic_features"],
     ["kussmaul_breathing", "tachypnoea"],
+    ["drowsiness", "confusion"],
+    ["acute_on_chronic_confusion", "confusion"],
   ];
 
   for (const [sourceFeature, aliasFeature] of aliasFeatures) {
@@ -3289,6 +3452,28 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
 
   if (/\b(?:no|not|without|denies|rather than looking)\s+(?:\w+\s+){0,3}wheez(?:e|y|ing)\b/.test(allText)) {
     removeMatchedFeature(matchedFeatures, "wheeze");
+  }
+
+  if (/\b(?:no|not|without|denies|no clear)\s+(?:\w+\s+){0,3}chest\s+pain\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "chest_pain");
+  }
+
+  if (/\b(?:no|not|without|denies|no clear)\s+(?:\w+\s+){0,3}(?:shortness\s+of\s+breath|sob|breathlessness|breathless)\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "sob");
+  }
+
+  if (/\b(?:no|not|without|denies)\s+(?:\w+\s+){0,3}urinary\s+symptoms?\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "urinary_symptoms");
+    removeMatchedFeature(matchedFeatures, "dysuria");
+    removeMatchedFeature(matchedFeatures, "frequency");
+    removeMatchedFeature(matchedFeatures, "urinary_frequency");
+  }
+
+  if (/\b(?:no|not|without|denies)\s+(?:\w+\s+){0,3}(?:focal\s+neurology|focal\s+neurological\s+deficits?|weakness|facial\s+droop|speech\s+disturbance)\b/.test(allText)) {
+    removeMatchedFeature(matchedFeatures, "focal_neurology");
+    removeMatchedFeature(matchedFeatures, "focal_weakness");
+    removeMatchedFeature(matchedFeatures, "aphasia");
+    removeMatchedFeature(matchedFeatures, "dysarthria");
   }
 
   if (/\b(?:no|not|without|denies)\s+(?:\w+\s+){0,3}(?:leg|calf|ankle)\s+swelling\b/.test(allText)) {

@@ -157,6 +157,18 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     has(features, "jaw_claudication") ||
     has(features, "scalp_tenderness") ||
     has(features, "transient_visual_symptoms");
+  const hasUrinarySymptomSignal =
+    has(features, "urinary_symptoms") ||
+    has(features, "dysuria") ||
+    has(features, "frequency") ||
+    has(features, "urinary_frequency") ||
+    has(features, "urinary_incontinence");
+  const hasDeliriumSignal =
+    has(features, "confusion") ||
+    has(features, "drowsiness") ||
+    has(features, "hallucinations") ||
+    has(features, "acute_on_chronic_confusion") ||
+    has(features, "fluctuation");
 
   if (rule.name === "Acute cholangitis") {
     const hasAcuteBiliaryInfectivePattern =
@@ -379,6 +391,47 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
   }
 
+  if (rule.name === "Delirium secondary to infection") {
+    const hasCnsInfectionSignature =
+      has(features, "headache") &&
+      (has(features, "neck_stiffness") ||
+        has(features, "photophobia") ||
+        has(features, "seizure") ||
+        has(features, "reduced_consciousness"));
+    const hasInfectiveSupport =
+      has(features, "fever") ||
+      has(features, "rigors") ||
+      has(features, "infection_source") ||
+      hasUrinarySymptomSignal ||
+      has(features, "productive_cough") ||
+      has(features, "crackles") ||
+      has(features, "hypoxia");
+
+    if (hasCnsInfectionSignature) {
+      return -8;
+    }
+
+    if (hasDeliriumSignal && hasInfectiveSupport) {
+      return 5;
+    }
+
+    if (!hasDeliriumSignal) {
+      return -5;
+    }
+  }
+
+  if (rule.name === "Pneumonia") {
+    const hasPneumoniaSource =
+      has(features, "productive_cough") ||
+      has(features, "sputum_change") ||
+      has(features, "crackles") ||
+      has(features, "hypoxia");
+
+    if (hasDeliriumSignal && has(features, "fever") && hasPneumoniaSource) {
+      return 4;
+    }
+  }
+
   if (rule.name === "Heart failure") {
     const overloadCount = [
       has(features, "orthopnoea"),
@@ -417,7 +470,7 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     const hasLocalizedPyelonephritisPattern =
       has(features, "flank_pain") &&
       has(features, "fever") &&
-      (has(features, "urinary_symptoms") || has(features, "dysuria") || has(features, "frequency") || has(features, "urinary_frequency")) &&
+      hasUrinarySymptomSignal &&
       has(features, "cva_tenderness");
     const hasInstabilityOrSepsisPattern =
       has(features, "hypotension") ||
@@ -431,15 +484,68 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
     }
 
     if (
-      has(features, "urinary_symptoms") &&
+      hasUrinarySymptomSignal &&
       (has(features, "fever") || has(features, "rigors")) &&
       (has(features, "confusion") || has(features, "hypotension") || has(features, "flank_pain"))
     ) {
       return 4;
     }
 
-    if (!has(features, "urinary_symptoms") && !has(features, "flank_pain")) {
+    if (!hasUrinarySymptomSignal && !has(features, "flank_pain")) {
       return -3;
+    }
+  }
+
+  if (rule.name === "Sepsis") {
+    const hasStrongLocalizedPulmonarySource =
+      has(features, "productive_cough") &&
+      has(features, "progressive_course") &&
+      (has(features, "sputum_change") || has(features, "rigors"));
+    const hasInstabilityOrHighRiskPhysiology =
+      has(features, "hypotension") ||
+      has(features, "collapse") ||
+      has(features, "confusion") ||
+      has(features, "tachycardia") ||
+      has(features, "tachypnoea") ||
+      has(features, "hypoxia");
+    const hasStrongLocalizedUrinarySource =
+      hasUrinarySymptomSignal &&
+      (has(features, "flank_pain") || has(features, "cva_tenderness") || has(features, "urinary_incontinence"));
+    const hasStrongLocalizedBiliarySource =
+      has(features, "ruq_pain") && has(features, "jaundice");
+
+    if (
+      hasDeliriumSignal &&
+      hasInstabilityOrHighRiskPhysiology &&
+      (has(features, "fever") || has(features, "rigors") || has(features, "infection_source") || hasStrongLocalizedUrinarySource || hasStrongLocalizedPulmonarySource)
+    ) {
+      return 3;
+    }
+
+    if (
+      (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&
+      !hasInstabilityOrHighRiskPhysiology
+    ) {
+      return -5;
+    }
+  }
+
+  if (rule.name === "Dementia / chronic cognitive impairment") {
+    const hasAcuteOrDangerContext =
+      has(features, "acute_on_chronic_confusion") ||
+      has(features, "fever") ||
+      has(features, "infection_source") ||
+      hasUrinarySymptomSignal ||
+      has(features, "hypoglycaemia_cue") ||
+      has(features, "focal_neurology") ||
+      has(features, "neck_stiffness") ||
+      has(features, "medication_toxicity_context") ||
+      has(features, "alcohol_withdrawal_context") ||
+      has(features, "metabolic_disturbance_context") ||
+      has(features, "dehydration");
+
+    if (hasAcuteOrDangerContext) {
+      return -6;
     }
   }
 
@@ -598,32 +704,6 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
       has(features, "collapse")
     ) {
       return -4;
-    }
-  }
-
-  if (rule.name === "Sepsis") {
-    const hasStrongLocalizedPulmonarySource =
-      has(features, "productive_cough") &&
-      has(features, "progressive_course") &&
-      (has(features, "sputum_change") || has(features, "rigors"));
-    const hasInstabilityOrHighRiskPhysiology =
-      has(features, "hypotension") ||
-      has(features, "collapse") ||
-      has(features, "confusion") ||
-      has(features, "tachycardia") ||
-      has(features, "tachypnoea") ||
-      has(features, "hypoxia");
-    const hasStrongLocalizedUrinarySource =
-      has(features, "urinary_symptoms") &&
-      (has(features, "flank_pain") || has(features, "cva_tenderness"));
-    const hasStrongLocalizedBiliarySource =
-      has(features, "ruq_pain") && has(features, "jaundice");
-
-    if (
-      (hasStrongLocalizedPulmonarySource || hasStrongLocalizedUrinarySource || hasStrongLocalizedBiliarySource) &&
-      !hasInstabilityOrHighRiskPhysiology
-    ) {
-      return -5;
     }
   }
 

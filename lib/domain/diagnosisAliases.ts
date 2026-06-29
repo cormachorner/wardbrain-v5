@@ -79,7 +79,40 @@ const DIAGNOSIS_ALIAS_GROUPS = [
   },
   {
     diagnosis: "Delirium secondary to infection",
-    aliases: ["delirium"],
+    aliases: ["delirium", "acute delirium", "infective delirium", "delirium secondary to infection"],
+  },
+  {
+    diagnosis: "Medication / sedative toxicity",
+    aliases: [
+      "medication toxicity",
+      "drug toxicity",
+      "sedative toxicity",
+      "opioid toxicity",
+      "benzodiazepine toxicity",
+      "anticholinergic toxicity",
+    ],
+  },
+  {
+    diagnosis: "Alcohol withdrawal",
+    aliases: ["alcohol withdrawal", "delirium tremens", "dt", "dts", "withdrawal delirium"],
+  },
+  {
+    diagnosis: "Electrolyte / metabolic disturbance",
+    aliases: [
+      "electrolyte disturbance",
+      "metabolic disturbance",
+      "hyponatraemia",
+      "hyponatremia",
+      "hypercalcaemia",
+      "hypercalcemia",
+      "renal failure",
+      "uraemia",
+      "uremia",
+    ],
+  },
+  {
+    diagnosis: "Dementia / chronic cognitive impairment",
+    aliases: ["dementia", "baseline dementia", "chronic cognitive impairment", "cognitive impairment"],
   },
   {
     diagnosis: "Pneumothorax",

@@ -118,6 +118,26 @@ export const GUIDELINE_COVERAGE_EXEMPTIONS: GuidelineCoverageExemption[] = [
     reason: "Infection/neurology comparator retained pending dedicated meningitis/encephalitis source mapping.",
   },
   {
+    slug: "medication-sedative-toxicity",
+    kind: "diagnosis",
+    reason: "Delirium toxicology comparator retained pending a dedicated medicines/toxicity source mapping.",
+  },
+  {
+    slug: "alcohol-withdrawal",
+    kind: "diagnosis",
+    reason: "Delirium withdrawal comparator retained pending dedicated alcohol-withdrawal source mapping.",
+  },
+  {
+    slug: "electrolyte-metabolic-disturbance",
+    kind: "diagnosis",
+    reason: "Broad metabolic delirium comparator retained pending narrower source-specific mappings.",
+  },
+  {
+    slug: "dementia-chronic-cognitive-impairment",
+    kind: "diagnosis",
+    reason: "Baseline cognitive impairment comparator retained to prevent chronic dementia anchoring in acute delirium cases.",
+  },
+  {
     slug: "anaemia",
     kind: "diagnosis",
     reason: "Breathlessness comparator retained pending dedicated anaemia source mapping.",
@@ -156,6 +176,11 @@ export const GUIDELINE_COVERAGE_EXEMPTIONS: GuidelineCoverageExemption[] = [
     slug: "hypoglycaemia-urgent-reversible-cause-pattern",
     kind: "redFlag",
     reason: "Internal reversible-cause safety pattern retained pending dedicated source mapping.",
+  },
+  {
+    slug: "infection-with-acute-confusion-pattern",
+    kind: "redFlag",
+    reason: "Source-aware sepsis/delirium safety pattern retained as WardBrain-authored linkage between NICE delirium and sepsis guidance.",
   },
   {
     slug: "gi-bleed-instability-pattern",
@@ -325,7 +350,7 @@ export const GUIDELINE_REGISTRY: GuidelineSource[] = [
     status: "current",
     lastReviewed: "2025-12-05",
     appliesToDiagnosisSlugs: ["sepsis", "uti-urosepsis", "delirium-secondary-to-infection"],
-    appliesToRedFlagSlugs: ["high-risk-sepsis-pattern"],
+    appliesToRedFlagSlugs: ["high-risk-sepsis-pattern", "infection-with-acute-confusion-pattern"],
     presentationBlocks: ["breathlessness", "confusion-delirium", "acute-abdominal-pain"],
     shortTeachingSummary:
       "Infection plus abnormal physiology or acute mental-state change should prompt structured sepsis risk assessment and source search.",
@@ -339,7 +364,7 @@ export const GUIDELINE_REGISTRY: GuidelineSource[] = [
     status: "current",
     lastReviewed: "2023-01-18",
     appliesToDiagnosisSlugs: ["delirium-secondary-to-infection"],
-    appliesToRedFlagSlugs: ["think-delirium-pattern"],
+    appliesToRedFlagSlugs: ["think-delirium-pattern", "infection-with-acute-confusion-pattern"],
     presentationBlocks: ["confusion-delirium"],
     shortTeachingSummary:
       "Acute change in attention, cognition, perception, or behaviour should be treated as delirium until assessed and precipitating causes are sought.",
@@ -382,7 +407,7 @@ export const GUIDELINE_REGISTRY: GuidelineSource[] = [
     lastReviewed: "2025-10-31",
     appliesToDiagnosisSlugs: ["pneumonia"],
     appliesToRedFlagSlugs: [],
-    presentationBlocks: ["breathlessness", "chest-pain"],
+    presentationBlocks: ["breathlessness", "chest-pain", "confusion-delirium"],
     shortTeachingSummary:
       "Fever, productive cough, focal chest signs, and hypoxia support pneumonia, while maintaining attention to PE and sepsis when physiology or risk factors demand it.",
   },

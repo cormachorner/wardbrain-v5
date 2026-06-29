@@ -138,7 +138,35 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "cranial_nerve_deficit") ||
         has(features, "visual_loss");
 
-      if (!has(features, "headache") || !hasFocalDeficit) {
+      const hasNeurologicalPresentationContext =
+        has(features, "headache") ||
+        has(features, "confusion") ||
+        has(features, "drowsiness") ||
+        has(features, "sudden_onset");
+
+      if (!hasNeurologicalPresentationContext || !hasFocalDeficit) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-ng253-infection-delirium-001") {
+      const hasDeliriumContext =
+        has(features, "confusion") ||
+        has(features, "drowsiness") ||
+        has(features, "acute_on_chronic_confusion") ||
+        has(features, "fluctuation");
+      const hasInfectionOrPhysiologyContext =
+        has(features, "fever") ||
+        has(features, "rigors") ||
+        has(features, "infection_source") ||
+        has(features, "urinary_symptoms") ||
+        has(features, "productive_cough") ||
+        has(features, "crackles") ||
+        has(features, "hypoxia") ||
+        has(features, "tachycardia") ||
+        has(features, "hypotension");
+
+      if (!hasDeliriumContext || !hasInfectionOrPhysiologyContext) {
         continue;
       }
     }

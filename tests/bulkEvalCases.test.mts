@@ -24,7 +24,7 @@ test("bulk evaluation fixture contains the initial labelled case set", async () 
   ) as unknown;
   const cases = parseBulkEvalCases(raw);
 
-  assert.equal(cases.length, 30);
+  assert.equal(cases.length, 37);
   assert.equal(new Set(cases.map((testCase) => testCase.id)).size, cases.length);
   assert.ok(cases.every((testCase) => testCase.expectedFeatureSlugs.length > 0));
   assert.ok(cases.every((testCase) => testCase.tags.length > 0));
@@ -62,10 +62,12 @@ test("bulk evaluation fixture contains the initial labelled case set", async () 
 test("bulk evaluation harness includes headache v1 fixtures", async () => {
   const cases = loadBulkEvalCases();
 
-  assert.equal(cases.length, 50);
+  assert.equal(cases.length, 57);
   assert.equal(new Set(cases.map((testCase) => testCase.id)).size, cases.length);
   assert.equal(cases.filter((testCase) => testCase.tags.includes("headache_v1")).length, 20);
   assert.ok(cases.some((testCase) => testCase.presentation === "headache"));
+  assert.equal(cases.filter((testCase) => testCase.tags.includes("delirium")).length, 10);
+  assert.ok(cases.some((testCase) => testCase.presentation === "confusion"));
 
   const headacheCase = cases.find(
     (testCase) => testCase.id === "headache-v1-sah-thunderclap-vomiting-neck-stiffness",

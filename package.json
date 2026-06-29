@@ -18,6 +18,7 @@
     "import:clinical-content": "tsx scripts/import-clinical-content.ts",
     "import:chest-pain-tests": "tsx scripts/import-chest-pain-v1-test-cases.ts",
     "import:breathlessness-tests": "tsx scripts/import-breathlessness-v1-test-cases.ts",
+    "import:confusion-delirium-tests": "tsx scripts/import-confusion-delirium-v1-test-cases.ts",
     "import:headache-tests": "tsx scripts/import-headache-v1-test-cases.ts"
   },
   "prisma": {

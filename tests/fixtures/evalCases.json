@@ -329,8 +329,8 @@
     "presentation": "confusion",
     "vignette": "An 84-year-old is acutely confused with fever, urinary frequency, new incontinence and foul-smelling urine. No chest pain or breathlessness history.",
     "expectedLeadDiagnosisSlug": "delirium-secondary-to-infection",
-    "expectedFeatureSlugs": ["older_age", "confusion", "fever", "urinary_frequency", "infection_source"],
-    "expectedRedFlagSlugs": [],
+    "expectedFeatureSlugs": ["older_age", "confusion", "fever", "urinary_frequency", "urinary_incontinence", "urinary_symptoms", "infection_source"],
+    "expectedRedFlagSlugs": ["Think delirium pattern", "Infection with acute confusion pattern"],
     "forbiddenRedFlagSlugs": ["ACS suspicion pattern", "PE suspicion pattern"],
     "forbiddenLeadDiagnosisSlugs": ["acute-coronary-syndrome", "pulmonary-embolism"],
     "tags": ["delirium", "infection", "confusion"]
@@ -342,7 +342,7 @@
     "vignette": "A 79-year-old is suddenly muddled and drowsy with fever, productive cough, green sputum and crackles at the right base. Family deny chest pain.",
     "expectedLeadDiagnosisSlug": "delirium-secondary-to-infection",
     "expectedFeatureSlugs": ["older_age", "confusion", "drowsiness", "fever", "productive_cough", "sputum_change", "crackles", "infection_source"],
-    "expectedRedFlagSlugs": [],
+    "expectedRedFlagSlugs": ["Think delirium pattern", "Infection with acute confusion pattern"],
     "forbiddenRedFlagSlugs": ["ACS suspicion pattern"],
     "forbiddenLeadDiagnosisSlugs": ["acute-coronary-syndrome"],
     "tags": ["delirium", "infection", "pneumonia"]
@@ -358,5 +358,89 @@
     "forbiddenRedFlagSlugs": [],
     "forbiddenLeadDiagnosisSlugs": ["panic-anxiety"],
     "tags": ["delirium", "meningitis", "infection"]
+  },
+  {
+    "id": "bulk-delirium-004-sepsis-unstable",
+    "title": "Sepsis delirium with abnormal physiology",
+    "presentation": "confusion",
+    "vignette": "An 88-year-old is newly confused and drowsy with rigors, fever, poor oral intake and looks septic. HR 124, BP 88/54.",
+    "expectedLeadDiagnosisSlug": "sepsis",
+    "expectedFeatureSlugs": ["older_age", "confusion", "drowsiness", "rigors", "fever", "poor_oral_intake", "tachycardia", "hypotension"],
+    "expectedRedFlagSlugs": ["Think delirium pattern", "Infection with acute confusion pattern", "High-risk sepsis pattern"],
+    "forbiddenRedFlagSlugs": ["ACS suspicion pattern", "PE suspicion pattern"],
+    "forbiddenLeadDiagnosisSlugs": ["acute-coronary-syndrome", "pulmonary-embolism"],
+    "tags": ["delirium", "infection", "sepsis", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-005-hypoglycaemia",
+    "title": "Hypoglycaemic confusion in insulin-treated diabetes",
+    "presentation": "confusion",
+    "vignette": "A diabetic patient on insulin missed meals and is sweaty, shaky and confused. Capillary glucose is low.",
+    "expectedLeadDiagnosisSlug": "hypoglycaemia",
+    "expectedFeatureSlugs": ["confusion", "diabetic_context", "hypoglycaemia_cue", "sweating"],
+    "expectedRedFlagSlugs": ["Hypoglycaemia urgent reversible-cause pattern"],
+    "forbiddenRedFlagSlugs": ["ACS suspicion pattern"],
+    "forbiddenLeadDiagnosisSlugs": ["acute-coronary-syndrome"],
+    "tags": ["delirium", "hypoglycaemia", "metabolic", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-006-stroke-focal-neuro",
+    "title": "Confusion with focal neurological deficit",
+    "presentation": "confusion",
+    "vignette": "A 74-year-old has new confusion with facial droop, left arm weakness and slurred speech. No fever or urinary symptoms.",
+    "expectedLeadDiagnosisSlug": "stroke-neurological-emergency",
+    "expectedFeatureSlugs": ["older_age", "confusion", "focal_neurology", "focal_weakness", "dysarthria"],
+    "expectedRedFlagSlugs": ["New focal neurological deficit pattern"],
+    "forbiddenRedFlagSlugs": ["Infection with acute confusion pattern"],
+    "forbiddenLeadDiagnosisSlugs": ["delirium-secondary-to-infection"],
+    "tags": ["delirium", "stroke", "neurology", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-007-medication-toxicity",
+    "title": "Sedative and opioid medication toxicity",
+    "presentation": "confusion",
+    "vignette": "A 70-year-old is newly confused and very drowsy after starting morphine, zopiclone and oxybutynin. No fever, no urinary symptoms and no focal neurology.",
+    "expectedLeadDiagnosisSlug": "medication-sedative-toxicity",
+    "expectedFeatureSlugs": ["older_age", "confusion", "drowsiness", "medication_toxicity_context"],
+    "expectedRedFlagSlugs": ["Think delirium pattern"],
+    "forbiddenRedFlagSlugs": ["Infection with acute confusion pattern", "New focal neurological deficit pattern"],
+    "forbiddenLeadDiagnosisSlugs": ["uti-urosepsis", "stroke-neurological-emergency"],
+    "tags": ["delirium", "medication", "toxicity", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-008-alcohol-withdrawal",
+    "title": "Alcohol withdrawal delirium",
+    "presentation": "confusion",
+    "vignette": "A heavy drinker stopped alcohol two days ago and now has agitation, hallucinations, tremor, sweating, tachycardia and confusion.",
+    "expectedLeadDiagnosisSlug": "alcohol-withdrawal",
+    "expectedFeatureSlugs": ["confusion", "agitation", "hallucinations", "sweating", "tachycardia", "alcohol_withdrawal_context"],
+    "expectedRedFlagSlugs": ["Think delirium pattern"],
+    "forbiddenRedFlagSlugs": ["ACS suspicion pattern"],
+    "forbiddenLeadDiagnosisSlugs": ["acute-coronary-syndrome"],
+    "tags": ["delirium", "alcohol_withdrawal", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-009-metabolic-dehydration",
+    "title": "Metabolic disturbance with dehydration and poor intake",
+    "presentation": "confusion",
+    "vignette": "An 82-year-old has poor oral intake, dehydration, hyponatraemia and drowsy confusion after several days of vomiting. No focal neurology or neck stiffness.",
+    "expectedLeadDiagnosisSlug": "electrolyte-metabolic-disturbance",
+    "expectedFeatureSlugs": ["older_age", "confusion", "drowsiness", "poor_oral_intake", "dehydration", "metabolic_disturbance_context", "vomiting"],
+    "expectedRedFlagSlugs": ["Think delirium pattern"],
+    "forbiddenRedFlagSlugs": ["New focal neurological deficit pattern", "Meningitis / encephalitis concern"],
+    "forbiddenLeadDiagnosisSlugs": ["stroke-neurological-emergency", "meningitis-encephalitis"],
+    "tags": ["delirium", "metabolic", "dehydration", "confusion"]
+  },
+  {
+    "id": "bulk-delirium-010-dementia-acute-deterioration",
+    "title": "Baseline dementia but acutely worse with infection clues",
+    "presentation": "confusion",
+    "vignette": "An 86-year-old with known baseline dementia is now acutely worse, off her legs, feverish and passing smelly urine with poor oral intake.",
+    "expectedLeadDiagnosisSlug": "delirium-secondary-to-infection",
+    "expectedFeatureSlugs": ["older_age", "baseline_dementia", "acute_on_chronic_confusion", "off_legs", "fever", "urinary_symptoms", "poor_oral_intake"],
+    "expectedRedFlagSlugs": ["Think delirium pattern", "Infection with acute confusion pattern"],
+    "forbiddenRedFlagSlugs": [],
+    "forbiddenLeadDiagnosisSlugs": ["dementia-chronic-cognitive-impairment"],
+    "tags": ["delirium", "dementia", "infection", "confusion"]
   }
 ]
