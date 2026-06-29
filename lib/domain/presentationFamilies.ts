@@ -28,8 +28,11 @@ export const FAMILY_DIAGNOSIS_MAP: Record<PresentationFamily, string[]> = {
     "Subarachnoid haemorrhage",
     "Migraine",
     "Tension headache",
+    "Cluster headache",
     "Temporal arteritis",
     "Meningitis / encephalitis",
+    "Raised intracranial pressure / intracranial mass",
+    "Cerebral venous sinus thrombosis",
     "Stroke / neurological emergency",
     "Viral illness",
   ],
@@ -143,25 +146,57 @@ const FAMILY_RULES: Record<
   },
   headache: {
     minimumScore: 4,
-    textTerms: ["headache", "thunderclap headache", "worst headache"],
+    textTerms: [
+      "headache",
+      "severe headache",
+      "sudden headache",
+      "thunderclap headache",
+      "worst headache",
+      "gradual headache",
+      "unilateral headache",
+      "bilateral headache",
+      "occipital headache",
+      "temporal headache",
+      "frontal headache",
+    ],
     featureWeights: {
       headache: 5,
+      severe_headache: 2,
       thunderclap: 4,
+      worst_headache_of_life: 4,
+      sudden_onset: 2,
+      gradual_onset: 1,
+      unilateral_headache: 2,
+      bilateral_headache: 1,
+      occipital_headache: 2,
+      frontal_headache: 1,
       neck_stiffness: 2,
       photophobia: 2,
+      phonophobia: 1,
       vomiting: 1,
       focal_neurology: 1,
+      focal_weakness: 2,
+      aphasia: 2,
+      ataxia: 2,
       visual_aura: 2,
       band_like_headache: 2,
       temporal_headache: 2,
       jaw_claudication: 3,
+      papilloedema: 3,
+      worse_on_waking: 2,
+      worse_lying_flat: 2,
+      seizure: 2,
+      pregnancy_possible: 1,
     },
     diagnosisWeights: {
       "Subarachnoid haemorrhage": 3,
       Migraine: 2,
       "Tension headache": 2,
+      "Cluster headache": 2,
       "Temporal arteritis": 3,
       "Meningitis / encephalitis": 2,
+      "Raised intracranial pressure / intracranial mass": 2,
+      "Cerebral venous sinus thrombosis": 2,
     },
   },
   "breathlessness-pleuritic-chest-pain": {
@@ -336,8 +371,21 @@ const FAMILY_RULES: Record<
   },
 };
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function includesTerm(text: string, term: string): boolean {
-  return text.includes(term);
+  if (!text.includes(term)) {
+    return false;
+  }
+
+  const escapedTerm = escapeRegExp(term).replace(/\s+/g, "\\s+");
+  const negatedTerm = new RegExp(
+    `\\b(?:no|not|denies|denied|without|nil)(?:\\s+\\w+){0,3}\\s+${escapedTerm}\\b`,
+  );
+
+  return !negatedTerm.test(text);
 }
 
 export function routePresentationFamilies(
@@ -370,6 +418,15 @@ export function routePresentationFamilies(
           score += weight;
           reasons.push(`diagnosis:${diagnosis}`);
         }
+      }
+
+      if (
+        family === "headache" &&
+        !features.matchedFeatures.includes("headache") &&
+        !rule.textTerms.some((term) => includesTerm(normalizedText, term))
+      ) {
+        score = 0;
+        reasons.length = 0;
       }
 
       return { family, score, reasons, minimumScore: rule.minimumScore };

@@ -30,6 +30,140 @@ export type GuidelineSupport = {
   sources: GuidelineSupportMatch[];
 };
 
+export type GuidelineCoverageExemption = {
+  slug: string;
+  kind: "diagnosis" | "redFlag";
+  reason: string;
+};
+
+export const GUIDELINE_COVERAGE_EXEMPTIONS: GuidelineCoverageExemption[] = [
+  {
+    slug: "acute-aortic-syndrome",
+    kind: "diagnosis",
+    reason: "Pilot dangerous comparator retained pending a dedicated aortic-syndrome source mapping.",
+  },
+  {
+    slug: "pericarditis",
+    kind: "diagnosis",
+    reason: "Pilot chest-pain comparator retained pending dedicated guideline source mapping.",
+  },
+  {
+    slug: "gord",
+    kind: "diagnosis",
+    reason: "Benign chest-pain comparator; guideline source mapping is lower priority than dangerous exclusions.",
+  },
+  {
+    slug: "musculoskeletal-chest-pain",
+    kind: "diagnosis",
+    reason: "Benign chest-pain comparator used for educational contrast; no pilot source mapping yet.",
+  },
+  {
+    slug: "panic-anxiety",
+    kind: "diagnosis",
+    reason: "Functional/anxiety comparator used to prevent overcalling danger diagnoses; no pilot source mapping yet.",
+  },
+  {
+    slug: "viral-illness",
+    kind: "diagnosis",
+    reason: "Benign infection comparator retained for educational contrast; no pilot source mapping yet.",
+  },
+  {
+    slug: "appendicitis",
+    kind: "diagnosis",
+    reason: "Acute abdomen comparator retained pending dedicated appendicitis source mapping.",
+  },
+  {
+    slug: "acute-pancreatitis",
+    kind: "diagnosis",
+    reason: "Acute abdomen comparator retained pending dedicated pancreatitis source mapping.",
+  },
+  {
+    slug: "ovarian-acute-pelvic-pathology",
+    kind: "diagnosis",
+    reason: "Gynaecological acute pelvic comparator retained pending dedicated source mapping.",
+  },
+  {
+    slug: "cauda-equina-syndrome",
+    kind: "diagnosis",
+    reason: "High-priority neurological red-flag comparator retained pending dedicated source mapping.",
+  },
+  {
+    slug: "gastroenteritis",
+    kind: "diagnosis",
+    reason: "Benign abdominal comparator used to test anchoring against surgical causes.",
+  },
+  {
+    slug: "gi-bleed",
+    kind: "diagnosis",
+    reason: "Urgent comparator retained pending dedicated GI-bleed source mapping beyond the red-flag rule.",
+  },
+  {
+    slug: "stroke-neurological-emergency",
+    kind: "diagnosis",
+    reason: "Neurological emergency comparator retained pending dedicated stroke/TIA source mapping.",
+  },
+  {
+    slug: "tia",
+    kind: "diagnosis",
+    reason: "Transient neurological comparator retained pending dedicated stroke/TIA source mapping.",
+  },
+  {
+    slug: "hypoglycaemia",
+    kind: "diagnosis",
+    reason: "Urgent reversible confusion comparator retained pending dedicated diabetes emergency source mapping.",
+  },
+  {
+    slug: "meningitis-encephalitis",
+    kind: "diagnosis",
+    reason: "Infection/neurology comparator retained pending dedicated meningitis/encephalitis source mapping.",
+  },
+  {
+    slug: "anaemia",
+    kind: "diagnosis",
+    reason: "Breathlessness comparator retained pending dedicated anaemia source mapping.",
+  },
+  {
+    slug: "primary-sclerosing-cholangitis",
+    kind: "diagnosis",
+    reason: "Chronic RUQ/jaundice comparator retained pending hepatobiliary source mapping.",
+  },
+  {
+    slug: "primary-biliary-cholangitis",
+    kind: "diagnosis",
+    reason: "Chronic RUQ/jaundice comparator retained pending hepatobiliary source mapping.",
+  },
+  {
+    slug: "testicular-torsion",
+    kind: "diagnosis",
+    reason: "Time-critical scrotal pain comparator retained pending dedicated source mapping.",
+  },
+  {
+    slug: "transient-focal-neurological-pattern",
+    kind: "redFlag",
+    reason: "Internal TIA/stroke safety pattern retained pending dedicated source mapping.",
+  },
+  {
+    slug: "cauda-equina-pattern",
+    kind: "redFlag",
+    reason: "Internal cauda equina safety pattern retained pending dedicated source mapping.",
+  },
+  {
+    slug: "testicular-torsion-pattern",
+    kind: "redFlag",
+    reason: "Internal torsion safety pattern retained pending dedicated source mapping.",
+  },
+  {
+    slug: "hypoglycaemia-urgent-reversible-cause-pattern",
+    kind: "redFlag",
+    reason: "Internal reversible-cause safety pattern retained pending dedicated source mapping.",
+  },
+  {
+    slug: "gi-bleed-instability-pattern",
+    kind: "redFlag",
+    reason: "Internal GI-bleed safety pattern retained pending dedicated GI-bleed source mapping.",
+  },
+];
+
 export const GUIDELINE_REGISTRY: GuidelineSource[] = [
   {
     id: "nice-cg95-chest-pain",
@@ -72,6 +206,82 @@ export const GUIDELINE_REGISTRY: GuidelineSource[] = [
     presentationBlocks: ["acute-abdominal-pain"],
     shortTeachingSummary:
       "Older or vascular-risk patients with abdominal, back, or flank pain plus collapse or hypotension need AAA actively considered.",
+  },
+  {
+    id: "nice-cg150-headache",
+    title: "Headaches in over 12s: diagnosis and management",
+    source: "NICE",
+    url: "https://www.nice.org.uk/guidance/cg150",
+    licenceStatus: "Linked source with WardBrain-authored short summary only; no bulk NICE content copied.",
+    status: "current",
+    lastReviewed: "2021-12-17",
+    appliesToDiagnosisSlugs: [
+      "migraine",
+      "tension-headache",
+      "cluster-headache",
+      "subarachnoid-haemorrhage",
+    ],
+    appliesToRedFlagSlugs: [
+      "headache-urgent-evaluation-pattern",
+      "thunderclap-headache-pattern",
+      "suspected-sah-pattern",
+    ],
+    presentationBlocks: ["headache"],
+    shortTeachingSummary:
+      "Headache reasoning should separate recurrent primary headache patterns from thunderclap, neurological, systemic, visual, or raised-ICP warning features.",
+  },
+  {
+    id: "nice-ng127-suspected-neurological-conditions",
+    title: "Suspected neurological conditions: recognition and referral",
+    source: "NICE",
+    url: "https://www.nice.org.uk/guidance/ng127",
+    licenceStatus: "Linked source with WardBrain-authored short summary only; no bulk NICE content copied.",
+    status: "current",
+    lastReviewed: "2023-05-03",
+    appliesToDiagnosisSlugs: [
+      "raised-intracranial-pressure-intracranial-mass",
+      "cerebral-venous-sinus-thrombosis",
+      "stroke-neurological-emergency",
+    ],
+    appliesToRedFlagSlugs: [
+      "raised-intracranial-pressure-pattern",
+      "new-focal-neurological-deficit-pattern",
+      "transient-focal-neurological-pattern",
+    ],
+    presentationBlocks: ["headache", "confusion-delirium"],
+    shortTeachingSummary:
+      "Headache with focal neurology, papilloedema, progressive visual symptoms, seizures, or raised-ICP features should be framed as possible secondary neurological pathology.",
+  },
+  {
+    id: "nice-ng240-meningitis",
+    title: "Meningitis (bacterial) and meningococcal disease: recognition, diagnosis and management",
+    source: "NICE",
+    url: "https://www.nice.org.uk/guidance/ng240",
+    licenceStatus: "Linked source with WardBrain-authored short summary only; no bulk NICE content copied.",
+    status: "current",
+    lastReviewed: "2024-03-19",
+    appliesToDiagnosisSlugs: ["meningitis-encephalitis"],
+    appliesToRedFlagSlugs: [
+      "meningitis-encephalitis-suspicion-pattern",
+      "meningitis-encephalitis-red-flag-pattern",
+    ],
+    presentationBlocks: ["headache", "confusion-delirium"],
+    shortTeachingSummary:
+      "Fever with headache plus meningism, photophobia, rash, seizure, confusion, or reduced consciousness should keep CNS infection urgent.",
+  },
+  {
+    id: "nice-cks-giant-cell-arteritis",
+    title: "Giant cell arteritis",
+    source: "NICE",
+    url: "https://cks.nice.org.uk/topics/giant-cell-arteritis/",
+    licenceStatus: "Linked source with WardBrain-authored short summary only; no bulk NICE CKS content copied.",
+    status: "external-summary-only",
+    lastReviewed: "2025-09-01",
+    appliesToDiagnosisSlugs: ["temporal-arteritis"],
+    appliesToRedFlagSlugs: ["giant-cell-arteritis-pattern"],
+    presentationBlocks: ["headache"],
+    shortTeachingSummary:
+      "New headache in a person over 50 with jaw claudication, scalp/temporal tenderness, PMR symptoms, or visual disturbance should raise GCA and visual-risk concern.",
   },
   {
     id: "nice-cg188-gallstone-disease",

@@ -6,6 +6,7 @@ import { join } from "node:path";
 import {
   evaluateBulkCase,
   filterBulkEvalCases,
+  loadBulkEvalCases,
   parseBulkEvalCliArgs,
   parseBulkEvalCases,
   summarizeByPresentation,
@@ -58,11 +59,37 @@ test("bulk evaluation fixture contains the initial labelled case set", async () 
   assert.ok(tagSummary[0].averageLlmFeatureRecallWeighted >= 0);
 });
 
+test("bulk evaluation harness includes headache v1 fixtures", async () => {
+  const cases = loadBulkEvalCases();
+
+  assert.equal(cases.length, 50);
+  assert.equal(new Set(cases.map((testCase) => testCase.id)).size, cases.length);
+  assert.equal(cases.filter((testCase) => testCase.tags.includes("headache_v1")).length, 20);
+  assert.ok(cases.some((testCase) => testCase.presentation === "headache"));
+
+  const headacheCase = cases.find(
+    (testCase) => testCase.id === "headache-v1-sah-thunderclap-vomiting-neck-stiffness",
+  );
+
+  assert.ok(headacheCase);
+
+  const result = await evaluateBulkCase(headacheCase, { liveLlm: false });
+
+  assert.equal(result.id, headacheCase.id);
+  assert.equal(result.presentation, "headache");
+  assert.equal(result.tags.includes("headache_v1"), true);
+  assert.equal(result.deterministicLeadCorrect, true);
+
+  const presentationSummary = summarizeByPresentation([result]);
+  const tagSummary = summarizeByTag([result]);
+
+  assert.ok(presentationSummary.some((summary) => summary.group === "headache"));
+  assert.ok(tagSummary.some((summary) => summary.group === "headache"));
+  assert.ok(tagSummary.some((summary) => summary.group === "headache_v1"));
+});
+
 test("bulk evaluation CLI --case filters to a single case", () => {
-  const raw = JSON.parse(
-    readFileSync(join(process.cwd(), "tests", "fixtures", "evalCases.json"), "utf8"),
-  ) as unknown;
-  const cases = parseBulkEvalCases(raw);
+  const cases = loadBulkEvalCases();
   const args = parseBulkEvalCliArgs([
     "--case",
     "bulk-heart-failure-001-overload",

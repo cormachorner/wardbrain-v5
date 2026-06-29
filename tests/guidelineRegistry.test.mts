@@ -2,10 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  GUIDELINE_COVERAGE_EXEMPTIONS,
   GUIDELINE_REGISTRY,
   guidelineSlug,
   lookupGuidelineSupport,
 } from "../lib/guidelines/guidelineRegistry.js";
+import { GUIDELINE_RULES } from "../lib/domain/guidelineRules.js";
+import { SUPPORTED_PRESENTATION_BLOCKS } from "../lib/pilotStatus.js";
 
 test("guideline registry entries include source and licence metadata", () => {
   assert.ok(GUIDELINE_REGISTRY.length > 0);
@@ -53,4 +56,60 @@ test("guideline lookup maps source-aware breathlessness red flags without scorin
 
   assert.ok(sourceIds.includes("nice-ng158-vte"));
   assert.ok(sourceIds.includes("wardbrain-pilot-gaps"));
+});
+
+test("pilot-supported diagnosis slugs have guideline support or documented exemptions", () => {
+  const mappedDiagnosisSlugs = new Set(
+    GUIDELINE_REGISTRY.flatMap((source) => source.appliesToDiagnosisSlugs.map(guidelineSlug)),
+  );
+  const exemptDiagnosisSlugs = new Set(
+    GUIDELINE_COVERAGE_EXEMPTIONS
+      .filter((exemption) => exemption.kind === "diagnosis")
+      .map((exemption) => exemption.slug),
+  );
+  const pilotDiagnosisSlugs = [
+    ...new Set(
+      SUPPORTED_PRESENTATION_BLOCKS.flatMap((block) =>
+        block.diagnoses.map(guidelineSlug),
+      ),
+    ),
+  ].sort();
+  const missingCoverage = pilotDiagnosisSlugs.filter(
+    (slug) => !mappedDiagnosisSlugs.has(slug) && !exemptDiagnosisSlugs.has(slug),
+  );
+
+  assert.deepEqual(missingCoverage, []);
+});
+
+test("pilot red-flag slugs have guideline support or documented exemptions", () => {
+  const mappedRedFlagSlugs = new Set(
+    GUIDELINE_REGISTRY.flatMap((source) => source.appliesToRedFlagSlugs.map(guidelineSlug)),
+  );
+  const exemptRedFlagSlugs = new Set(
+    GUIDELINE_COVERAGE_EXEMPTIONS
+      .filter((exemption) => exemption.kind === "redFlag")
+      .map((exemption) => exemption.slug),
+  );
+  const redFlagSlugs = GUIDELINE_RULES
+    .filter((rule) => rule.id !== "gmc-ai-001")
+    .map((rule) => guidelineSlug(rule.title))
+    .sort();
+  const missingCoverage = redFlagSlugs.filter(
+    (slug) => !mappedRedFlagSlugs.has(slug) && !exemptRedFlagSlugs.has(slug),
+  );
+
+  assert.deepEqual(missingCoverage, []);
+});
+
+test("guideline coverage exemptions are documented and unique", () => {
+  const keys = GUIDELINE_COVERAGE_EXEMPTIONS.map(
+    (exemption) => `${exemption.kind}:${exemption.slug}`,
+  );
+
+  assert.equal(keys.length, new Set(keys).size);
+
+  for (const exemption of GUIDELINE_COVERAGE_EXEMPTIONS) {
+    assert.ok(exemption.slug);
+    assert.ok(exemption.reason.length >= 20);
+  }
 });

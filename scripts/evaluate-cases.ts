@@ -10,6 +10,7 @@ import { openAiLlmCompletionClient, type LlmCompletionClient } from "../lib/llm/
 import { getLlmExtractionConfig, type LlmExtractionConfig } from "../lib/llm/config";
 import { getFeatureImportanceWeight } from "../lib/llm/featureImportance";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
+import { headacheV1Cases } from "../tests/fixtures/headacheV1Cases";
 
 export type BulkEvalCase = {
   id: string;
@@ -145,6 +146,31 @@ export function parseBulkEvalCases(raw: unknown): BulkEvalCase[] {
       tags: asStringArray(record.tags),
     };
   });
+}
+
+function headacheV1CaseToBulkEvalCase(testCase: (typeof headacheV1Cases)[number]): BulkEvalCase {
+  return {
+    id: testCase.id,
+    title: testCase.title,
+    presentation: testCase.expectedPresentationBlock ?? "headache",
+    vignette: testCase.vignette,
+    expectedLeadDiagnosisSlug: canonicalDiagnosisSlug(testCase.expectedLeadDiagnosis),
+    expectedFeatureSlugs: testCase.expectedFeatureSlugs.map(canonicalFeatureSlug),
+    expectedRedFlagSlugs: testCase.expectedRedFlags ?? [],
+    forbiddenRedFlagSlugs: testCase.forbiddenRedFlags ?? [],
+    forbiddenLeadDiagnosisSlugs: [],
+    tags: ["headache", "headache_v1"],
+  };
+}
+
+export function loadBulkEvalCases(): BulkEvalCase[] {
+  const rawCases = JSON.parse(
+    readFileSync(join(process.cwd(), "tests", "fixtures", "evalCases.json"), "utf8"),
+  ) as unknown;
+  const baseCases = parseBulkEvalCases(rawCases);
+  const headacheCases = headacheV1Cases.map(headacheV1CaseToBulkEvalCase);
+
+  return [...baseCases, ...headacheCases];
 }
 
 export function filterBulkEvalCases(
@@ -777,11 +803,8 @@ async function main() {
     console.log("Live LLM case evaluation skipped: missing explicit live eval configuration.");
   }
 
-  const rawCases = JSON.parse(
-    readFileSync(join(process.cwd(), "tests", "fixtures", "evalCases.json"), "utf8"),
-  ) as unknown;
   const cliArgs = parseBulkEvalCliArgs(process.argv.slice(2));
-  const cases = filterBulkEvalCases(parseBulkEvalCases(rawCases), cliArgs);
+  const cases = filterBulkEvalCases(loadBulkEvalCases(), cliArgs);
   const shouldRunLlm = liveLlm && llmConfig.usable;
   const results: BulkEvalResult[] = [];
 

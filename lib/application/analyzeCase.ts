@@ -45,6 +45,7 @@ import type {
   DifferentialResult,
   ExtractedFeatures,
 } from "../types";
+import type { PresentationFamily } from "../../types/wardbrain";
 
 const DIFFERENTIAL_DISPLAY_THRESHOLD = 6;
 const PLAUSIBLE_DIFFERENTIAL_THRESHOLD = 3;
@@ -85,6 +86,17 @@ const FIT_CHECK_PRESENTATION_ORDER = [
 const FIT_CHECK_PRESENTATION_PRIORITY = new Map<string, number>(
   FIT_CHECK_PRESENTATION_ORDER.map((feature, index) => [feature, index]),
 );
+
+function getDefinitionBlockIdForFamily(family?: PresentationFamily): string | undefined {
+  switch (family) {
+    case "acute-abdominal-pain":
+      return "acute_abdominal_pain";
+    case "headache":
+      return "headache";
+    default:
+      return undefined;
+  }
+}
 
 function getLeadDiagnosis(input: CaseInput): string {
   return input.leadDiagnosis?.trim() || input.suspectedDiagnosis?.trim() || "";
@@ -679,11 +691,15 @@ function analyzeValidatedCaseWithFeatures(
       .join(" "),
     features,
   );
-  const usesAcuteAbdominalDefinitionScoring = initialFamilyRoute.primaryFamily === "acute-abdominal-pain";
+  const definitionBlockId = getDefinitionBlockIdForFamily(initialFamilyRoute.primaryFamily);
+  const definitionDiagnoses = definitionBlockId
+    ? getDiagnosisDefinitionsForPresentationBlock(definitionBlockId)
+    : [];
+  const usesDefinitionScoring = definitionDiagnoses.length > 0;
 
-  const rawScored = usesAcuteAbdominalDefinitionScoring
+  const rawScored = usesDefinitionScoring
     ? scoreDiagnosisDefinitions(
-        getDiagnosisDefinitionsForPresentationBlock("acute_abdominal_pain"),
+        definitionDiagnoses,
         features,
         validatedInput,
         redFlags,
@@ -700,7 +716,7 @@ function analyzeValidatedCaseWithFeatures(
           .map((rule) => scoreDiagnosis(rule, features, boosts, age))
           .sort((a, b) => b.score - a.score);
       })();
-  const scored = usesAcuteAbdominalDefinitionScoring
+  const scored = usesDefinitionScoring
     ? rawScored
     : applyPresentationFamilyRanking(validatedInput, features, rawScored, redFlags);
 

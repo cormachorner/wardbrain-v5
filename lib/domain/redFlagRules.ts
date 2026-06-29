@@ -20,6 +20,129 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
   for (const rule of GUIDELINE_RULES) {
     if (rule.id === "gmc-ai-001") continue;
 
+    if (rule.id === "nice-cg150-headache-001") {
+      const hasDangerousHeadacheContext =
+        has(features, "thunderclap") ||
+        has(features, "worst_headache_of_life") ||
+        has(features, "focal_neurology") ||
+        has(features, "focal_weakness") ||
+        has(features, "aphasia") ||
+        has(features, "ataxia") ||
+        has(features, "dysarthria") ||
+        has(features, "cranial_nerve_deficit") ||
+        has(features, "collapse") ||
+        has(features, "reduced_consciousness") ||
+        (has(features, "neck_stiffness") &&
+          (has(features, "fever") || has(features, "confusion") || has(features, "vomiting")));
+
+      if (!has(features, "headache") || !hasDangerousHeadacheContext) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-cg150-thunderclap-headache-001") {
+      const hasThunderclapPattern =
+        has(features, "thunderclap") ||
+        has(features, "worst_headache_of_life") ||
+        (has(features, "sudden_onset") && has(features, "severe_headache"));
+
+      if (!has(features, "headache") || !hasThunderclapPattern) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-cg150-sah-001") {
+      const hasThunderclapPattern =
+        has(features, "thunderclap") ||
+        has(features, "worst_headache_of_life") ||
+        (has(features, "sudden_onset") && has(features, "severe_headache"));
+      const hasAssociatedSahFeature =
+        has(features, "vomiting") ||
+        has(features, "neck_stiffness") ||
+        has(features, "collapse") ||
+        has(features, "seizure") ||
+        has(features, "reduced_consciousness") ||
+        has(features, "focal_neurology");
+
+      if (!has(features, "headache") || !hasThunderclapPattern || !hasAssociatedSahFeature) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-ng240-meningitis-headache-001") {
+      const hasCnsInfectionContext =
+        has(features, "neck_stiffness") ||
+        has(features, "photophobia") ||
+        has(features, "rash") ||
+        has(features, "confusion") ||
+        has(features, "seizure") ||
+        has(features, "reduced_consciousness");
+
+      if (!has(features, "headache") || !has(features, "fever") || !hasCnsInfectionContext) {
+        continue;
+      }
+    }
+
+    if (rule.id === "wardbrain-gap-meningitis-001") {
+      const hasCnsInfectionContext =
+        has(features, "neck_stiffness") ||
+        has(features, "photophobia") ||
+        has(features, "rash") ||
+        has(features, "confusion") ||
+        has(features, "reduced_consciousness");
+
+      if (!has(features, "headache") || !has(features, "fever") || !hasCnsInfectionContext) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-cks-gca-001") {
+      const hasAgeContext = has(features, "age_over_50") || has(features, "older_age");
+      const hasHeadacheContext = has(features, "headache") || has(features, "temporal_headache");
+      const hasGcaSpecificFeature =
+        has(features, "jaw_claudication") ||
+        has(features, "scalp_tenderness") ||
+        has(features, "temporal_tenderness") ||
+        has(features, "visual_loss") ||
+        has(features, "transient_visual_loss") ||
+        has(features, "pmr_like_symptoms");
+
+      if (!hasAgeContext || !hasHeadacheContext || !hasGcaSpecificFeature) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-ng127-raised-icp-001") {
+      const hasRaisedIcpFeature =
+        has(features, "worse_on_waking") ||
+        has(features, "worse_lying_flat") ||
+        has(features, "worse_with_coughing") ||
+        has(features, "papilloedema") ||
+        (has(features, "vomiting") && has(features, "visual_disturbance")) ||
+        has(features, "cancer") ||
+        has(features, "immunosuppression");
+
+      if (!has(features, "headache") || !hasRaisedIcpFeature) {
+        continue;
+      }
+    }
+
+    if (rule.id === "nice-ng127-focal-neuro-headache-001") {
+      const hasFocalDeficit =
+        has(features, "focal_neurology") ||
+        has(features, "focal_weakness") ||
+        has(features, "sensory_loss") ||
+        has(features, "aphasia") ||
+        has(features, "ataxia") ||
+        has(features, "dysarthria") ||
+        has(features, "cranial_nerve_deficit") ||
+        has(features, "visual_loss");
+
+      if (!has(features, "headache") || !hasFocalDeficit) {
+        continue;
+      }
+    }
+
     if (rule.id === "nice-ng156-aaa-001") {
       const hasAaaPainContext =
         has(features, "abdominal_pain") ||

@@ -4,13 +4,20 @@ import {
   acuteAbdominalPainDiagnoses,
   acuteAbdominalPainFeatureVocabulary,
 } from "./acuteAbdominalPain";
+import {
+  headacheDeferredSecondPass,
+  headacheDiagnoses,
+  headacheFeatureVocabulary,
+} from "./headache";
 
 export const PRESENTATION_BLOCK_DIAGNOSIS_REGISTRY = {
   acute_abdominal_pain: acuteAbdominalPainDiagnoses,
+  headache: headacheDiagnoses,
 } as const satisfies Record<string, DiagnosisDefinition[]>;
 
 export const PRESENTATION_BLOCK_FEATURE_VOCABULARIES = {
   acute_abdominal_pain: acuteAbdominalPainFeatureVocabulary,
+  headache: headacheFeatureVocabulary,
 } as const;
 
 export const ALL_PRESENTATION_BLOCK_FEATURES = [
@@ -19,6 +26,7 @@ export const ALL_PRESENTATION_BLOCK_FEATURES = [
 
 export const PRESENTATION_BLOCK_DEFERRED_DIAGNOSES = {
   acute_abdominal_pain: acuteAbdominalPainDeferredSecondPass,
+  headache: headacheDeferredSecondPass,
 } as const;
 
 export const ALL_PRESENTATION_BLOCK_DIAGNOSES = Object.values(
