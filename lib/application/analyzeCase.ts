@@ -16,6 +16,13 @@ import {
 import { DIAGNOSIS_RULES, findDiagnosisRule } from "../domain/diagnosisRules";
 import { extractFeatures } from "../domain/featureExtractor";
 import { formatFeatureLabel } from "../domain/featureLabels";
+import { deriveLabFeatures } from "../domain/labs";
+import {
+  applyLabDiagnosisModifiers,
+  filterApplicableLabDiagnosisModifiers,
+  getLabDiagnosisModifiers,
+} from "../domain/labs/labDiagnosisModifiers";
+import type { LabPanels } from "../domain/labs/labTypes";
 import { applyPresentationFamilyRanking } from "../domain/familyRanking";
 import { findNextStepsRule } from "../domain/nextStepsRules";
 import {
@@ -667,6 +674,48 @@ function buildUncertainty(
     missingInformation: [...missingInformation].slice(0, 5),
   };
 }
+
+function hasEnteredLabs(labs: LabPanels | undefined): boolean {
+  if (!labs) {
+    return false;
+  }
+
+  return [labs.fbc, labs.ues, labs.lfts, labs.abg].some(
+    (panel) =>
+      panel &&
+      Object.entries(panel).some(
+        ([key, value]) => !["oxygenContext", "fio2"].includes(key) && value !== undefined,
+      ),
+  );
+}
+
+function sanitisePanel<T extends Record<string, unknown>>(panel: T | undefined): T | undefined {
+  if (!panel) {
+    return undefined;
+  }
+
+  const entries = Object.entries(panel).filter(([, value]) => value !== undefined && value !== "");
+
+  return entries.length > 0 ? Object.fromEntries(entries) as T : undefined;
+}
+
+function sanitiseLabs(input: CaseInput): LabPanels | undefined {
+  const labs = input.labs;
+
+  if (!labs) {
+    return undefined;
+  }
+
+  const sanitised: LabPanels = {
+    sex: input.sex === "male" || input.sex === "female" ? input.sex : labs.sex,
+    fbc: sanitisePanel(labs.fbc),
+    ues: sanitisePanel(labs.ues),
+    lfts: sanitisePanel(labs.lfts),
+    abg: sanitisePanel(labs.abg),
+  };
+
+  return hasEnteredLabs(sanitised) ? sanitised : undefined;
+}
   
 
 function analyzeValidatedCaseWithFeatures(
@@ -696,6 +745,19 @@ function analyzeValidatedCaseWithFeatures(
     ? getDiagnosisDefinitionsForPresentationBlock(definitionBlockId)
     : [];
   const usesDefinitionScoring = definitionDiagnoses.length > 0;
+  const labs = hasEnteredLabs(validatedInput.labs)
+    ? deriveLabFeatures({
+        ...validatedInput.labs,
+        sex: validatedInput.sex === "male" || validatedInput.sex === "female"
+          ? validatedInput.sex
+          : validatedInput.labs?.sex,
+      })
+    : undefined;
+  const labDiagnosisModifiers = getLabDiagnosisModifiers({
+    labs,
+    features,
+    presentationBlockId: definitionBlockId ?? initialFamilyRoute.primaryFamily,
+  });
 
   const rawScored = usesDefinitionScoring
     ? scoreDiagnosisDefinitions(
@@ -716,9 +778,11 @@ function analyzeValidatedCaseWithFeatures(
           .map((rule) => scoreDiagnosis(rule, features, boosts, age))
           .sort((a, b) => b.score - a.score);
       })();
-  const scored = usesDefinitionScoring
+  const clinicallyScored = usesDefinitionScoring
     ? rawScored
     : applyPresentationFamilyRanking(validatedInput, features, rawScored, redFlags);
+  const applicableLabDiagnosisModifiers = filterApplicableLabDiagnosisModifiers(clinicallyScored, labDiagnosisModifiers);
+  const scored = applyLabDiagnosisModifiers(clinicallyScored, applicableLabDiagnosisModifiers);
 
   const filteredDifferentials = scored.filter(
     (dx, index) =>
@@ -786,7 +850,6 @@ function analyzeValidatedCaseWithFeatures(
     corePilotBlocks,
     displayedDifferentials.map((differential) => differential.name),
   );
-
   return {
     problemRepresentation,
     redFlags,
@@ -800,6 +863,8 @@ function analyzeValidatedCaseWithFeatures(
     diagnosisTraces,
     uncertainty,
     guidelineSupport,
+    labs,
+    labDiagnosisModifiers: applicableLabDiagnosisModifiers.length > 0 ? applicableLabDiagnosisModifiers : undefined,
     detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,
@@ -914,5 +979,6 @@ function validateCaseInput(input: CaseInput): CaseInput {
     otherDifferentials: (input.otherDifferentials ?? "").trim(),
     dangerousDiagnoses: (input.dangerousDiagnoses ?? "").trim(),
     suspectedDiagnosis: (input.suspectedDiagnosis ?? "").trim(),
+    labs: sanitiseLabs(input),
   };
 }

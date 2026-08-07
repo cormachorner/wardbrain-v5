@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import type { LabValueAssessment } from "../lib/domain/labs/labTypes";
 import type { AnalyzeCaseResponse } from "../lib/types";
 import { SimpleList } from "./WardBrainCard";
 
@@ -236,12 +237,65 @@ function WhyItFitsDisclosure({
   );
 }
 
+function isLabReason(reason: string) {
+  return reason.startsWith("Lab:");
+}
+
+function parseLabReason(reason: string) {
+  const match = reason.match(/^Lab:\s*\+(\d+)\s+(.+?)\s+-\s+(.+)$/);
+
+  if (!match) {
+    return {
+      delta: undefined,
+      feature: "Laboratory evidence",
+      explanation: reason.replace(/^Lab:\s*/, ""),
+    };
+  }
+
+  return {
+    delta: match[1],
+    feature: formatSlug(match[2]),
+    explanation: match[3],
+  };
+}
+
+function LaboratoryEvidence({ reasons }: { reasons: string[] }) {
+  const labReasons = reasons.filter(isLabReason).map(parseLabReason);
+
+  if (labReasons.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 rounded-xl border border-sky-100 bg-sky-50 p-3 text-sm text-slate-700">
+      <div className="mb-1 font-medium text-slate-900">Laboratory evidence</div>
+      <ul className="space-y-1">
+        {labReasons.map((reason) => (
+          <li key={`${reason.delta}-${reason.feature}-${reason.explanation}`} className="flex gap-2">
+            {reason.delta && (
+              <span className="shrink-0 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-semibold text-sky-900">
+                +{reason.delta}
+              </span>
+            )}
+            <span>
+              <span className="font-medium capitalize">{reason.feature}: </span>
+              {reason.explanation}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function DiagnosisTraceDisclosure({
   trace,
 }: {
   trace: AnalyzeCaseResponse["diagnosisTraces"][number];
 }) {
   const [open, setOpen] = useState(false);
+  const clinicalOtherReasons = trace.otherReasons.filter((reason) => !isLabReason(reason));
+  const labReasons = trace.otherReasons.filter(isLabReason);
 
   return (
     <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
@@ -267,15 +321,282 @@ function DiagnosisTraceDisclosure({
             <span className="font-medium">Features against: </span>
             <ChipList items={trace.opposingFeatures} />
           </div>
-          {trace.otherReasons.length > 0 && (
+          {clinicalOtherReasons.length > 0 && (
             <div>
               <span className="font-medium">Composite/rule support: </span>
-              <ChipList items={trace.otherReasons} />
+              <ChipList items={clinicalOtherReasons} />
             </div>
           )}
+          <LaboratoryEvidence reasons={labReasons} />
         </div>
       )}
     </div>
+  );
+}
+
+function LabExplanationDisclosure({ explanations }: { explanations: string[] }) {
+  const [open, setOpen] = useState(false);
+
+  if (explanations.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex items-center gap-1 rounded-lg text-sm font-medium text-slate-600 outline-none hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
+      >
+        Why?
+        <Chevron open={open} />
+      </button>
+      {open && (
+        <ul className="mt-2 space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-700">
+          {explanations.map((explanation) => (
+            <li key={explanation}>• {explanation}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function labStatusMarker(status: "low" | "high" | "normal" | "invalid" | "missing") {
+  if (status === "low") return "↓";
+  if (status === "high") return "↑";
+  if (status === "invalid") return "!";
+  return "";
+}
+
+function labPanelForTest(test: string) {
+  if (["Hb", "WCC", "Platelets", "MCV", "MCH", "MCHC", "Neutrophils", "Lymphocytes", "Monocytes", "Eosinophils", "Basophils", "Reticulocytes", "PCV", "ESR", "D-dimer"].includes(test)) {
+    return "FBC";
+  }
+
+  if (["Na", "K", "Cl", "HCO3", "Urea", "Creatinine", "Calcium", "Magnesium", "Phosphate", "eGFR", "Fasting glucose"].includes(test)) {
+    return test === "Fasting glucose" ? "Glucose" : "U&Es";
+  }
+
+  if (["Albumin", "ALT", "AST", "ALP", "Bilirubin", "GGT"].includes(test)) {
+    return "LFTs";
+  }
+
+  return "ABG";
+}
+
+function labStatusClasses(status: LabValueAssessment["status"]) {
+  if (status === "invalid") return "border-amber-200 bg-amber-50 text-amber-950";
+  if (status === "high" || status === "low") return "border-slate-200 bg-white text-slate-800";
+  return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function LabAbnormalityRow({ abnormality }: { abnormality: LabValueAssessment }) {
+  const marker = labStatusMarker(abnormality.status);
+  const statusLabel = abnormality.status === "high"
+    ? "High"
+    : abnormality.status === "low"
+      ? "Low"
+      : abnormality.status === "invalid"
+        ? "Invalid"
+        : abnormality.status;
+
+  return (
+    <li className={`rounded-lg border px-3 py-2 ${labStatusClasses(abnormality.status)}`}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-medium">{abnormality.test}</span>
+        <span className="text-right">
+          {abnormality.value !== undefined ? `${abnormality.value} ${abnormality.unit}` : "not provided"}
+          {marker && <span className="ml-1 font-bold" aria-hidden="true">{marker}</span>}
+        </span>
+      </div>
+      <div className="mt-1 text-xs text-slate-500">
+        {statusLabel}
+        {" · "}
+        Reference {abnormality.referenceRange}
+      </div>
+    </li>
+  );
+}
+
+function AbgSummary({ abnormalities, features }: { abnormalities: LabValueAssessment[]; features: string[] }) {
+  const abgAbnormalities = abnormalities.filter((abnormality) => labPanelForTest(abnormality.test) === "ABG");
+  const abgFeatureSet = new Set([
+    "acidaemia",
+    "alkalaemia",
+    "metabolic_acidosis",
+    "respiratory_acidosis",
+    "respiratory_alkalosis",
+    "metabolic_alkalosis",
+    "hypoxaemia",
+    "hypercapnia",
+    "hypocapnia",
+    "low_bicarbonate_abg",
+    "raised_bicarbonate_abg",
+    "base_deficit",
+    "base_excess",
+    "raised_lactate",
+  ]);
+  const abgFeatures = features.filter((feature) => abgFeatureSet.has(feature));
+
+  if (abgAbnormalities.length === 0 && abgFeatures.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="font-semibold text-slate-900">ABG</div>
+        <div className="text-xs text-slate-500">acid-base / gas exchange</div>
+      </div>
+      {abgAbnormalities.length > 0 && (
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {abgAbnormalities.map((abnormality) => (
+            <LabAbnormalityRow
+              key={`${abnormality.test}-${abnormality.value}-${abnormality.status}`}
+              abnormality={abnormality}
+            />
+          ))}
+        </ul>
+      )}
+      {abgFeatures.length > 0 && (
+        <div className="mt-3">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Interpretation</div>
+          <ChipList items={abgFeatures.map(formatSlug)} limit={6} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LaboratoryResults({ labs }: { labs: NonNullable<AnalyzeCaseResponse["labs"]> }) {
+  const nonAbgAbnormalities = labs.abnormalities.filter(
+    (abnormality) => labPanelForTest(abnormality.test) !== "ABG",
+  );
+  const groupedAbnormalities = nonAbgAbnormalities.reduce<Record<string, typeof labs.abnormalities>>(
+    (groups, abnormality) => {
+      const panel = labPanelForTest(abnormality.test);
+      groups[panel] = [...(groups[panel] ?? []), abnormality];
+      return groups;
+    },
+    {},
+  );
+  const abgFeatureNames = new Set([
+    "acidaemia",
+    "alkalaemia",
+    "metabolic_acidosis",
+    "respiratory_acidosis",
+    "respiratory_alkalosis",
+    "metabolic_alkalosis",
+    "hypoxaemia",
+    "hypercapnia",
+    "hypocapnia",
+    "low_bicarbonate_abg",
+    "raised_bicarbonate_abg",
+    "base_deficit",
+    "base_excess",
+    "raised_lactate",
+  ]);
+  const nonAbgFeatures = labs.features.filter((feature) => !abgFeatureNames.has(feature));
+  const missingWarnings = Array.from(new Set(labs.warnings.filter((warning) => warning.includes("not provided"))));
+  const otherWarnings = Array.from(new Set(labs.warnings.filter((warning) => !warning.includes("not provided"))));
+
+  return (
+    <Section title="Laboratory results" icon={<Icon name="info" />}>
+      <div className="space-y-4 text-sm text-slate-700">
+        {labs.safetyWarnings.length > 0 && (
+          <div className="space-y-2">
+            {labs.safetyWarnings.map((warning) => (
+              <div
+                key={warning.id}
+                className={
+                  warning.severity === "urgent"
+                    ? "rounded-xl border border-red-200 bg-red-50 p-3 text-red-950"
+                    : "rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950"
+                }
+              >
+                <div className="text-xs font-semibold uppercase tracking-wide">
+                  {warning.severity === "urgent" ? "Urgent laboratory abnormality" : "Laboratory safety warning"}
+                </div>
+                <div className="mt-1 font-semibold">{warning.title}</div>
+                <div className="mt-1">{warning.explanation}</div>
+                <ul className="mt-2 space-y-1">
+                  {warning.triggerValues.map((triggerValue) => (
+                    <li key={`${warning.id}-${triggerValue.test}`} className="rounded-lg bg-white/70 px-2 py-1">
+                      <span className="font-semibold">{triggerValue.test} {triggerValue.value} {triggerValue.unit}</span>
+                      <span className="opacity-80"> - {triggerValue.threshold}</span>
+                    </li>
+                  ))}
+                </ul>
+                {warning.recommendedNextStep && (
+                  <div className="mt-2">
+                    <span className="font-medium">Recommended next step: </span>
+                    {warning.recommendedNextStep}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <AbgSummary abnormalities={labs.abnormalities} features={labs.features} />
+
+        {nonAbgAbnormalities.length > 0 ? (
+          <div>
+            <div className="mb-2 text-sm font-semibold text-slate-900">Clinically important abnormalities</div>
+            <div className="grid gap-3 sm:grid-cols-2">
+            {Object.entries(groupedAbnormalities).map(([panel, abnormalities]) => (
+              <div key={panel} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-2 font-semibold text-slate-900">{panel}</div>
+                <ul className="space-y-2">
+                  {abnormalities.map((abnormality) => (
+                    <LabAbnormalityRow
+                      key={`${abnormality.test}-${abnormality.value}-${abnormality.status}`}
+                      abnormality={abnormality}
+                    />
+                  ))}
+                </ul>
+              </div>
+            ))}
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
+            No non-ABG laboratory abnormalities detected in the entered values.
+          </p>
+        )}
+
+        <div>
+          <div className="mb-2 text-sm font-semibold text-slate-900">Derived interpretation / patterns</div>
+          <ChipList items={nonAbgFeatures.map(formatSlug)} empty="No non-ABG derived lab-only features." limit={8} />
+        </div>
+
+        {otherWarnings.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
+            <div className="font-medium">Invalid values</div>
+            <ChipList items={otherWarnings} tone="amber" />
+          </div>
+        )}
+
+        {missingWarnings.length > 0 && (
+          <details className="rounded-xl border border-slate-200 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-medium text-slate-600">
+              Missing fields from partial panels ({missingWarnings.length})
+            </summary>
+            <div className="mt-2">
+              <ChipList items={missingWarnings} limit={8} />
+            </div>
+          </details>
+        )}
+
+        <LabExplanationDisclosure explanations={labs.explanations} />
+
+        <p className="text-xs text-slate-500">
+          Lab interpretation is educational. Lab-derived score modifiers are separately labelled as laboratory evidence and do not alter non-lab red-flag rules.
+        </p>
+      </div>
+    </Section>
   );
 }
 
@@ -291,6 +612,7 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
     ),
   );
   const leadDiagnosis = result.differentials[0];
+  const leadClinicalReasons = leadDiagnosis?.reasonsFor.filter((reason) => !isLabReason(reason)) ?? [];
 
   async function copyPresentation() {
     try {
@@ -320,10 +642,11 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
             </div>
             <div className="mt-3 text-sm text-slate-700">
               <span className="font-medium">Key support: </span>
-              <ChipList items={leadDiagnosis.reasonsFor} />
+              <ChipList items={leadClinicalReasons} />
             </div>
+            <LaboratoryEvidence reasons={leadDiagnosis.reasonsFor} />
             <WhyItFitsDisclosure
-              reasonsFor={leadDiagnosis.reasonsFor}
+              reasonsFor={leadClinicalReasons}
               reasonsAgainst={leadDiagnosis.reasonsAgainst}
             />
           </div>
@@ -345,11 +668,12 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
 
                 <div className="mt-2 text-sm text-slate-700">
                   <span className="font-medium">Key support: </span>
-                  <ChipList items={dx.reasonsFor} empty="Limited support" />
+                  <ChipList items={dx.reasonsFor.filter((reason) => !isLabReason(reason))} empty="Limited support" />
                 </div>
 
+                <LaboratoryEvidence reasons={dx.reasonsFor} />
                 <WhyItFitsDisclosure
-                  reasonsFor={dx.reasonsFor}
+                  reasonsFor={dx.reasonsFor.filter((reason) => !isLabReason(reason))}
                   reasonsAgainst={dx.reasonsAgainst}
                 />
 
@@ -481,6 +805,10 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
           ) : null}
         </div>
       </Section>
+
+      {result.labs && (
+        <LaboratoryResults labs={result.labs} />
+      )}
 
       <Section title="Guideline support" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
         {result.guidelineSupport.sources.length > 0 ? (

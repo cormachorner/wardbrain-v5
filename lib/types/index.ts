@@ -1,4 +1,6 @@
 import type { WardBrainPresentationBlockMatch } from "../../types/wardbrain";
+import type { LabInterpretationResult, LabPanels } from "../domain/labs/labTypes";
+import type { LabDiagnosisModifier } from "../domain/labs/labDiagnosisModifiers";
 import type { GuidelineSupport } from "../guidelines/guidelineRegistry";
 import type { SupportedPresentationBlock } from "../pilotStatus";
 
@@ -17,6 +19,7 @@ export type CaseInput = {
   otherDifferentials?: string;
   dangerousDiagnoses?: string;
   suspectedDiagnosis?: string;
+  labs?: LabPanels;
 };
 
 export type ExtractedFeatures = {
@@ -154,6 +157,8 @@ export type AnalysisResult = {
     missingInformation: string[];
   };
   guidelineSupport: GuidelineSupport;
+  labs?: LabInterpretationResult;
+  labDiagnosisModifiers?: LabDiagnosisModifier[];
   detectedFeatures?: string[];
   detectedFeatureSlugs?: string[];
 };

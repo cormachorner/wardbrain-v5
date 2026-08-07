@@ -11,6 +11,7 @@
     "test": "node scripts/run-tests.mjs",
     "eval:cases": "node scripts/evaluate-cases.mjs",
     "eval:cases:live": "WARDBRAIN_LLM_EVAL_LIVE=1 WARDBRAIN_LLM_TIMEOUT_MS=30000 node scripts/evaluate-cases.mjs",
+    "eval:labs": "node scripts/evaluate-lab-workflow.mjs",
     "eval:llm": "node scripts/evaluate-llm-extraction.mjs",
     "eval:llm:live": "WARDBRAIN_LLM_EVAL_LIVE=1 WARDBRAIN_LLM_TIMEOUT_MS=30000 node scripts/evaluate-llm-extraction.mjs",
     "eval:presentation": "node scripts/evaluate-presentation-rewrite.mjs",

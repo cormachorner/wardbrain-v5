@@ -4,6 +4,70 @@ import type { CaseInput } from '../../../lib/types';
 import { z } from "zod"
 import { prisma } from "../../../lib/prisma";
 
+const optionalNumber = z.number().finite().optional()
+
+const labsSchema = z
+  .object({
+    sex: z.enum(["male", "female", "unknown"]).optional(),
+    fbc: z
+      .object({
+        hb: optionalNumber,
+        wcc: optionalNumber,
+        platelets: optionalNumber,
+        mcv: optionalNumber,
+        mch: optionalNumber,
+        mchc: optionalNumber,
+        neutrophils: optionalNumber,
+        lymphocytes: optionalNumber,
+        monocytes: optionalNumber,
+        eosinophils: optionalNumber,
+        basophils: optionalNumber,
+        reticulocytes: optionalNumber,
+        pcv: optionalNumber,
+        esr: optionalNumber,
+        dDimer: optionalNumber,
+      })
+      .optional(),
+    ues: z
+      .object({
+        sodium: optionalNumber,
+        potassium: optionalNumber,
+        chloride: optionalNumber,
+        bicarbonate: optionalNumber,
+        urea: optionalNumber,
+        creatinine: optionalNumber,
+        calcium: optionalNumber,
+        magnesium: optionalNumber,
+        phosphate: optionalNumber,
+        egfr: optionalNumber,
+        fastingGlucose: optionalNumber,
+      })
+      .optional(),
+    lfts: z
+      .object({
+        albumin: optionalNumber,
+        alt: optionalNumber,
+        ast: optionalNumber,
+        alp: optionalNumber,
+        bilirubin: optionalNumber,
+        ggt: optionalNumber,
+      })
+      .optional(),
+    abg: z
+      .object({
+        ph: optionalNumber,
+        pao2: optionalNumber,
+        paco2: optionalNumber,
+        bicarbonate: optionalNumber,
+        baseExcess: optionalNumber,
+        lactate: optionalNumber,
+        oxygenContext: z.enum(["room_air", "supplemental_oxygen", "unknown"]).optional(),
+        fio2: optionalNumber,
+      })
+      .optional(),
+  })
+  .optional()
+
 const caseInputSchema = z.object({
   age: z.string().min(1),
   sex: z.string().min(1),
@@ -19,6 +83,7 @@ const caseInputSchema = z.object({
   otherDifferentials: z.string().optional(),
   dangerousDiagnoses: z.string().optional(),
   suspectedDiagnosis: z.string().optional(),
+  labs: labsSchema,
 })
 
 export async function POST(request: Request) {
