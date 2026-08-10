@@ -239,6 +239,27 @@ const DIAGNOSIS_ALIAS_GROUPS = [
     ],
   },
   {
+    diagnosis: "Acute hepatitis",
+    aliases: [
+      "acute hepatitis",
+      "viral hepatitis",
+      "hepatitis",
+      "acute liver inflammation",
+      "hepatitis / acute liver inflammation",
+    ],
+  },
+  {
+    diagnosis: "Drug-induced liver injury",
+    aliases: [
+      "drug-induced liver injury",
+      "drug induced liver injury",
+      "dili",
+      "toxic hepatitis",
+      "medication-related liver injury",
+      "medication related liver injury",
+    ],
+  },
+  {
     diagnosis: "Primary sclerosing cholangitis",
     aliases: ["primary sclerosing cholangitis", "psc"],
   },

@@ -347,6 +347,10 @@ function buildAnchorWarning(
     (d) => d.name.toLowerCase() === canonicalSuspectedDiagnosis.toLowerCase(),
   );
 
+  if (!top) {
+    return "Insufficient clinical information to generate a reliable differential. Add more history or examination findings before testing an anchor.";
+  }
+
   if (!suspected) {
     return `You may be anchoring too early. ${top.name} currently fits the pattern better than your entered diagnosis.`;
   }
@@ -364,6 +368,26 @@ function buildAnchorWarning(
   }
 
   return "Your current diagnosis is not obviously undercut by the engine, but keep testing dangerous alternatives before settling.";
+}
+
+function hasInsufficientClinicalSupport(
+  features: ExtractedFeatures,
+  scored: DifferentialResult[],
+  route: ReturnType<typeof routePresentationFamilies>,
+): boolean {
+  const topScore = scored[0]?.score ?? 0;
+  const highSignalFeatures = features.matchedFeatures.filter(
+    (feature) =>
+      ![
+        "older_age",
+        "male",
+        "female",
+        "tachycardia",
+        "tachypnoea",
+      ].includes(feature),
+  );
+
+  return topScore <= 3 && highSignalFeatures.length < 2 && route.confidence < 4;
 }
 
 function buildReasoningComparison(
@@ -716,6 +740,48 @@ function sanitiseLabs(input: CaseInput): LabPanels | undefined {
 
   return hasEnteredLabs(sanitised) ? sanitised : undefined;
 }
+
+function includeLabSupportedRuleCandidates(
+  differentials: DifferentialResult[],
+  labDiagnosisModifiers: ReturnType<typeof getLabDiagnosisModifiers>,
+  features: ExtractedFeatures,
+  age: number | undefined,
+): DifferentialResult[] {
+  if (labDiagnosisModifiers.length === 0) {
+    return differentials;
+  }
+
+  const existingDiagnoses = new Set(differentials.map((differential) => differential.name));
+  const boosts = getDiagnosisBoosts(features);
+  const additionalCandidates: DifferentialResult[] = [];
+
+  for (const diagnosis of new Set(labDiagnosisModifiers.map((modifier) => modifier.diagnosis))) {
+    if (existingDiagnoses.has(diagnosis)) {
+      continue;
+    }
+
+    const rule = findDiagnosisRule(diagnosis);
+
+    if (!rule) {
+      continue;
+    }
+
+    const registryEntry = CONDITION_PROMOTION_REGISTRY_BY_NAME[rule.name];
+
+    if (registryEntry && registryEntry.promotionStatus !== "live-engine") {
+      continue;
+    }
+
+    const clinicallyScoredCandidate = scoreDiagnosis(rule, features, boosts, age);
+
+    if (clinicallyScoredCandidate.score > 0) {
+      additionalCandidates.push(clinicallyScoredCandidate);
+      existingDiagnoses.add(diagnosis);
+    }
+  }
+
+  return [...differentials, ...additionalCandidates].sort((left, right) => right.score - left.score);
+}
   
 
 function analyzeValidatedCaseWithFeatures(
@@ -781,17 +847,29 @@ function analyzeValidatedCaseWithFeatures(
   const clinicallyScored = usesDefinitionScoring
     ? rawScored
     : applyPresentationFamilyRanking(validatedInput, features, rawScored, redFlags);
-  const applicableLabDiagnosisModifiers = filterApplicableLabDiagnosisModifiers(clinicallyScored, labDiagnosisModifiers);
-  const scored = applyLabDiagnosisModifiers(clinicallyScored, applicableLabDiagnosisModifiers);
+  const labSupportedClinicallyScored = includeLabSupportedRuleCandidates(
+    clinicallyScored,
+    labDiagnosisModifiers,
+    features,
+    age,
+  );
+  const applicableLabDiagnosisModifiers = filterApplicableLabDiagnosisModifiers(
+    labSupportedClinicallyScored,
+    labDiagnosisModifiers,
+  );
+  const scored = applyLabDiagnosisModifiers(labSupportedClinicallyScored, applicableLabDiagnosisModifiers);
 
-  const filteredDifferentials = scored.filter(
+  const insufficientClinicalSupport = hasInsufficientClinicalSupport(features, scored, initialFamilyRoute);
+  const filteredDifferentials = insufficientClinicalSupport ? [] : scored.filter(
     (dx, index) =>
       index < 2 ||
       dx.score >= DIFFERENTIAL_DISPLAY_THRESHOLD ||
       dx.reasonsFor.some((reason) => reason.includes("pattern")),
   );
 
-  const plausibleDifferentials = scored.filter((dx) => dx.score >= PLAUSIBLE_DIFFERENTIAL_THRESHOLD);
+  const plausibleDifferentials = insufficientClinicalSupport
+    ? []
+    : scored.filter((dx) => dx.score >= PLAUSIBLE_DIFFERENTIAL_THRESHOLD);
   const minimumDisplayCount = plausibleDifferentials.length >= MIN_DISPLAYED_DIFFERENTIALS
     ? MIN_DISPLAYED_DIFFERENTIALS
     : 2;

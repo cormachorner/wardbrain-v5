@@ -152,6 +152,10 @@ function isCopdCompatible(features: ExtractedFeatures, blockId: string | undefin
   );
 }
 
+function isDiliCompatible(features: ExtractedFeatures): boolean {
+  return hasClinicalFeature(features, "medication_toxicity_context");
+}
+
 function addModifier(
   modifiers: LabDiagnosisModifier[],
   diagnosis: string,
@@ -182,6 +186,7 @@ export function getLabDiagnosisModifiers({
   const ruqCompatible = isRuqCompatible(features, presentationBlockId);
   const biliaryInfectionCompatible = isBiliaryInfectionCompatible(features);
   const copdCompatible = isCopdCompatible(features, presentationBlockId);
+  const diliCompatible = isDiliCompatible(features);
 
   if (infectionCompatible) {
     if (hasLabFeature(labs, "neutrophilia")) {
@@ -237,7 +242,7 @@ export function getLabDiagnosisModifiers({
     }
 
     if (hasLabFeature(labs, "low_bicarbonate") || hasLabFeature(labs, "low_bicarbonate_abg")) {
-      addModifier(modifiers, "Diabetic ketoacidosis", "low_bicarbonate", 3, "high", "Low bicarbonate supports DKA in a compatible diabetic/metabolic presentation.");
+      addModifier(modifiers, "Diabetic ketoacidosis", "low_bicarbonate", 2, "high", "Low bicarbonate supports DKA in a compatible diabetic/metabolic presentation.");
     }
 
     if (hasLabFeature(labs, "hyperglycaemia_lab")) {
@@ -297,11 +302,27 @@ export function getLabDiagnosisModifiers({
     }
 
     if (hasLabFeature(labs, "hepatocellular_pattern")) {
-      addModifier(modifiers, "Hepatitis / acute liver inflammation", "hepatocellular_pattern", 6, "high", "A hepatocellular LFT pattern strongly supports hepatitis or acute liver inflammation in compatible RUQ/jaundice presentations.");
+      addModifier(modifiers, "Acute hepatitis", "hepatocellular_pattern", 7, "high", "A hepatocellular LFT pattern strongly supports acute hepatitis or liver inflammation in compatible RUQ/jaundice presentations.");
+
+      if (diliCompatible) {
+        addModifier(modifiers, "Drug-induced liver injury", "hepatocellular_pattern", 7, "high", "A hepatocellular LFT pattern strongly supports drug-induced liver injury when medication or toxin exposure is present.");
+      }
     }
 
     if (hasLabFeature(labs, "raised_alt") && hasLabFeature(labs, "raised_ast")) {
-      addModifier(modifiers, "Hepatitis / acute liver inflammation", "raised_transaminases", 3, "moderate", "Raised ALT and AST support hepatocellular injury in compatible RUQ/jaundice presentations.");
+      addModifier(modifiers, "Acute hepatitis", "raised_transaminases", 5, "high", "Marked transaminase elevation supports hepatocellular injury in compatible RUQ/jaundice presentations.");
+
+      if (diliCompatible) {
+        addModifier(modifiers, "Drug-induced liver injury", "raised_transaminases", 5, "high", "Marked transaminase elevation supports drug-induced liver injury when medication or toxin exposure is present.");
+      }
+    }
+
+    if (hasLabFeature(labs, "raised_bilirubin") && hasLabFeature(labs, "hepatocellular_pattern")) {
+      addModifier(modifiers, "Acute hepatitis", "raised_bilirubin_hepatocellular", 2, "moderate", "Raised bilirubin modestly supports acute hepatitis when the LFT pattern is hepatocellular rather than cholestatic.");
+
+      if (diliCompatible) {
+        addModifier(modifiers, "Drug-induced liver injury", "raised_bilirubin_hepatocellular", 2, "moderate", "Raised bilirubin modestly supports drug-induced liver injury when hepatocellular injury and medication or toxin exposure coexist.");
+      }
     }
   }
 

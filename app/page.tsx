@@ -24,6 +24,20 @@ const initialCase: CaseInput = {
   dangerousDiagnoses: "",
 };
 
+function hasLearningReflectionInput(input: CaseInput | null) {
+  if (!input) {
+    return false;
+  }
+
+  return Boolean(
+    input.leadDiagnosis?.trim() ||
+      input.otherDifferentials?.trim() ||
+      input.dangerousDiagnoses?.trim() ||
+      input.keyPositives.trim() ||
+      input.keyNegatives.trim(),
+  );
+}
+
 export default function Home() {
   const { data: session, status } = useSession()
   const [caseInput, setCaseInput] = useState<CaseInput>(initialCase);
@@ -194,7 +208,12 @@ export default function Home() {
               </div>
             )}
 
-            {submittedCase && result ? <AnalysisResults result={result} /> : null}
+            {submittedCase && result ? (
+              <AnalysisResults
+                result={result}
+                showEducationalReflection={hasLearningReflectionInput(submittedCase)}
+              />
+            ) : null}
 
             {!isAnalyzing && !submittedCase && !result && !error && (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-600">

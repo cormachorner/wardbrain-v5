@@ -86,6 +86,37 @@ const caseInputSchema = z.object({
   labs: labsSchema,
 })
 
+const REQUIRED_FIELD_LABELS = {
+  age: "patient’s age",
+  sex: "sex",
+  presentingComplaint: "presenting complaint",
+} as const
+
+function joinMissingFields(fields: string[]) {
+  if (fields.length === 1) {
+    return fields[0]
+  }
+
+  if (fields.length === 2) {
+    return `${fields[0]} and ${fields[1]}`
+  }
+
+  return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`
+}
+
+function getRequiredFieldMessage(body: unknown) {
+  const record = body && typeof body === "object" ? body as Record<string, unknown> : {}
+  const missing = (Object.keys(REQUIRED_FIELD_LABELS) as Array<keyof typeof REQUIRED_FIELD_LABELS>)
+    .filter((field) => typeof record[field] !== "string" || !record[field].trim())
+    .map((field) => REQUIRED_FIELD_LABELS[field])
+
+  if (missing.length === 0) {
+    return null
+  }
+
+  return `Please add the ${joinMissingFields(missing)} before analysing the case.`
+}
+
 export async function POST(request: Request) {
   const session =
     process.env.WARDBRAIN_TEST_AUTH_BYPASS === "1"
@@ -110,6 +141,12 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    const requiredFieldMessage = getRequiredFieldMessage(body);
+
+    if (requiredFieldMessage) {
+      return NextResponse.json({ error: requiredFieldMessage }, { status: 400 })
+    }
+
     const caseInput: CaseInput = caseInputSchema.parse(body);
 
     const result = await analyzeCaseWithOptionalLlmPresentation(caseInput);

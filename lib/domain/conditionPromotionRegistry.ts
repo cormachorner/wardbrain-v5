@@ -224,6 +224,33 @@ export const CONDITION_PROMOTION_REGISTRY: WardBrainConditionPromotionEntry[] = 
     learnMoreKey: "biliary-colic-gallstone-disease",
   },
   {
+    canonicalName: "Acute hepatitis",
+    presentationFamilies: ["ruq-pain-jaundice"],
+    promotionStatus: LIVE_ENGINE,
+    aliases: [
+      "acute hepatitis",
+      "viral hepatitis",
+      "hepatitis",
+      "acute liver inflammation",
+    ],
+    sourceAnchor: "NICE CKS hepatitis summaries",
+    learnMoreKey: "acute-hepatitis",
+  },
+  {
+    canonicalName: "Drug-induced liver injury",
+    presentationFamilies: ["ruq-pain-jaundice"],
+    promotionStatus: LIVE_ENGINE,
+    aliases: [
+      "drug-induced liver injury",
+      "drug induced liver injury",
+      "DILI",
+      "toxic hepatitis",
+      "medication-related liver injury",
+    ],
+    sourceAnchor: "NICE CKS hepatitis summaries + BNF medicines safety context",
+    learnMoreKey: "drug-induced-liver-injury",
+  },
+  {
     canonicalName: "Primary sclerosing cholangitis",
     presentationFamilies: ["ruq-pain-jaundice"],
     promotionStatus: SCAFFOLD_ONLY,

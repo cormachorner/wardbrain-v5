@@ -243,6 +243,8 @@ test("biochemical regression: hepatocellular injury pattern does not create bili
 
   assert.ok(labFeatures(biochemical).includes("hepatocellular_pattern"));
   assert.ok(!labFeatures(biochemical).includes("cholestatic_pattern"));
+  assert.equal(biochemical.differentials[0]?.name, "Acute hepatitis");
+  assert.ok(modifierFeatures(biochemical, "Acute hepatitis").includes("hepatocellular_pattern"));
   assert.deepEqual(modifierFeatures(biochemical, "Choledocholithiasis / obstructive jaundice"), []);
   assert.deepEqual(modifierFeatures(biochemical, "Acute cholangitis"), []);
 });

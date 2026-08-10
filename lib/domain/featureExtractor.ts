@@ -1834,7 +1834,6 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "focal neurology",
     "focal neurological deficit",
     "focal deficit",
-    "weakness",
     "unilateral weakness",
     "one sided weakness",
     "one sided numbness",

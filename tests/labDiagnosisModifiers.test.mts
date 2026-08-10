@@ -46,6 +46,12 @@ function modifierFeatures(result: AnalyzeCaseResponse, diagnosis: string): strin
     .map((modifier) => modifier.feature);
 }
 
+function modifierDelta(result: AnalyzeCaseResponse, diagnosis: string, feature: string): number | undefined {
+  return result.labDiagnosisModifiers?.find(
+    (modifier) => modifier.diagnosis === diagnosis && modifier.feature === feature,
+  )?.scoreDelta;
+}
+
 function rankSignature(result: AnalyzeCaseResponse) {
   return result.differentials.map((differential) => ({
     name: differential.name,
@@ -83,6 +89,40 @@ test("lab diagnosis modifiers: GI bleed plus anaemia and raised urea improves GI
   assert.ok(withLabs.differentials.find((differential) => differential.name === "GI bleed")?.reasonsFor.some((reason) => reason.startsWith("Lab:")));
 });
 
+test("lab diagnosis modifiers: melaena plus anaemia and raised urea can add GI bleed support when definition scoring omitted it", () => {
+  const input = buildInput({
+    presentingComplaint: "Abdominal pain",
+    history: "Melaena with dizziness, epigastric pain, pallor and tachycardia.",
+    observations: "HR 118.",
+  });
+  const result = analyzeCase({
+    ...input,
+    labs: {
+      fbc: { hb: 68, mcv: 71 },
+      ues: { urea: 16 },
+    },
+  });
+
+  assert.equal(result.differentials[0]?.name, "GI bleed");
+  assert.deepEqual(modifierFeatures(result, "GI bleed").sort(), ["anaemia", "microcytic_anaemia", "raised_urea"].sort());
+});
+
+test("lab diagnosis modifiers: isolated anaemia without GI bleed features does not promote GI bleed", () => {
+  const input = buildInput({
+    presentingComplaint: "Breathlessness",
+    history: "Progressive exertional breathlessness with pallor and fatigue. No melaena or haematemesis.",
+  });
+  const result = analyzeCase({
+    ...input,
+    labs: {
+      fbc: { hb: 68, mcv: 71 },
+    },
+  });
+
+  assert.deepEqual(modifierFeatures(result, "GI bleed"), []);
+  assert.notEqual(result.differentials[0]?.name, "GI bleed");
+});
+
 test("lab diagnosis modifiers: isolated raised urea without GI bleed symptoms does not strongly promote GI bleed", () => {
   const input = buildInput({
     presentingComplaint: "Chest pain",
@@ -117,6 +157,7 @@ test("lab diagnosis modifiers: DKA plus hyperglycaemia and metabolic acidosis im
   assert.ok(scoreFor(withLabs, "Diabetic ketoacidosis") > scoreFor(withoutLabs, "Diabetic ketoacidosis"));
   assert.ok(modifierFeatures(withLabs, "Diabetic ketoacidosis").includes("metabolic_acidosis"));
   assert.ok(modifierFeatures(withLabs, "Diabetic ketoacidosis").includes("hyperglycaemia_lab"));
+  assert.equal(modifierDelta(withLabs, "Diabetic ketoacidosis", "low_bicarbonate"), 2);
 });
 
 test("lab diagnosis modifiers: raised lactate alone does not promote DKA", () => {
@@ -158,7 +199,7 @@ test("lab diagnosis modifiers: hepatocellular pattern supports hepatitis when th
     matchedFeatures: ["ruq_pain", "jaundice"],
   };
   const baseDifferentials: DifferentialResult[] = [
-    { name: "Hepatitis / acute liver inflammation", score: 4, reasonsFor: [], reasonsAgainst: [] },
+    { name: "Acute hepatitis", score: 4, reasonsFor: [], reasonsAgainst: [] },
     { name: "Acute cholangitis", score: 5, reasonsFor: [], reasonsAgainst: [] },
   ];
 
@@ -169,14 +210,14 @@ test("lab diagnosis modifiers: hepatocellular pattern supports hepatitis when th
   });
   const scored = applyLabDiagnosisModifiers(baseDifferentials, modifiers);
 
-  const hepatitis = scored.find((differential) => differential.name === "Hepatitis / acute liver inflammation");
+  const hepatitis = scored.find((differential) => differential.name === "Acute hepatitis");
   assert.ok(hepatitis);
-  assert.equal(hepatitis.score, 13);
+  assert.equal(hepatitis.score, 18);
   assert.deepEqual(
     modifiers
-      .filter((modifier) => modifier.diagnosis === "Hepatitis / acute liver inflammation")
+      .filter((modifier) => modifier.diagnosis === "Acute hepatitis")
       .map((modifier) => modifier.feature),
-    ["hepatocellular_pattern", "raised_transaminases"],
+    ["hepatocellular_pattern", "raised_transaminases", "raised_bilirubin_hepatocellular"],
   );
   assert.ok(hepatitis.reasonsFor.some((reason) => reason.startsWith("Lab:")));
 });

@@ -43,10 +43,10 @@ export const SUPPORTED_PRESENTATION_BLOCKS: SupportedPresentationBlock[] =
   }));
 
 export const PILOT_GATE_STATUS = {
-  lastUpdated: "2026-06-21",
+  lastUpdated: "2026-08-10",
   testCommand: "npm test",
   testStatus: "passing",
-  testCount: 350,
+  testCount: 515,
   lintCommand: "npm run lint",
   lintStatus: "passing",
   buildCommand: "npm run build",

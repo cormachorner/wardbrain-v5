@@ -445,6 +445,8 @@ export const corePilotBlocks = [
       "Acute cholecystitis",
       "Choledocholithiasis / obstructive jaundice",
       "Biliary colic / gallstone disease",
+      "Acute hepatitis",
+      "Drug-induced liver injury",
       "Primary sclerosing cholangitis",
       "Primary biliary cholangitis"
     ],
@@ -506,6 +508,8 @@ export const corePilotBlocks = [
         "Acute cholecystitis",
         "Choledocholithiasis / obstructive jaundice",
         "Biliary colic / gallstone disease",
+        "Acute hepatitis",
+        "Drug-induced liver injury",
         "Primary sclerosing cholangitis",
         "Primary biliary cholangitis"
       ]

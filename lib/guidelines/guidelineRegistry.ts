@@ -328,6 +328,20 @@ export const GUIDELINE_REGISTRY: GuidelineSource[] = [
       "RUQ pain with jaundice, fever, rigors, or cholestatic symptoms should separate cholangitis/obstruction from uncomplicated biliary colic.",
   },
   {
+    id: "nice-cks-hepatitis",
+    title: "Hepatitis: clinical knowledge summaries",
+    source: "NICE",
+    url: "https://cks.nice.org.uk/topics/hepatitis/",
+    licenceStatus: "Linked source with WardBrain-authored short summary only; no bulk NICE CKS content copied.",
+    status: "external-summary-only",
+    lastReviewed: "2026-08-10",
+    appliesToDiagnosisSlugs: ["acute-hepatitis", "drug-induced-liver-injury"],
+    appliesToRedFlagSlugs: [],
+    presentationBlocks: ["ruq-pain-jaundice"],
+    shortTeachingSummary:
+      "Marked hepatocellular LFT abnormalities with jaundice and systemic symptoms should keep acute hepatitis and medication/toxin-related liver injury visible as non-biliary comparators.",
+  },
+  {
     id: "nice-ng126-ectopic-pregnancy",
     title: "Ectopic pregnancy and miscarriage: diagnosis and initial management",
     source: "NICE",

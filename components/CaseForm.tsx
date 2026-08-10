@@ -1,8 +1,13 @@
 import type { CaseInput } from "../lib/types";
+import { useState } from "react";
+import { mergeLabPanels, parseLabText } from "../lib/input/labTextParser";
+import { parseSmartCaseInput } from "../lib/input/smartCaseInput";
 import type { ReactNode } from "react";
 import { Field, TextArea } from "./WardBrainCard";
 
 type LabPanelKey = "fbc" | "ues" | "lfts" | "abg";
+type InputMode = "structured" | "smart";
+type LabEntryMode = "manual" | "paste";
 
 function FormSection({
   title,
@@ -113,6 +118,80 @@ export function CaseForm({
   onClear: () => void;
   isAnalyzing: boolean;
 }) {
+  const [inputMode, setInputMode] = useState<InputMode>("structured");
+  const [smartInputText, setSmartInputText] = useState("");
+  const [smartInputNotice, setSmartInputNotice] = useState<string | null>(null);
+  const [labEntryMode, setLabEntryMode] = useState<LabEntryMode>("manual");
+  const [labPasteText, setLabPasteText] = useState("");
+  const [labPasteNotice, setLabPasteNotice] = useState<string | null>(null);
+
+  function applyCasePatch(patch: Partial<CaseInput>) {
+    for (const [field, value] of Object.entries(patch) as Array<[keyof CaseInput, CaseInput[keyof CaseInput]]>) {
+      onFieldChange(field, value);
+    }
+  }
+
+  function applySmartInput() {
+    const parsed = parseSmartCaseInput(smartInputText);
+    const patch = {
+      ...parsed.patch,
+      labs: parsed.patch.labs
+        ? {
+            ...mergeLabPanels(caseInput.labs, parsed.patch.labs),
+            sex: parsed.patch.sex === "male" || parsed.patch.sex === "female"
+              ? parsed.patch.sex
+              : caseInput.sex === "male" || caseInput.sex === "female"
+                ? caseInput.sex
+                : caseInput.labs?.sex,
+          }
+        : undefined,
+    };
+
+    if (patch.labs === undefined) {
+      delete patch.labs;
+    }
+
+    applyCasePatch(patch);
+
+    const populatedFields = Object.keys(patch).filter((field) => field !== "labs").length;
+    setSmartInputNotice(
+      `Smart input populated ${populatedFields} field${populatedFields === 1 ? "" : "s"}${
+        parsed.parsedLabCount > 0 ? ` and ${parsed.parsedLabCount} lab value${parsed.parsedLabCount === 1 ? "" : "s"}` : ""
+      }. Please review before analysing.`,
+    );
+  }
+
+  function applyLabPaste() {
+    const parsed = parseLabText(labPasteText, caseInput.labs);
+    const mergedLabs = {
+      ...mergeLabPanels(caseInput.labs, parsed.labs),
+      sex: caseInput.sex === "male" || caseInput.sex === "female" ? caseInput.sex : caseInput.labs?.sex,
+    };
+
+    if (parsed.parsedValues.length > 0) {
+      onFieldChange("labs", mergedLabs);
+    }
+
+    setLabPasteNotice(
+      [
+        parsed.parsedValues.length > 0
+          ? `Parsed ${parsed.parsedValues.length} lab value${parsed.parsedValues.length === 1 ? "" : "s"}. Review the structured fields below before analysing.`
+          : "No supported lab values were confidently parsed.",
+        ...parsed.warnings,
+      ].join(" "),
+    );
+  }
+
+  function handleClear() {
+    setSmartInputText("");
+    setSmartInputNotice(null);
+    setLabPasteText("");
+    setLabPasteNotice(null);
+    setInputMode("structured");
+    setLabEntryMode("manual");
+    onClear();
+  }
+
   function updateLabValue(panel: LabPanelKey, field: string, value: number | undefined) {
     onFieldChange("labs", {
       ...caseInput.labs,
@@ -145,92 +224,130 @@ export function CaseForm({
       </div>
 
       <div className="space-y-3">
-        <FormSection title="Patient">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium">Age</span>
-              <input
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none ring-0 focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
-                value={caseInput.age}
-                onChange={(e) => onFieldChange("age", e.target.value)}
-                placeholder="68"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium">Sex</span>
-              <select
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
-                value={caseInput.sex}
-                onChange={(e) => onFieldChange("sex", e.target.value)}
-              >
-                <option value="">Select</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </label>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Input mode
           </div>
-        </FormSection>
+          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setInputMode("structured")}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                inputMode === "structured" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Structured
+            </button>
+            <button
+              type="button"
+              onClick={() => setInputMode("smart")}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                inputMode === "smart" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Smart input
+            </button>
+          </div>
+        </div>
 
-        <FormSection title="Presentation">
-          <Field
-            label="Presenting complaint"
-            value={caseInput.presentingComplaint}
-            onChange={(v) => onFieldChange("presentingComplaint", v)}
-            placeholder="Tearing chest pain"
-          />
+        {inputMode === "smart" ? (
+          <FormSection
+            title="Smart input"
+            description="Paste the whole case. WardBrain will populate the same structured fields for you to review."
+          >
+            <textarea
+              className="min-h-40 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+              value={smartInputText}
+              onChange={(event) => setSmartInputText(event.target.value)}
+              placeholder="72M with central crushing chest pain radiating to jaw, sweaty and nauseated. PMH HTN and T2DM. HR 105, BP 145/85. Hb 140, WCC 11.2..."
+            />
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={applySmartInput}
+                className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Populate structured fields
+              </button>
+              {smartInputNotice && <span className="text-sm text-slate-600">{smartInputNotice}</span>}
+            </div>
+          </FormSection>
+        ) : (
+          <>
+            <FormSection title="Patient">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium">Age</span>
+                  <input
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none ring-0 focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                    value={caseInput.age}
+                    onChange={(e) => onFieldChange("age", e.target.value)}
+                    placeholder="68"
+                  />
+                </label>
 
-          <TextArea
-            label="History of presenting complaint"
-            value={caseInput.history}
-            onChange={(v) => onFieldChange("history", v)}
-            placeholder="Sudden onset, radiating to the back, collapse..."
-          />
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium">Sex</span>
+                  <select
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                    value={caseInput.sex}
+                    onChange={(e) => onFieldChange("sex", e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </label>
+              </div>
+            </FormSection>
 
-          <TextArea
-            label="Observations"
-            value={caseInput.observations}
-            onChange={(v) => onFieldChange("observations", v)}
-            placeholder="BP, HR, sats, RR..."
-          />
-        </FormSection>
+            <FormSection title="Presentation">
+              <Field
+                label="Presenting complaint"
+                value={caseInput.presentingComplaint}
+                onChange={(v) => onFieldChange("presentingComplaint", v)}
+                placeholder="Tearing chest pain"
+              />
 
-        <FormSection title="Background">
-          <TextArea
-            label="PMH / PSH"
-            value={caseInput.pmh}
-            onChange={(v) => onFieldChange("pmh", v)}
-            placeholder="Untreated hypertension..."
-          />
+              <TextArea
+                label="Clinical narrative / history"
+                value={caseInput.history}
+                onChange={(v) => onFieldChange("history", v)}
+                placeholder="Sudden onset, radiating to the back, collapse..."
+              />
 
-          <TextArea
-            label="Drugs / allergies"
-            value={caseInput.meds}
-            onChange={(v) => onFieldChange("meds", v)}
-            placeholder="Any regular meds, anticoagulation, allergies..."
-          />
+              <TextArea
+                label="Examination / observations"
+                value={caseInput.observations}
+                onChange={(v) => onFieldChange("observations", v)}
+                placeholder="BP, HR, sats, RR, focused exam..."
+              />
+            </FormSection>
 
-          <TextArea
-            label="Social / risk factors"
-            value={caseInput.social}
-            onChange={(v) => onFieldChange("social", v)}
-            placeholder="Smoker, alcohol, independent baseline..."
-          />
+            <FormSection title="Background">
+              <TextArea
+                label="PMH / PSH"
+                value={caseInput.pmh}
+                onChange={(v) => onFieldChange("pmh", v)}
+                placeholder="Untreated hypertension..."
+              />
 
-          <TextArea
-            label="Key positives"
-            value={caseInput.keyPositives}
-            onChange={(v) => onFieldChange("keyPositives", v)}
-            placeholder="Radiates to back, loss of consciousness, pulsatile abdomen..."
-          />
+              <TextArea
+                label="Drugs / allergies"
+                value={caseInput.meds}
+                onChange={(v) => onFieldChange("meds", v)}
+                placeholder="Any regular meds, anticoagulation, allergies..."
+              />
 
-          <TextArea
-            label="Key negatives"
-            value={caseInput.keyNegatives}
-            onChange={(v) => onFieldChange("keyNegatives", v)}
-            placeholder="No fever, no pleuritic pain..."
-          />
-        </FormSection>
+              <TextArea
+                label="Social / risk factors"
+                value={caseInput.social}
+                onChange={(v) => onFieldChange("social", v)}
+                placeholder="Smoker, alcohol, independent baseline..."
+              />
+            </FormSection>
+          </>
+        )}
 
         <FormSection
           title="Investigations"
@@ -242,6 +359,51 @@ export function CaseForm({
             </summary>
 
             <div className="mt-4 space-y-3">
+              <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setLabEntryMode("manual")}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                    labEntryMode === "manual" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:bg-white"
+                  }`}
+                >
+                  Enter manually
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLabEntryMode("paste")}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                    labEntryMode === "paste" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:bg-white"
+                  }`}
+                >
+                  Paste results
+                </button>
+              </div>
+
+              {labEntryMode === "paste" && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <label className="block">
+                    <span className="mb-1 block text-sm font-medium text-slate-800">Paste investigation results</span>
+                    <textarea
+                      className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                      value={labPasteText}
+                      onChange={(event) => setLabPasteText(event.target.value)}
+                      placeholder={"Hb 82\nWCC 14.2\nPlatelets 320\nNa 138\nK 4.6\nUrea 14\nCreatinine 110"}
+                    />
+                  </label>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={applyLabPaste}
+                      className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Parse into structured fields
+                    </button>
+                    {labPasteNotice && <span className="text-sm text-slate-600">{labPasteNotice}</span>}
+                  </div>
+                </div>
+              )}
+
               <LabPanel title="FBC" enteredCount={countEnteredValues(caseInput.labs?.fbc)} defaultOpen>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <LabNumberField label="Hb" unit="g/L" value={caseInput.labs?.fbc?.hb} onChange={(value) => updateLabValue("fbc", "hb", value)} placeholder="82" />
@@ -338,34 +500,50 @@ export function CaseForm({
           </details>
         </FormSection>
 
-        <FormSection
-          title="Your current reasoning"
-          description="Optional. These fields help compare your thinking with WardBrain's output."
-        >
-          <Field
-            label="Lead diagnosis"
-            helper="What do you think is the single most likely diagnosis right now?"
-            value={caseInput.leadDiagnosis ?? ""}
-            onChange={(v) => onFieldChange("leadDiagnosis", v)}
-            placeholder="GORD"
-          />
+        <details className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+            Learning & reflection
+          </summary>
+          <div className="mt-4 space-y-3">
+            <Field
+              label="Lead diagnosis"
+              helper="Optional. What do you think is the single most likely diagnosis right now?"
+              value={caseInput.leadDiagnosis ?? ""}
+              onChange={(v) => onFieldChange("leadDiagnosis", v)}
+              placeholder="GORD"
+            />
 
-          <TextArea
-            label="Other differentials being considered"
-            helper="List other diagnoses you are actively considering."
-            value={caseInput.otherDifferentials ?? ""}
-            onChange={(v) => onFieldChange("otherDifferentials", v)}
-            placeholder="PE, ACS, pneumonia"
-          />
+            <TextArea
+              label="Other differentials being considered"
+              helper="Optional. List other diagnoses you are actively considering."
+              value={caseInput.otherDifferentials ?? ""}
+              onChange={(v) => onFieldChange("otherDifferentials", v)}
+              placeholder="PE, ACS, pneumonia"
+            />
 
-          <TextArea
-            label="Dangerous diagnoses to exclude"
-            helper="Which dangerous or time-critical diagnoses must be ruled out?"
-            value={caseInput.dangerousDiagnoses ?? ""}
-            onChange={(v) => onFieldChange("dangerousDiagnoses", v)}
-            placeholder="Acute aortic syndrome, PE, GI bleed"
-          />
-        </FormSection>
+            <TextArea
+              label="Dangerous diagnoses to exclude"
+              helper="Optional. Which dangerous or time-critical diagnoses must be ruled out?"
+              value={caseInput.dangerousDiagnoses ?? ""}
+              onChange={(v) => onFieldChange("dangerousDiagnoses", v)}
+              placeholder="Acute aortic syndrome, PE, GI bleed"
+            />
+
+            <TextArea
+              label="Key positives"
+              value={caseInput.keyPositives}
+              onChange={(v) => onFieldChange("keyPositives", v)}
+              placeholder="Radiates to back, loss of consciousness, pulsatile abdomen..."
+            />
+
+            <TextArea
+              label="Key negatives"
+              value={caseInput.keyNegatives}
+              onChange={(v) => onFieldChange("keyNegatives", v)}
+              placeholder="No fever, no pleuritic pain..."
+            />
+          </div>
+        </details>
       </div>
 
       <div className="mt-6 flex gap-3">
@@ -380,7 +558,7 @@ export function CaseForm({
         <button
           type="button"
           className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-          onClick={onClear}
+          onClick={handleClear}
         >
           Clear
         </button>

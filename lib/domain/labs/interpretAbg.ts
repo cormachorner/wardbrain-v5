@@ -38,24 +38,57 @@ export function interpretAbg(panel: AbgPanel = {}): LabInterpretationResult {
     result.explanations.push("Lactate is above the educational reference range.");
   }
 
-  if (assessments.ph.status === "low" && assessments.bicarbonate.status === "low") {
+  const hasMetabolicAcidosis =
+    assessments.ph.status === "low" && assessments.bicarbonate.status === "low";
+  const hasRespiratoryAcidosis =
+    assessments.ph.status === "low" && assessments.paco2.status === "high";
+  const hasRespiratoryAlkalosis =
+    assessments.ph.status === "high" && assessments.paco2.status === "low";
+  const hasMetabolicAlkalosis =
+    assessments.ph.status === "high" && assessments.bicarbonate.status === "high";
+
+  if (hasMetabolicAcidosis) {
     addFeature(result.features, "metabolic_acidosis");
+    result.explanations.push("pH is low and bicarbonate is low, supporting a primary metabolic acidosis pattern.");
   }
 
-  if (assessments.ph.status === "low" && assessments.paco2.status === "high") {
+  if (hasRespiratoryAcidosis) {
     addFeature(result.features, "respiratory_acidosis");
+    result.explanations.push("pH is low and PaCO2 is high, supporting a primary respiratory acidosis pattern.");
   }
 
-  if (assessments.ph.status === "high" && assessments.paco2.status === "low") {
+  if (hasRespiratoryAlkalosis) {
     addFeature(result.features, "respiratory_alkalosis");
+    result.explanations.push("pH is high and PaCO2 is low, supporting a primary respiratory alkalosis pattern.");
   }
 
-  if (assessments.ph.status === "high" && assessments.bicarbonate.status === "high") {
+  if (hasMetabolicAlkalosis) {
     addFeature(result.features, "metabolic_alkalosis");
+    result.explanations.push("pH is high and bicarbonate is high, supporting a primary metabolic alkalosis pattern.");
+  }
+
+  if (
+    (hasMetabolicAcidosis && hasRespiratoryAcidosis) ||
+    (hasMetabolicAlkalosis && hasRespiratoryAlkalosis)
+  ) {
+    addFeature(result.features, "possible_mixed_acid_base_disorder");
+    result.explanations.push("Both metabolic and respiratory abnormalities point in the same pH direction, so this may represent a mixed acid-base disorder.");
+  }
+
+  if (
+    assessments.ph.status === "normal" &&
+    assessments.paco2.status !== "normal" &&
+    assessments.paco2.status !== "missing" &&
+    assessments.paco2.status !== "invalid" &&
+    assessments.bicarbonate.status !== "normal" &&
+    assessments.bicarbonate.status !== "missing" &&
+    assessments.bicarbonate.status !== "invalid"
+  ) {
+    addFeature(result.features, "possible_compensated_or_mixed_acid_base_disorder");
+    result.explanations.push("PaCO2 and bicarbonate are both abnormal with a normal pH, which may reflect compensation or mixed acid-base physiology.");
   }
 
   addMissingWarnings(result, Object.values(assessments));
 
   return result;
 }
-

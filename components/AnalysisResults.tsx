@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import {
+  formatLabEvidenceForUser,
+  isLabEvidenceReason,
+  parseLabEvidenceReason,
+} from "../lib/domain/labs/labEvidenceDisplay";
 import type { LabValueAssessment } from "../lib/domain/labs/labTypes";
 import type { AnalyzeCaseResponse } from "../lib/types";
 import { SimpleList } from "./WardBrainCard";
@@ -238,29 +243,16 @@ function WhyItFitsDisclosure({
 }
 
 function isLabReason(reason: string) {
-  return reason.startsWith("Lab:");
+  return isLabEvidenceReason(reason);
 }
 
 function parseLabReason(reason: string) {
-  const match = reason.match(/^Lab:\s*\+(\d+)\s+(.+?)\s+-\s+(.+)$/);
-
-  if (!match) {
-    return {
-      delta: undefined,
-      feature: "Laboratory evidence",
-      explanation: reason.replace(/^Lab:\s*/, ""),
-    };
-  }
-
-  return {
-    delta: match[1],
-    feature: formatSlug(match[2]),
-    explanation: match[3],
-  };
+  return parseLabEvidenceReason(reason);
 }
 
 function LaboratoryEvidence({ reasons }: { reasons: string[] }) {
   const labReasons = reasons.filter(isLabReason).map(parseLabReason);
+  const showInternalWeights = process.env.NODE_ENV !== "production";
 
   if (labReasons.length === 0) {
     return null;
@@ -272,14 +264,14 @@ function LaboratoryEvidence({ reasons }: { reasons: string[] }) {
       <ul className="space-y-1">
         {labReasons.map((reason) => (
           <li key={`${reason.delta}-${reason.feature}-${reason.explanation}`} className="flex gap-2">
-            {reason.delta && (
-              <span className="shrink-0 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-semibold text-sky-900">
-                +{reason.delta}
-              </span>
-            )}
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" aria-hidden="true" />
             <span>
-              <span className="font-medium capitalize">{reason.feature}: </span>
-              {reason.explanation}
+              {formatLabEvidenceForUser(reason)}
+              {showInternalWeights && reason.delta !== undefined && (
+                <span className="ml-2 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-900">
+                  dev +{reason.delta}
+                </span>
+              )}
             </span>
           </li>
         ))}
@@ -429,6 +421,8 @@ function AbgSummary({ abnormalities, features }: { abnormalities: LabValueAssess
     "respiratory_acidosis",
     "respiratory_alkalosis",
     "metabolic_alkalosis",
+    "possible_mixed_acid_base_disorder",
+    "possible_compensated_or_mixed_acid_base_disorder",
     "hypoxaemia",
     "hypercapnia",
     "hypocapnia",
@@ -489,6 +483,8 @@ function LaboratoryResults({ labs }: { labs: NonNullable<AnalyzeCaseResponse["la
     "respiratory_acidosis",
     "respiratory_alkalosis",
     "metabolic_alkalosis",
+    "possible_mixed_acid_base_disorder",
+    "possible_compensated_or_mixed_acid_base_disorder",
     "hypoxaemia",
     "hypercapnia",
     "hypocapnia",
@@ -600,7 +596,13 @@ function LaboratoryResults({ labs }: { labs: NonNullable<AnalyzeCaseResponse["la
   );
 }
 
-export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
+export function AnalysisResults({
+  result,
+  showEducationalReflection = true,
+}: {
+  result: AnalyzeCaseResponse;
+  showEducationalReflection?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const showPresentationDebug = process.env.NODE_ENV !== "production";
   const displayedDetectedFeatures = Array.from(
@@ -649,6 +651,17 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
               reasonsFor={leadClinicalReasons}
               reasonsAgainst={leadDiagnosis.reasonsAgainst}
             />
+          </div>
+        )}
+
+        {!leadDiagnosis && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+            <div className="font-semibold">Insufficient clinical information</div>
+            <p className="mt-1">
+              WardBrain does not have enough clinical support to generate a reliable ranked
+              differential. Add more history, examination findings, observations, and key
+              negatives. Any laboratory safety warnings are still shown below.
+            </p>
           </div>
         )}
 
@@ -725,35 +738,37 @@ export function AnalysisResults({ result }: { result: AnalyzeCaseResponse }) {
         )}
       </Section>
 
-      <Section title="Dangerous diagnoses to exclude / comparison" icon={<Icon name="shield" />}>
-        <div className="space-y-3 text-sm text-slate-700">
-          <p>{result.reasoningComparison.leadAssessment}</p>
-          <p>{result.reasoningComparison.differentialAssessment}</p>
-          <p>{result.reasoningComparison.dangerAssessment}</p>
+      {showEducationalReflection && (
+        <Section title="Dangerous diagnoses to exclude / comparison" icon={<Icon name="shield" />}>
+          <div className="space-y-3 text-sm text-slate-700">
+            <p>{result.reasoningComparison.leadAssessment}</p>
+            <p>{result.reasoningComparison.differentialAssessment}</p>
+            <p>{result.reasoningComparison.dangerAssessment}</p>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="mb-1 text-base font-semibold text-slate-900">
-              {result.fitCheck.label}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="mb-1 text-base font-semibold text-slate-900">
+                {result.fitCheck.label}
+              </div>
+              <p>{result.fitCheck.summary}</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div>
+                  <span className="font-medium">Supporting: </span>
+                  <ChipList items={result.fitCheck.supporting} />
+                </div>
+                <div>
+                  <span className="font-medium">Conflicting: </span>
+                  <ChipList items={result.fitCheck.conflicting} tone="amber" empty="No major conflicts detected" />
+                </div>
+              </div>
             </div>
-            <p>{result.fitCheck.summary}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <div>
-                <span className="font-medium">Supporting: </span>
-                <ChipList items={result.fitCheck.supporting} />
-              </div>
-              <div>
-                <span className="font-medium">Conflicting: </span>
-                <ChipList items={result.fitCheck.conflicting} tone="amber" empty="No major conflicts detected" />
-              </div>
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
+              <span className="font-medium">Anchor warning: </span>
+              {result.anchorWarning}
             </div>
           </div>
-
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950">
-            <span className="font-medium">Anchor warning: </span>
-            {result.anchorWarning}
-          </div>
-        </div>
-      </Section>
+        </Section>
+      )}
 
       <Section title="Uncertainty / missing information" icon={<Icon name="search" />} tone="amber">
         <div className="mb-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium capitalize text-amber-950">
