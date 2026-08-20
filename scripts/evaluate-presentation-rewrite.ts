@@ -8,6 +8,11 @@ import {
   getLlmPresentationConfig,
   type LlmPresentationConfig,
 } from "../lib/llm/config";
+import {
+  assessPresentationQuality,
+  buildPresentationFacts,
+  type PresentationQualityAssessment,
+} from "../lib/llm/presentationFactsBuilder";
 import { rewritePresentationWithLlm } from "../lib/llm/presentationRewrite";
 import type { AnalyzeCaseResponse, CaseInput } from "../lib/types";
 import {
@@ -34,6 +39,8 @@ export type PresentationEvalResult = {
   wordCount: number;
   topDiagnosisMentioned: boolean;
   redFlagsMentionedWhenPresent: boolean;
+  quality: PresentationQualityAssessment;
+  qualityScore: number;
 };
 
 export type PresentationEvalAggregate = {
@@ -44,6 +51,8 @@ export type PresentationEvalAggregate = {
   fallbackReasons: Record<string, number>;
   unsupportedDiagnosisTerms: Record<string, number>;
   averageWordCount: number;
+  qualityPassRates: Record<keyof PresentationQualityAssessment, number>;
+  averageQualityScore: number;
 };
 
 function buildInput(testCase: BulkEvalCase): CaseInput {
@@ -125,9 +134,14 @@ function redFlagsMentioned(presentation: string, analysis: AnalyzeCaseResponse) 
 function createMockPresentationClient(): LlmCompletionClient {
   return {
     async completeJson(prompt) {
-      const topDiagnosis = prompt.match(/^Top diagnosis: (.*)$/m)?.[1]?.trim() || "undifferentiated pathology";
-      const top3 = prompt.match(/^Top 3 differentials: (.*)$/m)?.[1]?.trim() || "none";
-      const redFlags = prompt.match(/^Red flags: (.*)$/m)?.[1]?.trim() || "none";
+      const payloadText = prompt.match(/^Curated clinical payload: (.*)$/m)?.[1] ?? "{}";
+      const payload = JSON.parse(payloadText) as {
+        allowed_diagnoses?: string[];
+        red_flags?: Array<{ name: string }>;
+      };
+      const topDiagnosis = payload.allowed_diagnoses?.[0] ?? "undifferentiated pathology";
+      const top3 = payload.allowed_diagnoses?.join(", ") || "none";
+      const redFlags = payload.red_flags?.map((flag) => flag.name).join(", ") || "none";
       const redFlagText = redFlags === "none"
         ? "No specific red-flag pattern is currently highlighted."
         : `Red flags include ${redFlags}.`;
@@ -160,11 +174,13 @@ export async function evaluatePresentationCase(
     client?: LlmCompletionClient;
   },
 ): Promise<PresentationEvalResult> {
-  const analysis = analyzeCase(buildInput(testCase));
+  const input = buildInput(testCase);
+  const analysis = analyzeCase(input);
   const config = options.config ?? (options.liveLlm ? getLlmPresentationConfig() : mockPresentationConfig());
   const client = options.client ?? (options.liveLlm ? openAiLlmCompletionClient : createMockPresentationClient());
   const rewrite = await rewritePresentationWithLlm({
     analysis,
+    input,
     config,
     client,
   });
@@ -172,6 +188,11 @@ export async function evaluatePresentationCase(
   const evaluatedPresentation = metadata.llmPresentationUsed
     ? rewrite.presentation
     : analysis.presentation;
+  const quality = assessPresentationQuality(
+    evaluatedPresentation,
+    buildPresentationFacts(input, analysis),
+  );
+  const qualityScore = Object.values(quality).filter(Boolean).length;
 
   return {
     id: testCase.id,
@@ -195,6 +216,8 @@ export async function evaluatePresentationCase(
     wordCount: wordCount(evaluatedPresentation),
     topDiagnosisMentioned: topDiagnosisMentioned(evaluatedPresentation, analysis),
     redFlagsMentionedWhenPresent: redFlagsMentioned(evaluatedPresentation, analysis),
+    quality,
+    qualityScore,
   };
 }
 
@@ -211,6 +234,31 @@ export function summarizePresentationEval(
 ): PresentationEvalAggregate {
   const fallbackReasons: Record<string, number> = {};
   const unsupportedDiagnosisTerms: Record<string, number> = {};
+  const qualityKeys: Array<keyof PresentationQualityAssessment> = [
+    "compression",
+    "prioritisation",
+    "naturalLanguage",
+    "clinicalFlow",
+    "noHallucinations",
+    "noRepetition",
+    "spokenReadability",
+    "noUnsupportedDiagnosisMentions",
+    "noLiteralUncertaintyLabels",
+    "noGenericManagementFiller",
+    "noTemporalDistortion",
+    "noDuplicatedComorbidityLabels",
+    "requiredDiscriminativeFeaturesRetained",
+    "noTopThreeDifferentialListing",
+    "notOverlyTemplated",
+  ];
+  const qualityPassRates = Object.fromEntries(
+    qualityKeys.map((key) => [
+      key,
+      results.length > 0
+        ? results.filter((result) => result.quality[key]).length / results.length
+        : 0,
+    ]),
+  ) as Record<keyof PresentationQualityAssessment, number>;
 
   for (const result of results) {
     increment(fallbackReasons, result.fallbackReason);
@@ -228,12 +276,32 @@ export function summarizePresentationEval(
       results.length > 0
         ? results.reduce((sum, result) => sum + result.wordCount, 0) / results.length
         : 0,
+    qualityPassRates,
+    averageQualityScore:
+      results.length > 0
+        ? results.reduce((sum, result) => sum + result.qualityScore, 0) / results.length
+        : 0,
   };
 }
 
 function csvEscape(value: unknown) {
   const stringValue = Array.isArray(value) ? value.join(";") : String(value ?? "");
   return `"${stringValue.replaceAll('"', '""')}"`;
+}
+
+function presentationEvalCsvValue(
+  result: PresentationEvalResult,
+  column: string,
+) {
+  if (column === "top3Differentials") {
+    return result.top3Differentials.map((differential) => `${differential.slug}:${differential.name}`);
+  }
+
+  if (column in result.quality) {
+    return result.quality[column as keyof PresentationQualityAssessment];
+  }
+
+  return result[column as keyof PresentationEvalResult];
 }
 
 export function presentationEvalToCsv(results: readonly PresentationEvalResult[]) {
@@ -253,18 +321,28 @@ export function presentationEvalToCsv(results: readonly PresentationEvalResult[]
     "wordCount",
     "topDiagnosisMentioned",
     "redFlagsMentionedWhenPresent",
+    "qualityScore",
+    "compression",
+    "prioritisation",
+    "naturalLanguage",
+    "clinicalFlow",
+    "noHallucinations",
+    "noRepetition",
+    "spokenReadability",
+    "noUnsupportedDiagnosisMentions",
+    "noLiteralUncertaintyLabels",
+    "noGenericManagementFiller",
+    "noTemporalDistortion",
+    "noDuplicatedComorbidityLabels",
+    "requiredDiscriminativeFeaturesRetained",
+    "noTopThreeDifferentialListing",
+    "notOverlyTemplated",
   ] as const;
 
   return [
     columns.join(","),
     ...results.map((result) =>
-      columns.map((column) => {
-        const value = column === "top3Differentials"
-          ? result.top3Differentials.map((differential) => `${differential.slug}:${differential.name}`)
-          : result[column];
-
-        return csvEscape(value);
-      }).join(","),
+      columns.map((column) => csvEscape(presentationEvalCsvValue(result, column))).join(","),
     ),
   ].join("\n");
 }
@@ -288,6 +366,7 @@ function printCase(result: PresentationEvalResult) {
       result.fallbackReason ? `fallback=${result.fallbackReason}` : "fallback=none",
       result.unsupportedDiagnosisTerm ? `unsupported=${result.unsupportedDiagnosisTerm}` : "",
       `words=${result.wordCount}`,
+      `quality=${result.qualityScore}/${Object.keys(result.quality).length}`,
     ].filter(Boolean).join(" | "),
   );
 }
@@ -348,6 +427,12 @@ async function main() {
   console.log(`Fallback reasons: ${formatGroupedCounts(aggregate.fallbackReasons)}`);
   console.log(`Unsupported diagnosis terms: ${formatGroupedCounts(aggregate.unsupportedDiagnosisTerms)}`);
   console.log(`Average word count: ${Math.round(aggregate.averageWordCount)}`);
+  console.log(`Average quality score: ${aggregate.averageQualityScore.toFixed(1)}/15`);
+  console.log(
+    `Quality pass rates: ${Object.entries(aggregate.qualityPassRates)
+      .map(([key, value]) => `${key}=${Math.round(value * 100)}%`)
+      .join(", ")}`,
+  );
   console.log("\nWrote reports/presentation-eval-results.json");
   console.log("Wrote reports/presentation-eval-results.csv");
 }

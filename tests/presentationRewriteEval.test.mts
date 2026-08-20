@@ -48,7 +48,7 @@ test("presentation eval counts accepted mock rewrite as used", async () => {
     liveLlm: true,
     config: enabledPresentationConfig,
     client: mockClient(
-      "This is a 58-year-old man with central chest pain, sweating, nausea and jaw radiation. The leading concern is ACS, with PE and acute aortic syndrome considered. The ACS red flag pattern is present and registrar review is needed.",
+      "A 58-year-old man presents with central chest pain, sweating, nausea and jaw radiation. The leading concern is ACS, with the ACS red flag pattern present.",
     ),
   });
   const summary = summarizePresentationEval([result]);
@@ -89,17 +89,19 @@ test("presentation eval counts too-long fallback", async () => {
   assert.equal(summary.fallbackReasons.too_long, 1);
 });
 
-test("presentation eval counts missing-red-flag fallback", async () => {
+test("presentation eval records rubric scores for accepted rewrites", async () => {
   const result = await evaluatePresentationCase(acsCase, {
     liveLlm: true,
     config: enabledPresentationConfig,
     client: mockClient(
-      "This is a 58-year-old man with central chest pain. The leading concern is ACS.",
+      "A 58-year-old man presents with central chest pain, sweating, nausea and jaw radiation on a background of hypertension. Overall this is most in keeping with ACS, with the ACS red flag pattern represented.",
     ),
   });
   const summary = summarizePresentationEval([result]);
 
-  assert.equal(result.used, false);
-  assert.equal(result.fallbackReason, "missing_red_flag");
-  assert.equal(summary.fallbackReasons.missing_red_flag, 1);
+  assert.equal(result.used, true);
+  assert.equal(result.fallbackReason, undefined);
+  assert.ok(result.qualityScore >= 6);
+  assert.equal(summary.averageQualityScore, result.qualityScore);
+  assert.equal(summary.qualityPassRates.noHallucinations, 1);
 });

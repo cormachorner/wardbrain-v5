@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { shouldSuppressDifferentialDisplay } from "../lib/application/differentialDisplay";
 import {
   formatLabEvidenceForUser,
   isLabEvidenceReason,
@@ -615,6 +616,7 @@ export function AnalysisResults({
   );
   const leadDiagnosis = result.differentials[0];
   const leadClinicalReasons = leadDiagnosis?.reasonsFor.filter((reason) => !isLabReason(reason)) ?? [];
+  const insufficientDifferentialSupport = shouldSuppressDifferentialDisplay(result);
 
   async function copyPresentation() {
     try {
@@ -629,7 +631,16 @@ export function AnalysisResults({
   return (
     <section className="space-y-4">
       <Section title="Most likely diagnosis / ranked differentials" icon={<Icon name="brain" />} tone="primary">
-        {leadDiagnosis && (
+        {insufficientDifferentialSupport ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+            <div className="font-semibold">Insufficient clinical information</div>
+            <p className="mt-1">
+              Insufficient clinical information to generate a reliable differential.
+              Add more history, examination findings, observations, and key negatives.
+              Any laboratory safety warnings are still shown below.
+            </p>
+          </div>
+        ) : leadDiagnosis ? (
           <div className="mb-4 rounded-2xl border border-[var(--brand-border)] bg-slate-50 p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Most likely
@@ -652,9 +663,7 @@ export function AnalysisResults({
               reasonsAgainst={leadDiagnosis.reasonsAgainst}
             />
           </div>
-        )}
-
-        {!leadDiagnosis && (
+        ) : (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
             <div className="font-semibold">Insufficient clinical information</div>
             <p className="mt-1">
@@ -665,7 +674,7 @@ export function AnalysisResults({
           </div>
         )}
 
-        {result.differentials.length > 1 ? (
+        {!insufficientDifferentialSupport && result.differentials.length > 1 ? (
           <ol className="space-y-2">
             {result.differentials.slice(1).map((dx, index) => (
               <li
@@ -696,9 +705,9 @@ export function AnalysisResults({
               </li>
             ))}
           </ol>
-        ) : (
+        ) : !insufficientDifferentialSupport ? (
           <p className="text-sm text-slate-500">No additional ranked differentials met the current display threshold.</p>
-        )}
+        ) : null}
       </Section>
 
       <Section title="Red-flag pattern detection" icon={<Icon name="alert" />} tone="danger">
@@ -812,9 +821,30 @@ export function AnalysisResults({
               Presentation source: {result.llmPresentation.presentationSource}
               {" · "}Attempted: {result.llmPresentation.llmPresentationAttempted ? "yes" : "no"}
               {" · "}Used: {result.llmPresentation.llmPresentationUsed ? "yes" : "no"}
+              {" · "}Repair: {result.llmPresentation.llmPresentationRepairAttempted ? "yes" : "no"}
+              {result.llmPresentation.llmPresentationOriginalFailureReason
+                ? ` · Original failure: ${result.llmPresentation.llmPresentationOriginalFailureReason}${
+                    result.llmPresentation.llmPresentationOriginalFailureTrigger
+                      ? ` (${result.llmPresentation.llmPresentationOriginalFailureTrigger})`
+                      : ""
+                  }`
+                : ""}
               {" · "}Fallback: {result.llmPresentation.llmPresentationFallbackReason ?? "none"}
               {result.llmPresentation.llmPresentationFallbackTrigger
                 ? ` (${result.llmPresentation.llmPresentationFallbackTrigger})`
+                : ""}
+              {result.llmPresentation.llmPresentationOriginalOutput
+                ? ` · Original output: ${result.llmPresentation.llmPresentationOriginalOutput}`
+                : ""}
+              {result.llmPresentation.llmPresentationRepairedOutput
+                ? ` · Repaired output: ${result.llmPresentation.llmPresentationRepairedOutput}`
+                : ""}
+              {result.llmPresentation.llmPresentationRepairedFailureReason
+                ? ` · Repaired failure: ${result.llmPresentation.llmPresentationRepairedFailureReason}${
+                    result.llmPresentation.llmPresentationRepairedFailureTrigger
+                      ? ` (${result.llmPresentation.llmPresentationRepairedFailureTrigger})`
+                      : ""
+                  }`
                 : ""}
             </p>
           ) : null}

@@ -38,6 +38,10 @@ import type { LlmCompletionClient } from "../llm/client";
 import type { LlmExtractionConfig, LlmPresentationConfig } from "../llm/config";
 import { mergeLlmFeatures } from "../llm/mergeFeatures";
 import {
+  buildPresentationFacts,
+  renderDeterministicPresentationFromFacts,
+} from "../llm/presentationFactsBuilder";
+import {
   rewritePresentationWithLlm,
   type LlmPresentationRewriteMetadata,
 } from "../llm/presentationRewrite";
@@ -928,7 +932,7 @@ function analyzeValidatedCaseWithFeatures(
     corePilotBlocks,
     displayedDifferentials.map((differential) => differential.name),
   );
-  return {
+  const analysis: AnalyzeCaseResponse = {
     problemRepresentation,
     redFlags,
     differentials: displayedDifferentials,
@@ -946,6 +950,13 @@ function analyzeValidatedCaseWithFeatures(
     detectedFeatureSlugs: features.matchedFeatures,
     detectedFeatures: features.matchedFeatures.map(formatFeatureLabel),
     matchedPresentationBlock: matchedPresentationBlock ?? null,
+  };
+
+  return {
+    ...analysis,
+    presentation: renderDeterministicPresentationFromFacts(
+      buildPresentationFacts(validatedInput, analysis),
+    ),
   };
 }
 
@@ -1025,6 +1036,7 @@ export async function analyzeCaseWithOptionalLlmPresentation(
   });
   const rewrite = await rewritePresentationWithLlm({
     analysis,
+    input,
     config: options.llmPresentationConfig,
     client: options.llmPresentationClient,
   });

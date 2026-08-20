@@ -184,7 +184,14 @@ export type AnalyzeCaseResponse = AnalysisResult & {
   llmPresentation?: {
     llmPresentationAttempted: boolean;
     llmPresentationUsed: boolean;
-    presentationSource: "deterministic" | "llm" | "fallback";
+    presentationSource: "deterministic" | "llm" | "llm_repair" | "fallback";
+    llmPresentationRepairAttempted?: boolean;
+    llmPresentationOriginalOutput?: string;
+    llmPresentationOriginalFailureReason?: string;
+    llmPresentationOriginalFailureTrigger?: string;
+    llmPresentationRepairedOutput?: string;
+    llmPresentationRepairedFailureReason?: string;
+    llmPresentationRepairedFailureTrigger?: string;
     llmPresentationFallbackReason?: string;
     llmPresentationFallbackTrigger?: string;
   };

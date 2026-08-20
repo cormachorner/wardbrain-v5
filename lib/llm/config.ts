@@ -6,6 +6,7 @@ export type LlmExtractionConfig = {
   apiKey?: string;
   confidenceThreshold: number;
   timeoutMs: number;
+  temperature?: number;
   skipReason?: string;
 };
 
@@ -17,6 +18,7 @@ type EnvLike = Record<string, string | undefined>;
 
 const DEFAULT_CONFIDENCE_THRESHOLD = 0.8;
 const DEFAULT_TIMEOUT_MS = 4_000;
+const DEFAULT_PRESENTATION_TEMPERATURE = 0.75;
 
 function parseNumber(value: string | undefined, fallback: number) {
   if (!value) {
@@ -110,10 +112,15 @@ export function getLlmPresentationConfig(
 ): LlmPresentationConfig {
   const extractionConfig = getLlmExtractionConfig(env);
   const presentationEnabled = env.WARDBRAIN_LLM_PRESENTATION_ENABLED === "1";
+  const temperature = parseNumber(
+    env.WARDBRAIN_LLM_PRESENTATION_TEMPERATURE,
+    DEFAULT_PRESENTATION_TEMPERATURE,
+  );
 
   if (!presentationEnabled) {
     return {
       ...extractionConfig,
+      temperature,
       presentationEnabled,
       usable: false,
       skipReason: "presentation_disabled",
@@ -122,6 +129,7 @@ export function getLlmPresentationConfig(
 
   return {
     ...extractionConfig,
+    temperature,
     presentationEnabled,
   };
 }

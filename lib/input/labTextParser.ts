@@ -24,6 +24,20 @@ type LabAlias = {
   patterns: RegExp[];
 };
 
+const SUBSCRIPT_TRANSLITERATION: Record<string, string> = {
+  "₀": "0",
+  "₁": "1",
+  "₂": "2",
+  "₃": "3",
+  "₄": "4",
+  "₅": "5",
+  "₆": "6",
+  "₇": "7",
+  "₈": "8",
+  "₉": "9",
+  "⁻": "-",
+};
+
 const LAB_ALIASES: LabAlias[] = [
   { panel: "fbc", field: "hb", label: "Hb", patterns: [/\bhb\b/i, /\bha?emoglobin\b/i] },
   { panel: "fbc", field: "wcc", label: "WCC", patterns: [/\bwcc\b/i, /\bwhite\s*(cell|blood)\s*count\b/i] },
@@ -58,15 +72,21 @@ const LAB_ALIASES: LabAlias[] = [
   { panel: "lfts", field: "bilirubin", label: "Bilirubin", patterns: [/\bbilirubin\b/i, /\bbili\b/i] },
   { panel: "lfts", field: "ggt", label: "GGT", patterns: [/\bggt\b/i] },
   { panel: "abg", field: "ph", label: "pH", patterns: [/\bph\b/i] },
-  { panel: "abg", field: "pao2", label: "PaO2", patterns: [/\bpao2\b/i, /\bpa\s*o2\b/i] },
-  { panel: "abg", field: "paco2", label: "PaCO2", patterns: [/\bpaco2\b/i, /\bpa\s*co2\b/i] },
-  { panel: "abg", field: "bicarbonate", label: "HCO3", patterns: [/\bhco3\b/i, /\bhco3-\b/i] },
+  { panel: "abg", field: "pao2", label: "PaO2", patterns: [/\bpao2\b/i, /\bpa\s*o2\b/i, /\bpo2\b/i, /\bp\s*o2\b/i] },
+  { panel: "abg", field: "paco2", label: "PaCO2", patterns: [/\bpaco2\b/i, /\bpa\s*co2\b/i, /\bpco2\b/i, /\bp\s*co2\b/i] },
+  { panel: "abg", field: "bicarbonate", label: "HCO3", patterns: [/\bhco3-?(?=\s|:|$)/i, /\bbicarb(?:onate)?\b/i] },
   { panel: "abg", field: "baseExcess", label: "Base excess", patterns: [/\bbe\b/i, /\bbase\s*excess\b/i] },
-  { panel: "abg", field: "lactate", label: "Lactate", patterns: [/\blactate\b/i] },
+  { panel: "abg", field: "lactate", label: "Lactate", patterns: [/\blactate\b/i, /\blac\b/i] },
 ];
 
-function splitRows(text: string): string[] {
+function normaliseLabText(text: string) {
   return text
+    .replace(/[₀₁₂₃₄₅₆₇₈₉⁻]/g, (char) => SUBSCRIPT_TRANSLITERATION[char] ?? char)
+    .replace(/[−–—]/g, "-");
+}
+
+function splitRows(text: string): string[] {
+  return normaliseLabText(text)
     .replaceAll("→", " ")
     .replaceAll("↑", " ")
     .replaceAll("↓", " ")
@@ -75,8 +95,26 @@ function splitRows(text: string): string[] {
     .filter(Boolean);
 }
 
-function findAlias(line: string): { alias: LabAlias; valueSearchText: string } | undefined {
-  for (const alias of LAB_ALIASES) {
+function isPanelHeader(row: string): LabPanelKey | undefined {
+  if (/\b(?:abg|arterial\s+blood\s+gas)\b/i.test(row)) return "abg";
+  if (/\b(?:fbc|full\s+blood\s+count)\b/i.test(row)) return "fbc";
+  if (/\b(?:u\s*&?\s*e|u\s*and\s*e|urea\s+and\s+electrolytes)\b/i.test(row)) return "ues";
+  if (/\b(?:lfts?|liver\s+function)\b/i.test(row)) return "lfts";
+
+  return undefined;
+}
+
+function orderedAliases(panelHint: LabPanelKey | undefined) {
+  return panelHint
+    ? [
+        ...LAB_ALIASES.filter((alias) => alias.panel === panelHint),
+        ...LAB_ALIASES.filter((alias) => alias.panel !== panelHint),
+      ]
+    : LAB_ALIASES;
+}
+
+function findAlias(line: string, panelHint?: LabPanelKey): { alias: LabAlias; valueSearchText: string } | undefined {
+  for (const alias of orderedAliases(panelHint)) {
     for (const pattern of alias.patterns) {
       const match = line.match(pattern);
 
@@ -102,6 +140,42 @@ function parseNumber(line: string): number | undefined {
   const value = Number(match[0]);
 
   return Number.isFinite(value) ? value : undefined;
+}
+
+function parseFio2Value(rawValue: string, percentMarker?: string): number | undefined {
+  const value = Number(rawValue);
+
+  if (!Number.isFinite(value)) {
+    return undefined;
+  }
+
+  if (percentMarker || value > 1) {
+    return value / 100;
+  }
+
+  return value;
+}
+
+function parseAbgOxygenContext(text: string): Pick<NonNullable<LabPanels["abg"]>, "oxygenContext" | "fio2"> {
+  const normalised = normaliseLabText(text);
+  const abg: Pick<NonNullable<LabPanels["abg"]>, "oxygenContext" | "fio2"> = {};
+
+  if (/\broom\s+air\b/i.test(normalised)) {
+    abg.oxygenContext = "room_air";
+  }
+
+  const fio2Matches = [...normalised.matchAll(/\bfio2\s*:?\s*([+]?\d+(?:\.\d+)?)\s*(%)?/gi)];
+  const fio2Values = fio2Matches
+    .map((match) => parseFio2Value(match[1], match[2]))
+    .filter((value): value is number => value !== undefined);
+  const uniqueFio2Values = [...new Set(fio2Values)];
+
+  if (uniqueFio2Values.length === 1) {
+    abg.fio2 = uniqueFio2Values[0];
+    abg.oxygenContext = abg.fio2 === 0.21 ? "room_air" : "supplemental_oxygen";
+  }
+
+  return abg;
 }
 
 function canonicalFieldKey(value: Pick<ParsedLabValue, "panel" | "field">): string {
@@ -135,17 +209,27 @@ export function mergeLabPanels(existing: LabPanels | undefined, incoming: LabPan
 
 export function parseLabText(text: string, existingLabs?: LabPanels): LabTextParseResult {
   const labs: LabPanels = {};
+  const oxygenContext = parseAbgOxygenContext(text);
   const candidateValues: ParsedLabValue[] = [];
   const parsedValues: ParsedLabValue[] = [];
   const unparsedLines: string[] = [];
   const warnings: string[] = [];
+  let currentPanel: LabPanelKey | undefined;
 
   for (const row of splitRows(text)) {
-    const aliasMatch = findAlias(row);
+    const panelHeader = isPanelHeader(row);
+
+    if (panelHeader) {
+      currentPanel = panelHeader;
+    }
+
+    const aliasMatch = findAlias(row, currentPanel);
     const value = aliasMatch ? parseNumber(aliasMatch.valueSearchText) : undefined;
 
     if (!aliasMatch || value === undefined) {
-      unparsedLines.push(row);
+      if (!panelHeader) {
+        unparsedLines.push(row);
+      }
       continue;
     }
 
@@ -187,6 +271,36 @@ export function parseLabText(text: string, existingLabs?: LabPanels): LabTextPar
 
     setLabValue(labs, firstValue);
     parsedValues.push(firstValue);
+  }
+
+  if (oxygenContext.oxygenContext) {
+    const existingOxygenContext = existingLabs?.abg?.oxygenContext;
+
+    if (existingOxygenContext && existingOxygenContext !== oxygenContext.oxygenContext) {
+      warnings.push(
+        `Conflicting ABG oxygen context detected: pasted ${oxygenContext.oxygenContext} differs from existing ${existingOxygenContext}. Existing value preserved.`,
+      );
+    } else {
+      labs.abg = {
+        ...(labs.abg ?? {}),
+        oxygenContext: oxygenContext.oxygenContext,
+      };
+    }
+  }
+
+  if (oxygenContext.fio2 !== undefined) {
+    const existingFio2 = existingLabs?.abg?.fio2;
+
+    if (existingFio2 !== undefined && existingFio2 !== oxygenContext.fio2) {
+      warnings.push(
+        `Conflicting FiO2 value detected: pasted ${oxygenContext.fio2} differs from existing ${existingFio2}. Existing value preserved.`,
+      );
+    } else {
+      labs.abg = {
+        ...(labs.abg ?? {}),
+        fio2: oxygenContext.fio2,
+      };
+    }
   }
 
   return {

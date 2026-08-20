@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { analyzeCase } from "../lib/application/analyzeCase.js";
 import { formatLabEvidenceForUser, parseLabEvidenceReason } from "../lib/domain/labs/labEvidenceDisplay.js";
 import { parseLabText } from "../lib/input/labTextParser.js";
 import { parseSmartCaseInput } from "../lib/input/smartCaseInput.js";
@@ -124,6 +125,147 @@ test("lab paste parser rejects pasted values that conflict with existing manual 
   assert.equal(result.labs.fbc?.hb, undefined);
   assert.equal(result.labs.fbc?.wcc, 15);
   assert.ok(result.warnings.some((warning) => warning.includes("pasted 110 differs from existing 82")));
+});
+
+test("lab paste parser handles full ABG block with numeric values", () => {
+  const result = parseLabText(`
+ABG (Room Air)
+
+pH 7.18
+PaCO2 3.1 kPa
+PaO2 11.8 kPa
+HCO3 10 mmol/L
+BE -14
+Lactate 4.8 mmol/L
+`);
+
+  assert.equal(result.labs.abg?.ph, 7.18);
+  assert.equal(result.labs.abg?.paco2, 3.1);
+  assert.equal(result.labs.abg?.pao2, 11.8);
+  assert.equal(result.labs.abg?.bicarbonate, 10);
+  assert.equal(result.labs.abg?.baseExcess, -14);
+  assert.equal(result.labs.abg?.lactate, 4.8);
+  assert.equal(result.labs.abg?.oxygenContext, "room_air");
+});
+
+test("lab paste parser handles unicode, units and colon-separated ABG labels", () => {
+  const result = parseLabText(`
+pH: 7.28
+FiO₂: 28%
+PaCO₂: 8.8 kPa
+PaO₂: 7.4 kPa
+HCO₃⁻: 34 mmol/L
+Base excess: +5 mmol/L
+Lactate: 2.1 mmol/L
+`);
+
+  assert.equal(result.labs.abg?.ph, 7.28);
+  assert.equal(result.labs.abg?.paco2, 8.8);
+  assert.equal(result.labs.abg?.pao2, 7.4);
+  assert.equal(result.labs.abg?.bicarbonate, 34);
+  assert.equal(result.labs.abg?.baseExcess, 5);
+  assert.equal(result.labs.abg?.lactate, 2.1);
+  assert.equal(result.labs.abg?.oxygenContext, "supplemental_oxygen");
+  assert.equal(result.labs.abg?.fio2, 0.28);
+});
+
+test("lab paste parser handles compact tabular ABG labels", () => {
+  const result = parseLabText([
+    "pH\t7.28",
+    "pCO2\t8.8\tkPa",
+    "pO2\t7.4\tkPa",
+    "HCO3\t34\tmmol/L",
+    "BE\t+5\tmmol/L",
+    "Lac\t2.1\tmmol/L",
+  ].join("\n"));
+
+  assert.equal(result.labs.abg?.ph, 7.28);
+  assert.equal(result.labs.abg?.paco2, 8.8);
+  assert.equal(result.labs.abg?.pao2, 7.4);
+  assert.equal(result.labs.abg?.bicarbonate, 34);
+  assert.equal(result.labs.abg?.baseExcess, 5);
+  assert.equal(result.labs.abg?.lactate, 2.1);
+});
+
+test("lab paste parser handles partial ABG and preserves negative base excess", () => {
+  const result = parseLabText(`
+pH 7.31
+BE -14
+`);
+
+  assert.equal(result.labs.abg?.ph, 7.31);
+  assert.equal(result.labs.abg?.baseExcess, -14);
+  assert.equal(result.labs.abg?.paco2, undefined);
+});
+
+test("lab paste parser accepts identical ABG duplicate aliases once", () => {
+  const result = parseLabText(`
+PaCO2 8.8
+PaCO₂ 8.8
+`);
+
+  assert.equal(result.labs.abg?.paco2, 8.8);
+  assert.equal(result.parsedValues.filter((value) => value.field === "paco2").length, 1);
+  assert.deepEqual(result.warnings, []);
+});
+
+test("lab paste parser rejects conflicting duplicate ABG aliases", () => {
+  const result = parseLabText(`
+PaCO2 8.8
+PaCO₂ 6.2
+`);
+
+  assert.equal(result.labs.abg?.paco2, undefined);
+  assert.equal(result.parsedValues.filter((value) => value.field === "paco2").length, 0);
+  assert.ok(result.warnings.some((warning) => warning.includes("Conflicting PaCO2 values detected: 8.8 and 6.2")));
+});
+
+test("lab paste parser preserves manual ABG value on conflict", () => {
+  const result = parseLabText("PaCO2 8.8\npH 7.28", { abg: { paco2: 6 } });
+
+  assert.equal(result.labs.abg?.paco2, undefined);
+  assert.equal(result.labs.abg?.ph, 7.28);
+  assert.ok(result.warnings.some((warning) => warning.includes("pasted 8.8 differs from existing 6")));
+});
+
+test("lab paste parser preserves manual ABG FiO2 value on conflict", () => {
+  const result = parseLabText("FiO2 0.28\nPaO2 8.8", { abg: { fio2: 0.4 } });
+
+  assert.equal(result.labs.abg?.fio2, undefined);
+  assert.equal(result.labs.abg?.pao2, 8.8);
+  assert.ok(result.warnings.some((warning) => warning.includes("pasted 0.28 differs from existing 0.4")));
+});
+
+test("pasted ABG values feed existing deterministic ABG interpretation", () => {
+  const parsed = parseLabText(`
+pH 7.18
+PaCO2 3.1 kPa
+PaO2 11.8 kPa
+HCO3 10 mmol/L
+BE -14
+Lactate 4.8 mmol/L
+`);
+  const result = analyzeCase({
+    age: "21",
+    sex: "female",
+    presentingComplaint: "Vomiting",
+    history: "Type 1 diabetes with vomiting, abdominal pain, polyuria, polydipsia and Kussmaul breathing.",
+    pmh: "Type 1 diabetes",
+    meds: "",
+    social: "",
+    keyPositives: "",
+    keyNegatives: "",
+    observations: "",
+    leadDiagnosis: "",
+    otherDifferentials: "",
+    dangerousDiagnoses: "",
+    labs: parsed.labs,
+  });
+
+  assert.ok(result.labs?.features.includes("metabolic_acidosis"));
+  assert.ok(result.labs?.features.includes("raised_lactate"));
+  assert.ok(result.labs?.safetyWarnings.some((warning) => warning.id === "severe-acidaemia"));
+  assert.ok(result.labDiagnosisModifiers?.some((modifier) => modifier.diagnosis === "Diabetic ketoacidosis"));
 });
 
 test("smart input parser populates structured case fields without bypassing the schema", () => {

@@ -18,6 +18,7 @@ export const openAiLlmCompletionClient: LlmCompletionClient = {
       },
       body: JSON.stringify({
         model: config.model,
+        ...(config.temperature !== undefined ? { temperature: config.temperature } : {}),
         text: {
           format: { type: "json_object" },
         },
