@@ -84,12 +84,14 @@ export function Field({
   value,
   onChange,
   placeholder,
+  required = false,
 }: {
   label: string;
   helper?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <label className="mt-3 block">
@@ -100,6 +102,7 @@ export function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        aria-required={required || undefined}
       />
     </label>
   );

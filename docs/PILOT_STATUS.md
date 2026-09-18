@@ -1,6 +1,6 @@
 # WardBrain Pilot Status
 
-Last updated: 2026-06-21
+Last updated: 2026-09-01
 
 WardBrain is an educational clinical-reasoning tool for de-identified practice cases. It is not clinical decision support.
 
@@ -96,3 +96,25 @@ WardBrain is an educational clinical-reasoning tool for de-identified practice c
 - Red flags now expose the triggering feature slugs.
 - Top ranked diagnoses now include support/against traces.
 - Analysis now includes an uncertainty layer with missing discriminating information.
+
+## Pilot UX Readiness Audit - 2026-09-01
+
+### Before
+
+- First-time users landed on structured entry, which required more manual form completion before they saw value.
+- Required fields were enforced by the API, but the form did not clearly block analysis until age, sex, and presenting complaint were present.
+- Loading and empty-result states were functional but did not strongly reinforce education-only/de-identified pilot use.
+- Ranked differentials exposed raw internal scores in the primary UI, which could read as false precision or confusing low-score output.
+- Mobile layout worked, but dense cards and horizontal result rows were harder to scan on small screens.
+
+### After
+
+- Case entry now defaults to paste-first smart input, while preserving structured review before analysis.
+- The form shows pilot guidance, highlights required fields, disables analysis until required fields are present, and disables parse/clear controls during analysis.
+- Loading, error, and empty output states are clearer and framed around educational, de-identified practice cases.
+- Differential ranking still uses the same deterministic logic, but the visible UI now describes evidence strength rather than raw scores. Internal scores remain available in development-only scoring detail.
+- Card padding and result header layout have been tightened for mobile readability.
+
+### Scope Guardrail
+
+No deterministic clinical scoring, red-flag logic, lab interpretation, presentation block matching, or LLM extraction logic was changed in this pass.

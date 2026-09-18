@@ -16,6 +16,13 @@ function formatSlug(value: string) {
   return value.replaceAll("_", " ").replaceAll("-", " ");
 }
 
+function evidenceStrength(score: number) {
+  if (score >= 10) return "Strong support";
+  if (score >= 7) return "Good support";
+  if (score >= 4) return "Some support";
+  return "Early signal";
+}
+
 function Icon({
   name,
   className = "h-4 w-4",
@@ -130,18 +137,20 @@ function Section({
   actions?: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const canCollapse = !defaultOpen;
   const toneClasses = {
     default: "border-slate-200 bg-white",
-    danger: "border-red-200 bg-white",
+    danger: "border-red-300 border-l-4 bg-white",
     amber: "border-amber-200 bg-white",
     secondary: "border-slate-200 bg-slate-50",
     primary: "border-[var(--brand-border)] bg-white",
   };
 
   return (
-    <section className={`rounded-2xl border p-5 shadow-sm transition-colors hover:border-slate-300 ${toneClasses[tone]}`}>
+    <section className={`rounded-2xl border p-4 shadow-sm transition-colors hover:border-slate-300 sm:p-5 ${toneClasses[tone]}`}>
       <div className="flex items-start justify-between gap-3">
-        <button
+        <h3 className="min-w-0 flex-1">
+        {canCollapse ? <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((current) => !current)}
@@ -152,10 +161,11 @@ function Section({
           <span className="ml-1 text-slate-400 group-hover:text-slate-600">
             <Chevron open={open} />
           </span>
-        </button>
+        </button> : <span className="flex items-center gap-2 text-xl font-semibold text-slate-950">{icon}{title}</span>}
+        </h3>
         {actions}
       </div>
-      {open && <div className="mt-3">{children}</div>}
+      {(!canCollapse || open) && <div className="mt-3">{children}</div>}
     </section>
   );
 }
@@ -205,40 +215,12 @@ function ChipList({
   );
 }
 
-function WhyItFitsDisclosure({
-  reasonsFor,
-  reasonsAgainst,
-}: {
-  reasonsFor: string[];
-  reasonsAgainst: string[];
-}) {
-  const [open, setOpen] = useState(false);
-
+function DiagnosisEvidence({ reasonsFor, reasonsAgainst }: { reasonsFor: string[]; reasonsAgainst: string[] }) {
   return (
-    <div className="mt-2 text-sm text-slate-700">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-        className="inline-flex items-center gap-1 rounded-lg text-sm font-medium text-slate-600 outline-none hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-[var(--brand-navy)] focus-visible:ring-offset-2"
-      >
-        Why it fits
-        <Chevron open={open} />
-      </button>
-      {open && (
-        <div className="mt-2 space-y-1 rounded-xl border border-slate-100 bg-slate-50 p-3">
-          <div>
-            <span className="font-medium">Why it fits: </span>
-            {reasonsFor.length > 0 ? reasonsFor.join(", ") : "Limited support"}
-          </div>
-          {reasonsAgainst.length > 0 && (
-            <div>
-              <span className="font-medium">Why against: </span>
-              {reasonsAgainst.join(", ")}
-            </div>
-          )}
-        </div>
-      )}
+    <div className="mt-3 space-y-3 text-sm text-slate-700">
+      <SimpleList title="Why it fits · supporting features" items={reasonsFor} />
+      {reasonsFor.length === 0 && <p>Limited clinical support in the details provided.</p>}
+      <SimpleList title="Features arguing against it" items={reasonsAgainst} />
     </div>
   );
 }
@@ -318,6 +300,12 @@ function DiagnosisTraceDisclosure({
             <div>
               <span className="font-medium">Composite/rule support: </span>
               <ChipList items={clinicalOtherReasons} />
+            </div>
+          )}
+          {process.env.NODE_ENV !== "production" && (
+            <div>
+              <span className="font-medium">Internal score: </span>
+              {trace.score}
             </div>
           )}
           <LaboratoryEvidence reasons={labReasons} />
@@ -502,19 +490,15 @@ function LaboratoryResults({ labs }: { labs: NonNullable<AnalyzeCaseResponse["la
   return (
     <Section title="Laboratory results" icon={<Icon name="info" />}>
       <div className="space-y-4 text-sm text-slate-700">
-        {labs.safetyWarnings.length > 0 && (
+        {labs.safetyWarnings.some((warning) => warning.severity !== "urgent") && (
           <div className="space-y-2">
-            {labs.safetyWarnings.map((warning) => (
+            {labs.safetyWarnings.filter((warning) => warning.severity !== "urgent").map((warning) => (
               <div
                 key={warning.id}
-                className={
-                  warning.severity === "urgent"
-                    ? "rounded-xl border border-red-200 bg-red-50 p-3 text-red-950"
-                    : "rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950"
-                }
+                className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950"
               >
                 <div className="text-xs font-semibold uppercase tracking-wide">
-                  {warning.severity === "urgent" ? "Urgent laboratory abnormality" : "Laboratory safety warning"}
+                  Laboratory safety warning
                 </div>
                 <div className="mt-1 font-semibold">{warning.title}</div>
                 <div className="mt-1">{warning.explanation}</div>
@@ -605,6 +589,7 @@ export function AnalysisResults({
   showEducationalReflection?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const showPresentationDebug = process.env.NODE_ENV !== "production";
   const displayedDetectedFeatures = Array.from(
     new Map(
@@ -620,97 +605,24 @@ export function AnalysisResults({
 
   async function copyPresentation() {
     try {
+      setCopyError(false);
       await navigator.clipboard.writeText(result.presentation);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
+      setCopyError(true);
       setCopied(false);
     }
   }
 
   return (
-    <section className="space-y-4">
-      <Section title="Most likely diagnosis / ranked differentials" icon={<Icon name="brain" />} tone="primary">
-        {insufficientDifferentialSupport ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            <div className="font-semibold">Insufficient clinical information</div>
-            <p className="mt-1">
-              Insufficient clinical information to generate a reliable differential.
-              Add more history, examination findings, observations, and key negatives.
-              Any laboratory safety warnings are still shown below.
-            </p>
-          </div>
-        ) : leadDiagnosis ? (
-          <div className="mb-4 rounded-2xl border border-[var(--brand-border)] bg-slate-50 p-4">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Most likely
-            </div>
-            <div className="mt-1 flex flex-wrap items-baseline justify-between gap-3">
-              <div className="text-2xl font-bold tracking-tight text-[var(--brand-navy)]">
-                {leadDiagnosis.name}
-              </div>
-              <div className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-medium text-slate-600">
-                Score {leadDiagnosis.score}
-              </div>
-            </div>
-            <div className="mt-3 text-sm text-slate-700">
-              <span className="font-medium">Key support: </span>
-              <ChipList items={leadClinicalReasons} />
-            </div>
-            <LaboratoryEvidence reasons={leadDiagnosis.reasonsFor} />
-            <WhyItFitsDisclosure
-              reasonsFor={leadClinicalReasons}
-              reasonsAgainst={leadDiagnosis.reasonsAgainst}
-            />
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            <div className="font-semibold">Insufficient clinical information</div>
-            <p className="mt-1">
-              WardBrain does not have enough clinical support to generate a reliable ranked
-              differential. Add more history, examination findings, observations, and key
-              negatives. Any laboratory safety warnings are still shown below.
-            </p>
-          </div>
-        )}
-
-        {!insufficientDifferentialSupport && result.differentials.length > 1 ? (
-          <ol className="space-y-2">
-            {result.differentials.slice(1).map((dx, index) => (
-              <li
-                key={dx.name}
-                className="rounded-xl border border-slate-200 bg-white/70 p-3 transition-colors hover:border-slate-300"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="font-semibold">
-                    {index + 2}. {dx.name}
-                  </div>
-                  <div className="text-sm text-slate-500">Score {dx.score}</div>
-                </div>
-
-                <div className="mt-2 text-sm text-slate-700">
-                  <span className="font-medium">Key support: </span>
-                  <ChipList items={dx.reasonsFor.filter((reason) => !isLabReason(reason))} empty="Limited support" />
-                </div>
-
-                <LaboratoryEvidence reasons={dx.reasonsFor} />
-                <WhyItFitsDisclosure
-                  reasonsFor={dx.reasonsFor.filter((reason) => !isLabReason(reason))}
-                  reasonsAgainst={dx.reasonsAgainst}
-                />
-
-                {result.diagnosisTraces[index + 1] && (
-                  <DiagnosisTraceDisclosure trace={result.diagnosisTraces[index + 1]} />
-                )}
-              </li>
-            ))}
-          </ol>
-        ) : !insufficientDifferentialSupport ? (
-          <p className="text-sm text-slate-500">No additional ranked differentials met the current display threshold.</p>
-        ) : null}
-      </Section>
-
-      <Section title="Red-flag pattern detection" icon={<Icon name="alert" />} tone="danger">
+    <section className="min-w-0 space-y-4 break-words">
+      <div>
+        <h2 className="text-2xl font-semibold">Explore the reasoning</h2>
+        <p className="mt-1 text-sm text-slate-600">Ranked possibilities for discussion, not a confirmed diagnosis. Support reflects the supplied case details, not a probability.</p>
+      </div>
+      {result.presentationSupport.warning && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">{result.presentationSupport.warning}</p>}
+      <Section title="Must-not-miss / red flags" icon={<Icon name="alert" />} tone={result.redFlags.length || result.labs?.safetyWarnings.some((warning) => warning.severity === "urgent") ? "danger" : "secondary"}>
         {result.redFlags.length > 0 ? (
           <ul className="space-y-2">
             {result.redFlags.map((flag) => (
@@ -736,19 +648,166 @@ export function AnalysisResults({
                 {flag.triggeredFeatures && flag.triggeredFeatures.length > 0 && (
                   <div className="mt-2 text-sm text-red-900">
                     <span className="font-medium">Triggered by: </span>
-                    <ChipList items={flag.triggeredFeatures.map(formatSlug)} tone="red" />
+                    <ChipList items={flag.triggeredFeatures.map(formatSlug)} tone="red" limit={Infinity} />
                   </div>
                 )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-slate-600">No major red-flag override pattern detected yet.</p>
+          <p className="text-slate-600">No red-flag pattern was detected in the supplied details. This does not exclude serious illness.</p>
         )}
+        {!insufficientDifferentialSupport && result.reasoningComparison.dangerAssessment !== "You have not entered any dangerous diagnoses to exclude yet." && (
+          <p className="mt-3 text-sm font-medium text-slate-800">{result.reasoningComparison.dangerAssessment}</p>
+        )}
+        {result.labs?.safetyWarnings.filter((warning) => warning.severity === "urgent").map((warning) => (
+          <div key={warning.id} className="mt-3 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-950">
+            <h4 className="font-semibold">Urgent laboratory finding: {warning.title}</h4>
+            <p className="mt-1">{warning.explanation}</p>
+            <p className="mt-1">{warning.triggerValues.map((value) => `${value.test} ${value.value} ${value.unit} (${value.threshold})`).join(" · ")}</p>
+            {warning.recommendedNextStep && <p className="mt-2 font-medium">{warning.recommendedNextStep}</p>}
+          </div>
+        ))}
       </Section>
 
+
+      <Section title="Most likely diagnoses" icon={<Icon name="brain" />} tone="primary">
+        {insufficientDifferentialSupport ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+            <div className="font-semibold">Insufficient clinical information</div>
+            <p className="mt-1">
+              Insufficient clinical information to generate a reliable differential.
+              Add more history, examination findings, observations, and key negatives.
+              Laboratory safety warnings remain visible in these results.
+            </p>
+          </div>
+        ) : leadDiagnosis ? (
+          <div className="mb-4 rounded-2xl border border-[var(--brand-border)] bg-slate-50 p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Leading possibility
+            </div>
+            <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
+              <div className="text-2xl font-bold tracking-tight text-[var(--brand-navy)]">
+                {leadDiagnosis.name}
+              </div>
+              <div className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-medium text-slate-600">
+                {evidenceStrength(leadDiagnosis.score)}
+              </div>
+            </div>
+            <LaboratoryEvidence reasons={leadDiagnosis.reasonsFor} />
+            <DiagnosisEvidence
+              reasonsFor={leadClinicalReasons}
+              reasonsAgainst={leadDiagnosis.reasonsAgainst}
+            />
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+            <div className="font-semibold">Insufficient clinical information</div>
+            <p className="mt-1">
+              WardBrain does not have enough clinical support to generate a reliable ranked
+              differential. Add more history, examination findings, observations, and key
+              negatives. Laboratory safety warnings remain visible in these results.
+            </p>
+          </div>
+        )}
+
+        {!insufficientDifferentialSupport && result.differentials.length > 1 ? (
+          <ol start={2} className="space-y-2">
+            {result.differentials.slice(1).map((dx, index) => (
+              <li
+                key={dx.name}
+                className="rounded-xl border border-slate-200 bg-white/70 p-3 transition-colors hover:border-slate-300"
+              >
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                  <div className="font-semibold">
+                    {index + 2}. {dx.name}
+                  </div>
+                  <div className="shrink-0 text-sm text-slate-500">{evidenceStrength(dx.score)}</div>
+                </div>
+
+                <LaboratoryEvidence reasons={dx.reasonsFor} />
+                <DiagnosisEvidence
+                  reasonsFor={dx.reasonsFor.filter((reason) => !isLabReason(reason))}
+                  reasonsAgainst={dx.reasonsAgainst}
+                />
+
+                {result.diagnosisTraces[index + 1] && (
+                  <DiagnosisTraceDisclosure trace={result.diagnosisTraces[index + 1]} />
+                )}
+              </li>
+            ))}
+          </ol>
+        ) : !insufficientDifferentialSupport ? (
+          <p className="text-sm text-slate-500">No additional ranked differentials met the current display threshold.</p>
+        ) : null}
+      </Section>
+
+
+      <Section title="What should I ask or check next?" icon={<Icon name="search" />} tone="amber">
+        <div className="mb-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium capitalize text-amber-950">
+          {result.uncertainty.level} uncertainty
+        </div>
+        <p className="text-slate-700">{result.uncertainty.summary}</p>
+
+        <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+          <SimpleList title="Why" items={result.uncertainty.reasons} />
+          <SimpleList
+            title="Ask or check next"
+            items={result.uncertainty.missingInformation}
+          />
+        </div>
+      </Section>
+
+      {result.nextSteps && (
+        <Section title="Investigations and next steps" icon={<Icon name="info" />}>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-semibold text-slate-900">{result.nextSteps.diagnosis}</div>
+
+            {result.nextSteps.sourceBody && result.nextSteps.sourceId && (
+              <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs font-medium text-slate-800">
+                {result.nextSteps.sourceBody} {result.nextSteps.sourceId}
+              </span>
+            )}
+
+            {result.nextSteps.sourceCoverage && (
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
+                coverage: {result.nextSteps.sourceCoverage}
+              </span>
+            )}
+          </div>
+
+          {result.nextSteps.investigations.length > 0 && (
+            <div className="mt-3">
+              <div className="mb-1 text-sm font-medium text-slate-900">Investigations</div>
+              <ul className="space-y-1 text-sm text-slate-700">
+                {result.nextSteps.investigations.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.nextSteps.immediateNextSteps.length > 0 && (
+            <div className="mt-3">
+              <div className="mb-1 text-sm font-medium text-slate-900">Immediate next steps</div>
+              <ul className="space-y-1 text-sm text-slate-700">
+                {result.nextSteps.immediateNextSteps.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.nextSteps.notes.length > 0 && (
+            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              {result.nextSteps.notes.join(" ")}
+            </div>
+          )}
+        </Section>
+      )}
+
       {showEducationalReflection && (
-        <Section title="Dangerous diagnoses to exclude / comparison" icon={<Icon name="shield" />}>
+        <Section title="Reflect on your reasoning" icon={<Icon name="shield" />}>
           <div className="space-y-3 text-sm text-slate-700">
             <p>{result.reasoningComparison.leadAssessment}</p>
             <p>{result.reasoningComparison.differentialAssessment}</p>
@@ -779,20 +838,6 @@ export function AnalysisResults({
         </Section>
       )}
 
-      <Section title="Uncertainty / missing information" icon={<Icon name="search" />} tone="amber">
-        <div className="mb-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium capitalize text-amber-950">
-          {result.uncertainty.level} uncertainty
-        </div>
-        <p className="text-slate-700">{result.uncertainty.summary}</p>
-
-        <div className="mt-3 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
-          <SimpleList title="Why" items={result.uncertainty.reasons} />
-          <SimpleList
-            title="Missing information that would help"
-            items={result.uncertainty.missingInformation}
-          />
-        </div>
-      </Section>
 
       <Section
         title="Present to the reg"
@@ -809,6 +854,8 @@ export function AnalysisResults({
           </button>
         }
       >
+        <p role="status" className="mb-2 text-sm text-slate-600">{copyError ? "Copy was unavailable. Select the summary text below to copy it manually." : copied ? "Presentation copied." : ""}</p>
+        {result.llmPresentation?.presentationSource === "fallback" && <p className="mb-3 text-sm text-slate-600">Showing the standard case summary because the optional wording enhancement was unavailable. The reasoning results are unchanged.</p>}
         <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
           <span className="font-medium">Problem representation: </span>
           {result.problemRepresentation}
@@ -957,55 +1004,8 @@ export function AnalysisResults({
         </div>
       </Section>
 
-      {result.nextSteps && (
-        <Section title="Investigations and immediate next steps" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="font-semibold text-slate-900">{result.nextSteps.diagnosis}</div>
 
-            {result.nextSteps.sourceBody && result.nextSteps.sourceId && (
-              <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs font-medium text-slate-800">
-                {result.nextSteps.sourceBody} {result.nextSteps.sourceId}
-              </span>
-            )}
-
-            {result.nextSteps.sourceCoverage && (
-              <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">
-                coverage: {result.nextSteps.sourceCoverage}
-              </span>
-            )}
-          </div>
-
-          {result.nextSteps.investigations.length > 0 && (
-            <div className="mt-3">
-              <div className="mb-1 text-sm font-medium text-slate-900">Investigations</div>
-              <ul className="space-y-1 text-sm text-slate-700">
-                {result.nextSteps.investigations.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {result.nextSteps.immediateNextSteps.length > 0 && (
-            <div className="mt-3">
-              <div className="mb-1 text-sm font-medium text-slate-900">Immediate next steps</div>
-              <ul className="space-y-1 text-sm text-slate-700">
-                {result.nextSteps.immediateNextSteps.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {result.nextSteps.notes.length > 0 && (
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-              {result.nextSteps.notes.join(" ")}
-            </div>
-          )}
-        </Section>
-      )}
-
-      <Section title="Presentation teaching scaffold" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
+      <Section title="Teaching points for this presentation" icon={<Icon name="info" />} defaultOpen={false} tone="secondary">
         {result.matchedPresentationBlock ? (
           <div className="space-y-4">
             <p className="text-sm text-slate-600">

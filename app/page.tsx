@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react"
 import { AnalysisResults } from "../components/AnalysisResults";
 import { WardBrainLogo } from "../components/brand/WardBrainLogo";
@@ -46,13 +46,19 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const resultsRegion = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (result || error || isAnalyzing) resultsRegion.current?.focus();
+  }, [result, error, isAnalyzing]);
+
   // Redirect to sign-in if not authenticated
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-[var(--brand-navy)]"></div>
+          <p className="mt-4 font-medium text-slate-700">Opening WardBrain...</p>
+          <p className="mt-1 text-sm text-slate-500">Educational cases only. No identifiable patient data.</p>
         </div>
       </div>
     )
@@ -60,7 +66,7 @@ export default function Home() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="mx-auto max-w-xl px-6 text-center">
           <WardBrainLogo size="lg" className="justify-center" />
           <p className="mt-5 text-xl text-slate-600">A clinical reasoning coach for medical students</p>
@@ -95,11 +101,15 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(caseInput),
+        signal: AbortSignal.timeout(60000),
       });
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? "WardBrain could not analyze this case.");
+        throw new Error(response.status === 401
+          ? "Your session has expired. Sign in again to continue."
+          : response.status === 400
+            ? "Check the required case details and any laboratory values, then try again."
+            : "WardBrain could not complete the analysis. Your case is still here; please try again.");
       }
 
       const nextResult = (await response.json()) as AnalyzeCaseResponse;
@@ -110,9 +120,9 @@ export default function Home() {
       setSubmittedCase(null);
       setResult(null);
       setError(
-        caughtError instanceof Error
+        caughtError instanceof Error && caughtError.name === "Error"
           ? caughtError.message
-          : "WardBrain could not analyze this case.",
+          : "The connection was interrupted or took too long. Your case is still here; please try again.",
       );
     } finally {
       setIsAnalyzing(false);
@@ -127,19 +137,18 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+    <main className="pilot-workspace min-h-screen bg-slate-50 text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:py-10">
         <header className="mb-8">
-          <div className="flex flex-col gap-6 rounded-3xl border border-[var(--brand-border)] bg-white/80 p-5 shadow-sm md:flex-row md:items-start md:justify-between md:p-6">
+          <div className="flex flex-col gap-6 rounded-2xl border border-[var(--brand-border)] bg-white/80 p-4 shadow-sm md:flex-row md:items-start md:justify-between md:p-6">
             <div>
               <WardBrainLogo size="md" />
+              <h1 className="sr-only">WardBrain clinical reasoning practice</h1>
               <p className="mt-4 max-w-3xl text-slate-600">
-                A clinical reasoning coach for medical students that detects anchoring,
-                surfaces dangerous differentials, and helps turn a messy case into a safer,
-                sharper presentation.
+                Practise clinical reasoning: organise a case, compare possibilities and learn what to ask next.
               </p>
               <div className="mt-4 inline-flex rounded-full border border-[var(--brand-border)] bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-                Educational use only • De-identified cases only
+                Pilot mode: educational use only • de-identified cases only
               </div>
               <details className="mt-2 text-xs text-slate-500">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 font-medium text-slate-600 hover:bg-slate-50">
@@ -194,21 +203,28 @@ export default function Home() {
             isAnalyzing={isAnalyzing}
           />
 
-          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
+          <div ref={resultsRegion} tabIndex={-1} aria-label="Case analysis" className="min-w-0 scroll-mt-4 rounded-2xl">
             {error && (
-              <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                {error}
+              <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900" role="alert">
+                <div className="font-semibold">Analysis did not run</div>
+                <p className="mt-1">{error}</p>
               </div>
             )}
 
             {isAnalyzing && (
-              <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm">
+              <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm" role="status">
                 <div className="font-semibold text-slate-900">Analysing case...</div>
                 <p className="mt-1">WardBrain is extracting features, checking red flags, and ranking differentials.</p>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full w-1/2 animate-pulse rounded-full bg-[var(--brand-navy)]" />
+                </div>
               </div>
             )}
 
-            {submittedCase && result ? (
+            {!isAnalyzing && submittedCase && result && JSON.stringify(caseInput) !== JSON.stringify(submittedCase) && (
+              <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">You have edited the case. These results are from your previous analysis; select Analyse case to update them.</p>
+            )}
+            {!isAnalyzing && submittedCase && result ? (
               <AnalysisResults
                 result={result}
                 showEducationalReflection={hasLearningReflectionInput(submittedCase)}
@@ -217,11 +233,16 @@ export default function Home() {
 
             {!isAnalyzing && !submittedCase && !result && !error && (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-600">
-                <div className="text-lg font-semibold text-slate-900">Enter a case to begin</div>
+                <div className="text-lg font-semibold text-slate-900">Your analysis will appear here</div>
                 <p className="mt-2">
-                  Add the presentation, observations, and your current reasoning on the left.
-                  WardBrain will show ranked differentials, red flags, uncertainty, and a reg-ready presentation here.
+                  Paste a de-identified practice case, organise and review the details,
+                  then analyse. WardBrain will show differentials, red-flag patterns,
+                  uncertainty, labs, and a presentation summary here.
                 </p>
+                <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-blue-950">
+                  <div className="font-semibold">Minimum to start</div>
+                  <p className="mt-1">Age, sex, and presenting complaint. More detail improves the teaching output.</p>
+                </div>
               </div>
             )}
           </div>

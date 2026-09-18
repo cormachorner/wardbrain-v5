@@ -1,5 +1,5 @@
 import type { CaseInput } from "../lib/types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { mergeLabPanels, parseLabText } from "../lib/input/labTextParser";
 import { parseSmartCaseInput } from "../lib/input/smartCaseInput";
 import type { ReactNode } from "react";
@@ -8,6 +8,12 @@ import { Field, TextArea } from "./WardBrainCard";
 type LabPanelKey = "fbc" | "ues" | "lfts" | "abg";
 type InputMode = "structured" | "smart";
 type LabEntryMode = "manual" | "paste";
+
+const requiredFields = [
+  { field: "age", label: "Age" },
+  { field: "sex", label: "Sex" },
+  { field: "presentingComplaint", label: "Presenting complaint" },
+] as const;
 
 function FormSection({
   title,
@@ -48,7 +54,7 @@ function LabNumberField({
     <label className="block">
       <span className="mb-1 flex items-baseline justify-between gap-2 text-xs font-medium text-slate-700">
         <span>{label}</span>
-        {unit && <span className="font-normal text-slate-400">{unit}</span>}
+        {unit && <span className="font-normal text-slate-500">{unit}</span>}
       </span>
       <input
         type="number"
@@ -57,7 +63,7 @@ function LabNumberField({
         className={`w-full rounded-lg border px-2.5 py-2 text-base outline-none transition-colors focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10 sm:text-sm ${
           hasValue
             ? "border-[var(--brand-border)] bg-slate-50 text-slate-950"
-            : "border-slate-300 bg-white text-slate-900 placeholder:text-slate-300"
+            : "border-slate-300 bg-white text-slate-900 placeholder:text-slate-500"
         }`}
         value={value ?? ""}
         onChange={(event) => {
@@ -118,12 +124,17 @@ export function CaseForm({
   onClear: () => void;
   isAnalyzing: boolean;
 }) {
-  const [inputMode, setInputMode] = useState<InputMode>("structured");
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const [inputMode, setInputMode] = useState<InputMode>("smart");
   const [smartInputText, setSmartInputText] = useState("");
   const [smartInputNotice, setSmartInputNotice] = useState<string | null>(null);
   const [labEntryMode, setLabEntryMode] = useState<LabEntryMode>("manual");
   const [labPasteText, setLabPasteText] = useState("");
   const [labPasteNotice, setLabPasteNotice] = useState<string | null>(null);
+  const missingRequiredFields = requiredFields.filter(({ field }) => !caseInput[field].trim());
+  const canAnalyse = missingRequiredFields.length === 0 && inputMode === "structured" && !isAnalyzing;
+  const canApplySmartInput = smartInputText.trim().length > 0 && !isAnalyzing;
+  const canApplyLabPaste = labPasteText.trim().length > 0 && !isAnalyzing;
 
   function applyCasePatch(patch: Partial<CaseInput>) {
     for (const [field, value] of Object.entries(patch) as Array<[keyof CaseInput, CaseInput[keyof CaseInput]]>) {
@@ -152,12 +163,14 @@ export function CaseForm({
     }
 
     applyCasePatch(patch);
+    setInputMode("structured");
+    requestAnimationFrame(() => reviewHeading.current?.focus());
 
     const populatedFields = Object.keys(patch).filter((field) => field !== "labs").length;
     setSmartInputNotice(
-      `Smart input populated ${populatedFields} field${populatedFields === 1 ? "" : "s"}${
+      `Added ${populatedFields} field${populatedFields === 1 ? "" : "s"}${
         parsed.parsedLabCount > 0 ? ` and ${parsed.parsedLabCount} lab value${parsed.parsedLabCount === 1 ? "" : "s"}` : ""
-      }. Please review before analysing.`,
+      }. Check the details below, especially anything the parser missed, before analysing.`,
     );
   }
 
@@ -187,7 +200,7 @@ export function CaseForm({
     setSmartInputNotice(null);
     setLabPasteText("");
     setLabPasteNotice(null);
-    setInputMode("structured");
+    setInputMode("smart");
     setLabEntryMode("manual");
     onClear();
   }
@@ -215,74 +228,87 @@ export function CaseForm({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-busy={isAnalyzing}>
       <div className="mb-4">
-        <h2 className="text-2xl font-semibold">Case input</h2>
+        <h2 className="text-2xl font-semibold">Enter a practice case</h2>
         <p className="mt-0.5 text-sm text-slate-600">
-          Add the messy case details. WardBrain will keep the payload exactly as entered.
+          Paste your case notes or enter the details yourself. Rough notes, abbreviations and bullet points are welcome.
         </p>
+        <p className="mt-2 text-sm text-slate-600">Use de-identified education cases only. Start with age, sex and the presenting problem; leave unknown optional details blank.</p>
       </div>
 
-      <div className="space-y-3">
+      <fieldset disabled={isAnalyzing} className="min-w-0 space-y-3">
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Input mode
+            1. Add your case
           </div>
-          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1">
+          <div className="inline-flex flex-wrap rounded-xl border border-slate-200 bg-white p-1">
             <button
               type="button"
+              aria-pressed={inputMode === "structured"}
               onClick={() => setInputMode("structured")}
+              disabled={isAnalyzing}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 inputMode === "structured" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
               }`}
             >
-              Structured
+              Enter details
             </button>
             <button
               type="button"
+              aria-pressed={inputMode === "smart"}
               onClick={() => setInputMode("smart")}
+              disabled={isAnalyzing}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 inputMode === "smart" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
               }`}
             >
-              Smart input
+              Paste case notes
             </button>
           </div>
         </div>
 
         {inputMode === "smart" ? (
           <FormSection
-            title="Smart input"
-            description="Paste the whole case. WardBrain will populate the same structured fields for you to review."
+            title="Paste your case notes"
+            description="Include age, sex and the presenting problem. Then select Organise and review to check the extracted details."
           >
             <textarea
-              className="min-h-40 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+              aria-label="Case notes"
+              className="min-h-40 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10 sm:text-sm"
               value={smartInputText}
               onChange={(event) => setSmartInputText(event.target.value)}
               placeholder="72M with central crushing chest pain radiating to jaw, sweaty and nauseated. PMH HTN and T2DM. HR 105, BP 145/85. Hb 140, WCC 11.2..."
+              disabled={isAnalyzing}
             />
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={applySmartInput}
-                className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                disabled={!canApplySmartInput}
+                className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Populate structured fields
+                Organise and review
               </button>
-              {smartInputNotice && <span className="text-sm text-slate-600">{smartInputNotice}</span>}
+
             </div>
           </FormSection>
         ) : (
           <>
-            <FormSection title="Patient">
+            <h3 ref={reviewHeading} tabIndex={-1} className="text-lg font-semibold">2. Review case details</h3>
+            {smartInputNotice && <p role="status" className="rounded-xl bg-blue-50 p-3 text-sm text-blue-950">{smartInputNotice}</p>}
+            <FormSection title="Patient · required">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-sm font-medium">Age</span>
                   <input
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none ring-0 focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
                     value={caseInput.age}
                     onChange={(e) => onFieldChange("age", e.target.value)}
-                    placeholder="68"
+                    placeholder="e.g. 68"
+                    inputMode="numeric"
+                    aria-required="true"
+
                   />
                 </label>
 
@@ -292,6 +318,7 @@ export function CaseForm({
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
                     value={caseInput.sex}
                     onChange={(e) => onFieldChange("sex", e.target.value)}
+                    aria-required="true"
                   >
                     <option value="">Select</option>
                     <option value="male">Male</option>
@@ -304,9 +331,11 @@ export function CaseForm({
             <FormSection title="Presentation">
               <Field
                 label="Presenting complaint"
+                helper="Required. A short presenting problem is enough."
                 value={caseInput.presentingComplaint}
                 onChange={(v) => onFieldChange("presentingComplaint", v)}
                 placeholder="Tearing chest pain"
+                required
               />
 
               <TextArea
@@ -326,14 +355,14 @@ export function CaseForm({
 
             <FormSection title="Background">
               <TextArea
-                label="PMH / PSH"
+                label="Past medical / surgical history"
                 value={caseInput.pmh}
                 onChange={(v) => onFieldChange("pmh", v)}
                 placeholder="Untreated hypertension..."
               />
 
               <TextArea
-                label="Drugs / allergies"
+                label="Medications / allergies"
                 value={caseInput.meds}
                 onChange={(v) => onFieldChange("meds", v)}
                 placeholder="Any regular meds, anticoagulation, allergies..."
@@ -351,7 +380,7 @@ export function CaseForm({
 
         <FormSection
           title="Investigations"
-          description="Optional. Lab interpretation and any lab-supported scoring are labelled separately from clinical findings."
+          description="Optional. Add values you have, using the units shown. Leave unmeasured tests blank."
         >
           <details className="rounded-xl border border-slate-200 bg-white p-3">
             <summary className="cursor-pointer text-sm font-semibold text-slate-800">
@@ -359,9 +388,10 @@ export function CaseForm({
             </summary>
 
             <div className="mt-4 space-y-3">
-              <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <div className="inline-flex flex-wrap rounded-xl border border-slate-200 bg-slate-50 p-1">
                 <button
                   type="button"
+                  aria-pressed={labEntryMode === "manual"}
                   onClick={() => setLabEntryMode("manual")}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                     labEntryMode === "manual" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:bg-white"
@@ -371,6 +401,7 @@ export function CaseForm({
                 </button>
                 <button
                   type="button"
+                  aria-pressed={labEntryMode === "paste"}
                   onClick={() => setLabEntryMode("paste")}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                     labEntryMode === "paste" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:bg-white"
@@ -385,27 +416,29 @@ export function CaseForm({
                   <label className="block">
                     <span className="mb-1 block text-sm font-medium text-slate-800">Paste investigation results</span>
                     <textarea
-                      className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10"
+                      className="min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10 sm:text-sm"
                       value={labPasteText}
                       onChange={(event) => setLabPasteText(event.target.value)}
                       placeholder={"Hb 82\nWCC 14.2\nPlatelets 320\nNa 138\nK 4.6\nUrea 14\nCreatinine 110"}
+                      disabled={isAnalyzing}
                     />
                   </label>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={applyLabPaste}
-                      className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      disabled={!canApplyLabPaste}
+                      className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Parse into structured fields
                     </button>
-                    {labPasteNotice && <span className="text-sm text-slate-600">{labPasteNotice}</span>}
+                    {labPasteNotice && <span role="status" className="text-sm text-slate-600">{labPasteNotice}</span>}
                   </div>
                 </div>
               )}
 
               <LabPanel title="FBC" enteredCount={countEnteredValues(caseInput.labs?.fbc)} defaultOpen>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                   <LabNumberField label="Hb" unit="g/L" value={caseInput.labs?.fbc?.hb} onChange={(value) => updateLabValue("fbc", "hb", value)} placeholder="82" />
                   <LabNumberField label="WCC" unit="x10^9/L" value={caseInput.labs?.fbc?.wcc} onChange={(value) => updateLabValue("fbc", "wcc", value)} placeholder="14.2" />
                   <LabNumberField label="Platelets" unit="x10^9/L" value={caseInput.labs?.fbc?.platelets} onChange={(value) => updateLabValue("fbc", "platelets", value)} placeholder="250" />
@@ -417,7 +450,7 @@ export function CaseForm({
                   <summary className="min-h-9 cursor-pointer rounded-lg px-1 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
                     More FBC fields
                   </summary>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                     <LabNumberField label="MCH" unit="pg" value={caseInput.labs?.fbc?.mch} onChange={(value) => updateLabValue("fbc", "mch", value)} />
                     <LabNumberField label="MCHC" unit="g/L" value={caseInput.labs?.fbc?.mchc} onChange={(value) => updateLabValue("fbc", "mchc", value)} />
                     <LabNumberField label="Lymphocytes" unit="x10^9/L" value={caseInput.labs?.fbc?.lymphocytes} onChange={(value) => updateLabValue("fbc", "lymphocytes", value)} />
@@ -433,7 +466,7 @@ export function CaseForm({
               </LabPanel>
 
               <LabPanel title="U&Es" enteredCount={countEnteredValues(caseInput.labs?.ues)}>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                   <LabNumberField label="Na" unit="mmol/L" value={caseInput.labs?.ues?.sodium} onChange={(value) => updateLabValue("ues", "sodium", value)} />
                   <LabNumberField label="K" unit="mmol/L" value={caseInput.labs?.ues?.potassium} onChange={(value) => updateLabValue("ues", "potassium", value)} />
                   <LabNumberField label="Urea" unit="mmol/L" value={caseInput.labs?.ues?.urea} onChange={(value) => updateLabValue("ues", "urea", value)} />
@@ -446,7 +479,7 @@ export function CaseForm({
                   <summary className="min-h-9 cursor-pointer rounded-lg px-1 py-2 text-xs font-medium text-slate-600 hover:text-slate-900">
                     More U&E fields
                   </summary>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                     <LabNumberField label="Chloride" unit="mmol/L" value={caseInput.labs?.ues?.chloride} onChange={(value) => updateLabValue("ues", "chloride", value)} />
                     <LabNumberField label="Calcium" unit="mmol/L" value={caseInput.labs?.ues?.calcium} onChange={(value) => updateLabValue("ues", "calcium", value)} />
                     <LabNumberField label="Magnesium" unit="mmol/L" value={caseInput.labs?.ues?.magnesium} onChange={(value) => updateLabValue("ues", "magnesium", value)} />
@@ -456,7 +489,7 @@ export function CaseForm({
               </LabPanel>
 
               <LabPanel title="LFTs" enteredCount={countEnteredValues(caseInput.labs?.lfts)}>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                   <LabNumberField label="Albumin" unit="g/L" value={caseInput.labs?.lfts?.albumin} onChange={(value) => updateLabValue("lfts", "albumin", value)} />
                   <LabNumberField label="ALT" unit="U/L" value={caseInput.labs?.lfts?.alt} onChange={(value) => updateLabValue("lfts", "alt", value)} />
                   <LabNumberField label="AST" unit="U/L" value={caseInput.labs?.lfts?.ast} onChange={(value) => updateLabValue("lfts", "ast", value)} />
@@ -467,7 +500,7 @@ export function CaseForm({
               </LabPanel>
 
               <LabPanel title="ABG" enteredCount={countEnteredValues(caseInput.labs?.abg)}>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                   <LabNumberField label="pH" value={caseInput.labs?.abg?.ph} onChange={(value) => updateLabValue("abg", "ph", value)} />
                   <LabNumberField label="PaO2" unit="kPa" value={caseInput.labs?.abg?.pao2} onChange={(value) => updateLabValue("abg", "pao2", value)} />
                   <LabNumberField label="PaCO2" unit="kPa" value={caseInput.labs?.abg?.paco2} onChange={(value) => updateLabValue("abg", "paco2", value)} />
@@ -492,7 +525,7 @@ export function CaseForm({
               </LabPanel>
 
               <LabPanel title="Glucose" enteredCount={caseInput.labs?.ues?.fastingGlucose !== undefined ? 1 : 0}>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                   <LabNumberField label="Fasting glucose" unit="mmol/L" value={caseInput.labs?.ues?.fastingGlucose} onChange={(value) => updateLabValue("ues", "fastingGlucose", value)} placeholder="5.0" />
                 </div>
               </LabPanel>
@@ -544,23 +577,31 @@ export function CaseForm({
             />
           </div>
         </details>
-      </div>
+      </fieldset>
 
-      <div className="mt-6 flex gap-3">
+      {(missingRequiredFields.length > 0 || inputMode === "smart") && (
+        <div className="mt-5 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+          <span className="font-semibold">Before analysis: </span>
+          {inputMode === "smart" ? "Organise your notes, then check " : "Add "}{missingRequiredFields.length ? missingRequiredFields.map(({ label }) => label.toLowerCase()).join(", ") : "the case details"}.
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-12 flex-1 rounded-xl bg-[var(--brand-navy)] px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
           onClick={onAnalyse}
-          disabled={isAnalyzing}
+          disabled={!canAnalyse}
         >
-          {isAnalyzing ? "Analysing..." : "Analyse case"}
+          {isAnalyzing ? "Analysing case..." : "Analyse case"}
         </button>
         <button
           type="button"
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+          className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={handleClear}
+          disabled={isAnalyzing}
         >
-          Clear
+          Clear case
         </button>
       </div>
     </section>
