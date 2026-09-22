@@ -1,3 +1,4 @@
+import { addQualitativeLabFindings } from "./qualitativeLabs";
 import { interpretAbg } from "./interpretAbg";
 import { interpretFbc } from "./interpretFbc";
 import { interpretLfts } from "./interpretLfts";
@@ -15,7 +16,7 @@ function hasPanelValues(panel: Record<string, unknown> | undefined): boolean {
 }
 
 // This intentionally derives lab-only features and does not feed the diagnosis engine.
-export function deriveLabFeatures(panels: LabPanels): LabInterpretationResult {
+export function deriveLabFeatures(panels: LabPanels, narrative = ""): LabInterpretationResult {
   const results: LabInterpretationResult[] = [];
 
   if (hasPanelValues(panels.fbc)) {
@@ -36,8 +37,8 @@ export function deriveLabFeatures(panels: LabPanels): LabInterpretationResult {
 
   const interpretation = mergeLabInterpretations(results);
 
-  return {
+  return addQualitativeLabFindings({
     ...interpretation,
     safetyWarnings: detectLabSafetyWarnings(interpretation),
-  };
+  }, panels, narrative);
 }

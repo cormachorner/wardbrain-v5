@@ -786,13 +786,52 @@ function includeLabSupportedRuleCandidates(
 
   return [...differentials, ...additionalCandidates].sort((left, right) => right.score - left.score);
 }
+
+function isDiagnosisDemographicallyEligible(
+  diagnosis: string,
+  input: CaseInput,
+  features: ExtractedFeatures,
+): boolean {
+  if (diagnosis !== "Ectopic pregnancy") {
+    return true;
+  }
+
+  const hasExplicitPregnancyContext = [
+    "pregnancy_possible",
+    "positive_pregnancy_test",
+    "missed_period",
+    "recent_miscarriage",
+  ].some((feature) => features.matchedFeatures.includes(feature));
+
+  if (hasExplicitPregnancyContext) {
+    return true;
+  }
+
+  if (input.sex === "male") {
+    return false;
+  }
+
+  return (
+    features.matchedFeatures.includes("female_of_childbearing_age") ||
+    (
+      features.matchedFeatures.includes("pelvic_pain") &&
+      features.matchedFeatures.includes("vaginal_bleeding")
+    )
+  );
+}
   
 
 function analyzeValidatedCaseWithFeatures(
   validatedInput: CaseInput,
   features: ExtractedFeatures,
 ): AnalyzeCaseResponse {
-  const redFlags = detectRedFlags(features);
+  const redFlags = detectRedFlags(features).filter(
+    (redFlag) =>
+      redFlag.boostDiagnoses.length === 0 ||
+      redFlag.boostDiagnoses.some((diagnosis) =>
+        isDiagnosisDemographicallyEligible(diagnosis, validatedInput, features),
+      ),
+  );
   const parsedAge = Number.parseInt(validatedInput.age, 10);
   const age = Number.isNaN(parsedAge) ? undefined : parsedAge;
   const initialFamilyRoute = routePresentationFamilies(
@@ -812,17 +851,16 @@ function analyzeValidatedCaseWithFeatures(
   );
   const definitionBlockId = getDefinitionBlockIdForFamily(initialFamilyRoute.primaryFamily);
   const definitionDiagnoses = definitionBlockId
-    ? getDiagnosisDefinitionsForPresentationBlock(definitionBlockId)
+    ? getDiagnosisDefinitionsForPresentationBlock(definitionBlockId).filter((definition) =>
+        isDiagnosisDemographicallyEligible(definition.name, validatedInput, features),
+      )
     : [];
   const usesDefinitionScoring = definitionDiagnoses.length > 0;
-  const labs = hasEnteredLabs(validatedInput.labs)
-    ? deriveLabFeatures({
-        ...validatedInput.labs,
-        sex: validatedInput.sex === "male" || validatedInput.sex === "female"
-          ? validatedInput.sex
-          : validatedInput.labs?.sex,
-      })
-    : undefined;
+  const labInterpretation = deriveLabFeatures({
+    ...validatedInput.labs,
+    sex: validatedInput.sex === "male" || validatedInput.sex === "female" ? validatedInput.sex : validatedInput.labs?.sex,
+  }, [validatedInput.presentingComplaint, validatedInput.history, validatedInput.observations, validatedInput.keyPositives, validatedInput.keyNegatives, validatedInput.labNarrative].join(". "));
+  const labs = hasEnteredLabs(validatedInput.labs) || labInterpretation.qualitativeFeatures?.length ? labInterpretation : undefined;
   const labDiagnosisModifiers = getLabDiagnosisModifiers({
     labs,
     features,
@@ -841,7 +879,10 @@ function analyzeValidatedCaseWithFeatures(
         const eligibleRules = DIAGNOSIS_RULES.filter((rule) => {
           const registryEntry = CONDITION_PROMOTION_REGISTRY_BY_NAME[rule.name];
 
-          return !registryEntry || registryEntry.promotionStatus === "live-engine";
+          return (
+            (!registryEntry || registryEntry.promotionStatus === "live-engine") &&
+            isDiagnosisDemographicallyEligible(rule.name, validatedInput, features)
+          );
         });
 
         return eligibleRules
@@ -856,6 +897,8 @@ function analyzeValidatedCaseWithFeatures(
     labDiagnosisModifiers,
     features,
     age,
+  ).filter((differential) =>
+    isDiagnosisDemographicallyEligible(differential.name, validatedInput, features),
   );
   const applicableLabDiagnosisModifiers = filterApplicableLabDiagnosisModifiers(
     labSupportedClinicallyScored,
@@ -1070,5 +1113,6 @@ function validateCaseInput(input: CaseInput): CaseInput {
     dangerousDiagnoses: (input.dangerousDiagnoses ?? "").trim(),
     suspectedDiagnosis: (input.suspectedDiagnosis ?? "").trim(),
     labs: sanitiseLabs(input),
+    labNarrative: input.labNarrative?.trim(),
   };
 }

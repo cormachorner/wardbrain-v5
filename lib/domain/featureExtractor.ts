@@ -1,3 +1,5 @@
+import { uesReferenceRanges } from "./labs/referenceRanges";
+import { isValidLabValue } from "./labs/labTypes";
 import { writeFileSync } from "node:fs";
 import type { CaseInput, ExtractedFeatures } from "../types";
 import { prisma } from "../prisma";
@@ -873,9 +875,7 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
     "fever with chills",
   ],
   infection_source: [
-    "cough",
     "productive cough",
-    "sputum",
     "green sputum",
     "yellow sputum",
     "purulent sputum",
@@ -2091,6 +2091,8 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   kussmaul_breathing: [
     "kussmaul breathing",
+    "deep tachypnoea",
+    "deep tachypnea",
     "kussmaul respirations",
     "deep rapid breathing",
     "deep and rapid breathing",
@@ -2217,7 +2219,6 @@ const FEATURE_PATTERNS: Record<string, string[]> = {
   ],
   hypotension: [
     "hypotension",
-    "shock",
     "hypotensive",
     "low blood pressure",
     "blood pressure 90",
@@ -2554,18 +2555,6 @@ const NEGATION_PREFIXES = [
   "nil",
 ];
 
-const BACKGROUND_CONTEXT_FEATURES = new Set([
-  "diabetic_context",
-  "hypertension",
-  "asthma_history",
-  "known_asthma",
-  "copd_history",
-  "known_copd",
-  "smoking_history",
-  "smoker",
-  "dehydration",
-]);
-
 const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
   fever: ["no fever", "not feverish", "without fever"],
   vomiting: ["no vomiting", "not vomiting", "without vomiting"],
@@ -2646,7 +2635,8 @@ const FEATURE_NEGATION_PHRASES: Record<string, string[]> = {
 
 const HIGH_RESPIRATORY_RATE_THRESHOLD = 22;
 const HIGH_HEART_RATE_THRESHOLD = 100;
-const LOW_SYSTOLIC_BP_THRESHOLD = 92;
+// Systolic BP below 100 is a circulatory concern; it does not establish shock or infection.
+const LOW_SYSTOLIC_BP_THRESHOLD = 99;
 const LOW_SATS_THRESHOLD = 92;
 const NORMAL_SATS_THRESHOLD = 95;
 const HIGH_TEMPERATURE_THRESHOLD = 38;
@@ -2839,6 +2829,19 @@ export function resetDbFeaturePhrasePatternsForTest() {
 }
 
 function hasNegatedPattern(text: string, feature: string, patterns: string[]): boolean {
+  return text.split(/[.;!?\n]|\bbut\b|\bhowever\b/i).some((clause) => {
+    if (hasNegatedPatternInClause(normaliseText(clause), feature, patterns)) return true;
+    // Carry an explicit denial across a coordinated list, but stop at a new assertion.
+    const lists = [...clause.matchAll(/\b(?:no|denies|denied|without|nil)\s+([^.;!?]+)/gi)];
+    return lists.some((match) => {
+      const list = match[1].split(/\b(?:with|has|reports|developed|now|although)\b/i)[0];
+      if (!/[,/]|\b(?:and|or)\b/i.test(list)) return false;
+      return patterns.some((pattern) => buildPatternRegex(pattern).test(normaliseText(list)));
+    });
+  });
+}
+
+function hasNegatedPatternInClause(text: string, feature: string, patterns: string[]): boolean {
   const explicitNegations = FEATURE_NEGATION_PHRASES[feature] ?? [];
 
   if (explicitNegations.some((phrase) => text.includes(phrase))) {
@@ -2852,13 +2855,11 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
     return true;
   }
 
-  if (BACKGROUND_CONTEXT_FEATURES.has(feature)) {
-    return false;
-  }
 
   return patterns.some((pattern) => {
     const escapedPattern = escapeRegExp(pattern).replace(/\s+/g, "\\s+");
 
+    if (new RegExp(`\\b${escapedPattern}\\s+(?:(?:is|are|was)\\s+)?(?:absent|denied|not present)\\b`).test(text)) return true;
     return NEGATION_PREFIXES.some((prefix) => {
       const escapedPrefix = escapeRegExp(prefix);
       const negatedPattern = new RegExp(
@@ -2868,6 +2869,12 @@ function hasNegatedPattern(text: string, feature: string, patterns: string[]): b
       return negatedPattern.test(text);
     });
   });
+}
+
+export function isFeatureExplicitlyNegated(text: string, feature: string): boolean {
+  const patterns = [...(FEATURE_PATTERNS[feature] ?? [feature.replaceAll("_", " ")]),
+    ...[...dbPhraseToFeatureSlug].filter(([phrase, slug]) => slug === feature && !(feature === "hypotension" && /^(?:in )?shock(?:ed)?$/.test(phrase))).map(([phrase]) => phrase)];
+  return hasNegatedPattern(text, feature, patterns);
 }
 
 function normaliseClauseText(text: string): string {
@@ -3345,8 +3352,10 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
   const matchedFeatures: string[] = [];
 
   for (const [phrase, feature] of dbPhraseToFeatureSlug.entries()) {
+    // A legacy DB mapping from plain cough must not bypass the infection-source guard.
+    if (feature === "infection_source" && (!hasPattern(allText, FEATURE_PATTERNS.infection_source) || hasNegatedPattern(rawText, feature, FEATURE_PATTERNS.infection_source))) continue;
     const present = buildPatternRegex(phrase).test(allText);
-    const negated = hasNegatedPattern(allText, feature, [phrase]);
+    const negated = present && hasNegatedPattern(rawText, feature, [phrase]);
 
     if (present && !negated) {
       addMatchedFeature(matchedFeatures, feature);
@@ -3355,7 +3364,7 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
 
   for (const [feature, patterns] of Object.entries(FEATURE_PATTERNS)) {
     const present = hasPattern(allText, patterns);
-    const negated = hasNegatedPattern(allText, feature, patterns);
+    const negated = present && hasNegatedPattern(rawText, feature, patterns);
 
     if (present && !negated) {
       addMatchedFeature(matchedFeatures, feature);
@@ -3383,6 +3392,8 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
   }
 
   const aliasFeatures: Array<[string, string]> = [
+    // Positive shock still supports instability; denying shock does not negate measured low BP.
+    ["shock", "hypotension"],
     ["migration_to_rif", "pain_migration_to_rif"],
     ["abdominal_movement_pain", "pain_worse_on_movement"],
     ["well_between_episodes", "pain_settles_between_episodes"],
@@ -3501,5 +3512,11 @@ export function extractFeatures(input: CaseInput): ExtractedFeatures {
     }
   }
 
-  return { allText, matchedFeatures };
+  const excludedFeatures: string[] = [];
+  // A supplied numeric glucose supersedes a conflicting qualitative hyperglycaemia cue.
+  if (input.labs?.ues?.fastingGlucose !== undefined && (!isValidLabValue(input.labs.ues.fastingGlucose) || input.labs.ues.fastingGlucose <= uesReferenceRanges.fastingGlucose.max!)) {
+    removeMatchedFeature(matchedFeatures, "hyperglycaemia");
+    excludedFeatures.push("hyperglycaemia");
+  }
+  return { allText, rawText, excludedFeatures, matchedFeatures: matchedFeatures.filter((feature) => !isFeatureExplicitlyNegated(rawText, feature)) };
 }

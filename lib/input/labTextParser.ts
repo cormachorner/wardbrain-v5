@@ -113,33 +113,30 @@ function orderedAliases(panelHint: LabPanelKey | undefined) {
     : LAB_ALIASES;
 }
 
-function findAlias(line: string, panelHint?: LabPanelKey): { alias: LabAlias; valueSearchText: string } | undefined {
-  for (const alias of orderedAliases(panelHint)) {
-    for (const pattern of alias.patterns) {
-      const match = line.match(pattern);
-
-      if (match?.index !== undefined) {
-        return {
-          alias,
-          valueSearchText: line.slice(match.index + match[0].length),
-        };
-      }
+// Match every label in narrative order; values must immediately follow their label.
+// Never borrow a number from a later symptom, observation or neighbouring test.
+function findValues(line: string, panelHint: LabPanelKey | undefined, warnings: string[]): ParsedLabValue[] {
+  const matches = orderedAliases(panelHint).flatMap((alias, priority) => alias.patterns.flatMap((pattern) =>
+    [...line.matchAll(new RegExp(pattern.source, "gi"))].map((match) => ({ alias, priority, index: match.index!, end: match.index! + match[0].length })),
+  )).sort((a, b) => a.index - b.index || a.priority - b.priority || b.end - a.end);
+  const values: ParsedLabValue[] = [];
+  let previousEnd = -1;
+  for (const match of matches) {
+    if (match.index < previousEnd) continue;
+    previousEnd = match.end;
+    const number = line.slice(match.end).match(/^\s*(?:(?:is|was|of)\s+)?[:=]?\s*([-+]?\d+(?:\.\d+)?)(?!\d|\.\d)/i);
+    if (!number) continue;
+    const unit = line.slice(match.end + number[0].length).match(/^\s*(mg\/d[lL]|g\/d[lL]|mmHg)\b/i);
+    if (unit) {
+      warnings.push(`${match.alias.label}: ${unit[1]} is not a supported paste unit. Convert to the unit shown in the structured field before entering it.`);
+      continue;
     }
+    // Negated, hypothetical and historical measurements need manual review.
+    const prefix = line.slice(0, match.index).split(/[.;!?]/).at(-1) ?? "";
+    if (/\b(?:no|not|without|previous|previously|baseline|target|if)\b[^,;]*$/i.test(prefix)) continue;
+    values.push({ label: match.alias.label, panel: match.alias.panel, field: match.alias.field, value: Number(number[1]), raw: line });
   }
-
-  return undefined;
-}
-
-function parseNumber(line: string): number | undefined {
-  const match = line.match(/[-+]?\d+(?:\.\d+)?/);
-
-  if (!match) {
-    return undefined;
-  }
-
-  const value = Number(match[0]);
-
-  return Number.isFinite(value) ? value : undefined;
+  return values;
 }
 
 function parseFio2Value(rawValue: string, percentMarker?: string): number | undefined {
@@ -197,13 +194,14 @@ function setLabValue(labs: LabPanels, parsed: ParsedLabValue): void {
 }
 
 export function mergeLabPanels(existing: LabPanels | undefined, incoming: LabPanels): LabPanels {
+  const defined = (panel: object | undefined) => Object.fromEntries(Object.entries(panel ?? {}).filter(([, value]) => value !== undefined));
   return {
     ...existing,
     sex: existing?.sex ?? incoming.sex,
-    fbc: { ...(incoming.fbc ?? {}), ...(existing?.fbc ?? {}) },
-    ues: { ...(incoming.ues ?? {}), ...(existing?.ues ?? {}) },
-    lfts: { ...(incoming.lfts ?? {}), ...(existing?.lfts ?? {}) },
-    abg: { ...(incoming.abg ?? {}), ...(existing?.abg ?? {}) },
+    fbc: { ...(incoming.fbc ?? {}), ...defined(existing?.fbc) },
+    ues: { ...(incoming.ues ?? {}), ...defined(existing?.ues) },
+    lfts: { ...(incoming.lfts ?? {}), ...defined(existing?.lfts) },
+    abg: { ...(incoming.abg ?? {}), ...defined(existing?.abg) },
   };
 }
 
@@ -223,25 +221,9 @@ export function parseLabText(text: string, existingLabs?: LabPanels): LabTextPar
       currentPanel = panelHeader;
     }
 
-    const aliasMatch = findAlias(row, currentPanel);
-    const value = aliasMatch ? parseNumber(aliasMatch.valueSearchText) : undefined;
-
-    if (!aliasMatch || value === undefined) {
-      if (!panelHeader) {
-        unparsedLines.push(row);
-      }
-      continue;
-    }
-
-    const parsed = {
-      label: aliasMatch.alias.label,
-      panel: aliasMatch.alias.panel,
-      field: aliasMatch.alias.field,
-      value,
-      raw: row,
-    };
-
-    candidateValues.push(parsed);
+    const values = findValues(row, currentPanel, warnings);
+    if (!values.length && !panelHeader) unparsedLines.push(row);
+    candidateValues.push(...values);
   }
 
   const groupedValues = candidateValues.reduce<Record<string, ParsedLabValue[]>>((groups, parsed) => {

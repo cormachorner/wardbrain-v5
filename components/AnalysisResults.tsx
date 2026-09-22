@@ -12,6 +12,12 @@ import type { LabValueAssessment } from "../lib/domain/labs/labTypes";
 import type { AnalyzeCaseResponse } from "../lib/types";
 import { SimpleList } from "./WardBrainCard";
 
+// A development server can also host student pilot sessions. Debug output must
+// be explicitly enabled, and must never be included in a production build.
+function showDevelopmentDebug() {
+  return process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_WARDBRAIN_DEBUG === "1";
+}
+
 function formatSlug(value: string) {
   return value.replaceAll("_", " ").replaceAll("-", " ");
 }
@@ -235,7 +241,7 @@ function parseLabReason(reason: string) {
 
 function LaboratoryEvidence({ reasons }: { reasons: string[] }) {
   const labReasons = reasons.filter(isLabReason).map(parseLabReason);
-  const showInternalWeights = process.env.NODE_ENV !== "production";
+  const showInternalWeights = showDevelopmentDebug();
 
   if (labReasons.length === 0) {
     return null;
@@ -302,7 +308,7 @@ function DiagnosisTraceDisclosure({
               <ChipList items={clinicalOtherReasons} />
             </div>
           )}
-          {process.env.NODE_ENV !== "production" && (
+          {showDevelopmentDebug() && (
             <div>
               <span className="font-medium">Internal score: </span>
               {trace.score}
@@ -544,13 +550,13 @@ function LaboratoryResults({ labs }: { labs: NonNullable<AnalyzeCaseResponse["la
           </div>
         ) : (
           <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-600">
-            No non-ABG laboratory abnormalities detected in the entered values.
+            No numeric non-ABG laboratory abnormalities detected in the entered values.
           </p>
         )}
 
         <div>
           <div className="mb-2 text-sm font-semibold text-slate-900">Derived interpretation / patterns</div>
-          <ChipList items={nonAbgFeatures.map(formatSlug)} empty="No non-ABG derived lab-only features." limit={8} />
+          <ChipList items={nonAbgFeatures.map((feature) => `${formatSlug(feature)}${labs.qualitativeFeatures?.includes(feature) ? " (qualitative report)" : ""}`)} empty="No non-ABG derived lab-only features." limit={8} />
         </div>
 
         {otherWarnings.length > 0 && (
@@ -590,7 +596,7 @@ export function AnalysisResults({
 }) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
-  const showPresentationDebug = process.env.NODE_ENV !== "production";
+  const showPresentationDebug = showDevelopmentDebug();
   const displayedDetectedFeatures = Array.from(
     new Map(
       result.detectedFeatures.map((feature, index) => [

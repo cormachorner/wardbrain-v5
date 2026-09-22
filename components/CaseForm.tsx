@@ -114,17 +114,21 @@ function countEnteredValues(panel: Record<string, unknown> | undefined) {
 export function CaseForm({
   caseInput,
   onFieldChange,
+  onCasePatch,
   onAnalyse,
   onClear,
   isAnalyzing,
 }: {
   caseInput: CaseInput;
   onFieldChange: <K extends keyof CaseInput>(field: K, value: CaseInput[K]) => void;
+  onCasePatch: (patch: Partial<CaseInput>) => void;
   onAnalyse: () => void;
   onClear: () => void;
   isAnalyzing: boolean;
 }) {
   const reviewHeading = useRef<HTMLHeadingElement>(null);
+  // Only unreviewed automatic values may be revised while editing the paste text.
+  const draftExtraction = useRef<Partial<CaseInput>>({});
   const [inputMode, setInputMode] = useState<InputMode>("smart");
   const [smartInputText, setSmartInputText] = useState("");
   const [smartInputNotice, setSmartInputNotice] = useState<string | null>(null);
@@ -136,19 +140,32 @@ export function CaseForm({
   const canApplySmartInput = smartInputText.trim().length > 0 && !isAnalyzing;
   const canApplyLabPaste = labPasteText.trim().length > 0 && !isAnalyzing;
 
-  function applyCasePatch(patch: Partial<CaseInput>) {
-    for (const [field, value] of Object.entries(patch) as Array<[keyof CaseInput, CaseInput[keyof CaseInput]]>) {
-      onFieldChange(field, value);
+  function applySmartInput(text = smartInputText, review = true) {
+    const previousDraft = draftExtraction.current;
+    const protectedLabs = { ...caseInput.labs };
+    for (const panel of ["fbc", "ues", "lfts", "abg"] as const) {
+      if (!previousDraft.labs?.[panel]) continue;
+      protectedLabs[panel] = Object.fromEntries(Object.entries(caseInput.labs?.[panel] ?? {}).filter(([field, value]) =>
+        value !== (previousDraft.labs?.[panel] as Record<string, unknown> | undefined)?.[field],
+      ));
     }
-  }
-
-  function applySmartInput() {
-    const parsed = parseSmartCaseInput(smartInputText);
+    const parsed = parseSmartCaseInput(text, protectedLabs);
+    // Existing reviewed/typed fields take precedence over automatic extraction.
+    if (caseInput.age.trim() && caseInput.age !== previousDraft.age) {
+      if (parsed.patch.age && parsed.patch.age !== caseInput.age) parsed.warnings.push("Existing age preserved. Check it against the pasted case.");
+      delete parsed.patch.age;
+    } else if (previousDraft.age && !parsed.patch.age) {
+      parsed.patch.age = "";
+    }
+    if (caseInput.sex.trim() && caseInput.sex !== previousDraft.sex) delete parsed.patch.sex;
+    else if (previousDraft.sex && !parsed.patch.sex) parsed.patch.sex = "";
+    draftExtraction.current = review ? {} : parsed.patch;
     const patch = {
       ...parsed.patch,
-      labs: parsed.patch.labs
+      history: text.trim(),
+      labs: parsed.patch.labs || previousDraft.labs
         ? {
-            ...mergeLabPanels(caseInput.labs, parsed.patch.labs),
+            ...mergeLabPanels(protectedLabs, parsed.patch.labs ?? {}),
             sex: parsed.patch.sex === "male" || parsed.patch.sex === "female"
               ? parsed.patch.sex
               : caseInput.sex === "male" || caseInput.sex === "female"
@@ -162,40 +179,46 @@ export function CaseForm({
       delete patch.labs;
     }
 
-    applyCasePatch(patch);
-    setInputMode("structured");
-    requestAnimationFrame(() => reviewHeading.current?.focus());
+    onCasePatch(patch);
+    if (review) {
+      setInputMode("structured");
+      requestAnimationFrame(() => reviewHeading.current?.focus());
+    }
 
     const populatedFields = Object.keys(patch).filter((field) => field !== "labs").length;
     setSmartInputNotice(
       `Added ${populatedFields} field${populatedFields === 1 ? "" : "s"}${
         parsed.parsedLabCount > 0 ? ` and ${parsed.parsedLabCount} lab value${parsed.parsedLabCount === 1 ? "" : "s"}` : ""
-      }. Check the details below, especially anything the parser missed, before analysing.`,
+      }. Check the details below, especially anything the parser missed, before analysing. ${parsed.warnings.join(" ")}`,
     );
   }
 
   function applyLabPaste() {
+    draftExtraction.current = {};
     const parsed = parseLabText(labPasteText, caseInput.labs);
     const mergedLabs = {
       ...mergeLabPanels(caseInput.labs, parsed.labs),
       sex: caseInput.sex === "male" || caseInput.sex === "female" ? caseInput.sex : caseInput.labs?.sex,
     };
 
-    if (parsed.parsedValues.length > 0) {
-      onFieldChange("labs", mergedLabs);
-    }
+    onCasePatch({
+      // Keep the original report, including qualitative-only results, in the request.
+      labNarrative: labPasteText.trim(),
+      labs: mergedLabs,
+    });
 
     setLabPasteNotice(
       [
         parsed.parsedValues.length > 0
           ? `Parsed ${parsed.parsedValues.length} lab value${parsed.parsedValues.length === 1 ? "" : "s"}. Review the structured fields below before analysing.`
-          : "No supported lab values were confidently parsed.",
+          : "Lab report retained for analysis. No numeric fields were filled; qualitative findings are checked during analysis.",
         ...parsed.warnings,
       ].join(" "),
     );
   }
 
   function handleClear() {
+    draftExtraction.current = {};
     setSmartInputText("");
     setSmartInputNotice(null);
     setLabPasteText("");
@@ -206,6 +229,7 @@ export function CaseForm({
   }
 
   function updateLabValue(panel: LabPanelKey, field: string, value: number | undefined) {
+    draftExtraction.current = {};
     onFieldChange("labs", {
       ...caseInput.labs,
       sex: caseInput.sex === "male" || caseInput.sex === "female" ? caseInput.sex : "unknown",
@@ -217,6 +241,7 @@ export function CaseForm({
   }
 
   function updateAbgOxygenContext(value: "room_air" | "supplemental_oxygen" | "unknown" | "") {
+    draftExtraction.current = {};
     onFieldChange("labs", {
       ...caseInput.labs,
       sex: caseInput.sex === "male" || caseInput.sex === "female" ? caseInput.sex : "unknown",
@@ -246,7 +271,10 @@ export function CaseForm({
             <button
               type="button"
               aria-pressed={inputMode === "structured"}
-              onClick={() => setInputMode("structured")}
+              onClick={() => {
+                draftExtraction.current = {};
+                setInputMode("structured");
+              }}
               disabled={isAnalyzing}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 inputMode === "structured" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"
@@ -271,20 +299,23 @@ export function CaseForm({
         {inputMode === "smart" ? (
           <FormSection
             title="Paste your case notes"
-            description="Include age, sex and the presenting problem. Then select Organise and review to check the extracted details."
+            description="Include age, sex and the presenting problem. Details are filled automatically. Select Organise and review to check them."
           >
             <textarea
               aria-label="Case notes"
               className="min-h-40 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus:border-[var(--brand-navy)] focus:ring-2 focus:ring-[var(--brand-navy)]/10 sm:text-sm"
               value={smartInputText}
-              onChange={(event) => setSmartInputText(event.target.value)}
+              onChange={(event) => {
+                setSmartInputText(event.target.value);
+                applySmartInput(event.target.value, false);
+              }}
               placeholder="72M with central crushing chest pain radiating to jaw, sweaty and nauseated. PMH HTN and T2DM. HR 105, BP 145/85. Hb 140, WCC 11.2..."
               disabled={isAnalyzing}
             />
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={applySmartInput}
+                onClick={() => applySmartInput()}
                 disabled={!canApplySmartInput}
                 className="rounded-xl border border-[var(--brand-border)] bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >

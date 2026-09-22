@@ -364,6 +364,37 @@ function getDefinitionPolicyModifier(
       break;
     case "ruptured_or_symptomatic_aaa":
       if (
+        (hasFeature(featureSet, "gi_bleed") ||
+          hasFeature(featureSet, "haematemesis") ||
+          hasFeature(featureSet, "melaena") ||
+          hasFeature(featureSet, "pr_bleeding")) &&
+        !hasFeature(featureSet, "pulsatile_abdomen") &&
+        !hasFeature(featureSet, "back_pain") &&
+        !hasFeature(featureSet, "flank_pain") &&
+        !hasFeature(featureSet, "sudden_onset")
+      ) {
+        scoreDelta -= 8;
+        reasonsAgainst.push("an explicit GI bleeding syndrome better explains nonspecific haemodynamic instability");
+      }
+
+      if (
+        hasFeature(featureSet, "abdominal_pain") &&
+        hasFeature(featureSet, "hypotension") &&
+        !hasFeature(featureSet, "collapse") &&
+        !hasFeature(featureSet, "shock") &&
+        !hasFeature(featureSet, "pulsatile_abdomen") &&
+        !(
+          hasFeature(featureSet, "sudden_onset") &&
+          (hasFeature(featureSet, "severe_pain") ||
+            hasFeature(featureSet, "back_pain") ||
+            hasFeature(featureSet, "flank_pain"))
+        )
+      ) {
+        scoreDelta -= 5;
+        reasonsAgainst.push("hypotension with nonspecific abdominal pain lacks a specific AAA syndrome pattern");
+      }
+
+      if (
         !hasFeature(featureSet, "collapse") &&
         !hasFeature(featureSet, "hypotension") &&
         !hasFeature(featureSet, "back_pain") &&
@@ -515,6 +546,26 @@ export function scoreDiagnosisDefinition(
 
   for (const reason of policyModifier.reasonsAgainst) {
     reasonsAgainst.add(reason);
+  }
+
+  if (
+    definition.id === "intra_abdominal_sepsis" &&
+    ![
+      "fever",
+      "hypothermia",
+      "rigors",
+      "infection_source",
+      "productive_cough",
+      "sputum_change",
+      "crackles",
+      "urinary_symptoms",
+      "dysuria",
+      "urinary_frequency",
+      "cva_tenderness",
+    ].some((feature) => hasFeature(featureSet, feature))
+  ) {
+    score = Math.min(score, 0);
+    reasonsAgainst.add("physiological instability without a plausible infection context is insufficient for sepsis");
   }
 
   return {

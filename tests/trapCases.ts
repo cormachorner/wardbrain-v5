@@ -1014,9 +1014,9 @@ export const TRAP_CASES: TrapCase[] = [
       redFlags: [],
       differentials: [
         {
-          name: "GI bleed",
-          score: 4,
-          reasonsFor: ["collapse / syncope", "hypotension / shock", "tachycardia"],
+          name: "Pulmonary embolism",
+          score: 3,
+          reasonsFor: ["tachycardia", "collapse / syncope"],
           reasonsAgainst: [],
         },
         {
@@ -1067,9 +1067,9 @@ export const TRAP_CASES: TrapCase[] = [
       redFlags: [],
       differentials: [
         {
-          name: "GI bleed",
-          score: 4,
-          reasonsFor: ["collapse / syncope", "hypotension / shock", "tachycardia"],
+          name: "Pulmonary embolism",
+          score: 3,
+          reasonsFor: ["tachycardia", "tachypnoea", "collapse / syncope"],
           reasonsAgainst: [],
         },
         {

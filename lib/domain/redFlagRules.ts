@@ -185,8 +185,39 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
         has(features, "smoking_history") ||
         has(features, "vascular_disease") ||
         has(features, "hypertension");
+      // Hypotension includes SBP 93–99: this is circulatory concern, not
+      // evidence of rupture by itself. Require a more discriminating pattern
+      // before displaying this specific warning; this is not an AAA rule-out.
+      const hasAcuteAaaPainPattern =
+        has(features, "sudden_onset") &&
+        (has(features, "severe_pain") ||
+          has(features, "back_pain") ||
+          has(features, "back_radiation") ||
+          has(features, "flank_pain"));
+      const hasDiscriminatingAaaFeature =
+        has(features, "collapse") ||
+        has(features, "shock") ||
+        has(features, "pulsatile_abdomen") ||
+        hasAcuteAaaPainPattern;
+      const hasExplicitGiBleedPattern =
+        has(features, "gi_bleed") ||
+        has(features, "pr_bleeding") ||
+        has(features, "melaena") ||
+        has(features, "haematemesis");
+      const hasIndependentAaaPainSignature =
+        has(features, "pulsatile_abdomen") ||
+        has(features, "back_pain") ||
+        has(features, "back_radiation") ||
+        has(features, "flank_pain") ||
+        hasAcuteAaaPainPattern;
 
-      if (!hasAaaPainContext || !hasInstability || !hasVascularContext) {
+      if (
+        !hasAaaPainContext ||
+        !hasInstability ||
+        !hasVascularContext ||
+        !hasDiscriminatingAaaFeature ||
+        (hasExplicitGiBleedPattern && !hasIndependentAaaPainSignature)
+      ) {
         continue;
       }
     }
@@ -390,7 +421,18 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
     }
 
     if (rule.id === "nice-cg188-cholangitis-001") {
-      if (!has(features, "ruq_pain") || !has(features, "jaundice")) {
+      const hasBiliaryInfectionContext =
+        has(features, "fever") ||
+        has(features, "rigors") ||
+        has(features, "infection_source");
+
+      // Haemodynamic abnormalities can accompany obstruction and do not, by
+      // themselves, establish the infective component of cholangitis.
+      if (
+        !has(features, "ruq_pain") ||
+        !has(features, "jaundice") ||
+        !hasBiliaryInfectionContext
+      ) {
         continue;
       }
     }
@@ -404,6 +446,13 @@ export function detectRedFlags(features: ExtractedFeatures): RedFlag[] {
 
     const matchCount = countMatches(features, rule.triggers);
     const triggeredFeatures = getMatchedTriggers(features, rule.triggers);
+    if (
+      rule.id === "nice-cg188-cholangitis-001" &&
+      has(features, "infection_source") &&
+      !triggeredFeatures.includes("infection_source")
+    ) {
+      triggeredFeatures.push("infection_source");
+    }
 
     if (matchCount >= 2) {
       flags.push({

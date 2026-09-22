@@ -84,6 +84,7 @@ const caseInputSchema = z.object({
   dangerousDiagnoses: z.string().optional(),
   suspectedDiagnosis: z.string().optional(),
   labs: labsSchema,
+  labNarrative: z.string().optional(),
 })
 
 const REQUIRED_FIELD_LABELS = {

@@ -14,6 +14,7 @@ function run(command, args) {
       ...process.env,
       NODE_ENV: process.env.NODE_ENV ?? "test",
       WARDBRAIN_TEST_MODE: "1",
+      WARDBRAIN_TEST_BUILD_DIR: buildDir,
       WARDBRAIN_TEST_DB_FALLBACK_LOG_PATH: join(buildDir, "db-feature-phrase-fallback.log"),
     },
   });
@@ -35,11 +36,16 @@ run("./node_modules/.bin/tsc", [
   "nodenext",
   "--target",
   "es2022",
+  "--jsx",
+  "react-jsx",
+  "--esModuleInterop",
+  "true",
   "--skipLibCheck",
   "true",
   "--noEmit",
   "false",
   "app/api/analyze-case/route.ts",
+  "app/page.tsx",
   "lib/application/analyzeCase.ts",
   "lib/differentialEngine.ts",
   "lib/familyRanking.ts",
@@ -129,6 +135,8 @@ run("./node_modules/.bin/tsc", [
   "tests/headacheV1.test.mts",
   "tests/integration/analyzeCaseApi.test.mts",
   "tests/inputParsing.test.mts",
+  "tests/prePilotSafety.test.mts",
+  "tests/aaaPilotSafety.test.mts",
   "tests/labDiagnosisModifiers.test.mts",
   "tests/labIntegration.test.mts",
   "tests/labWorkflowQa.test.mts",
@@ -174,6 +182,8 @@ run("node", [
   join(buildDir, "tests", "headacheV1.test.mjs"),
   join(buildDir, "tests", "integration", "analyzeCaseApi.test.mjs"),
   join(buildDir, "tests", "inputParsing.test.mjs"),
+  join(buildDir, "tests", "prePilotSafety.test.mjs"),
+  join(buildDir, "tests", "aaaPilotSafety.test.mjs"),
   join(buildDir, "tests", "labDiagnosisModifiers.test.mjs"),
   join(buildDir, "tests", "labIntegration.test.mjs"),
   join(buildDir, "tests", "labWorkflowQa.test.mjs"),
@@ -190,5 +200,7 @@ run("node", [
   join(buildDir, "tests", "reasoningComparison.test.mjs"),
   join(buildDir, "tests", "wardbrainLookup.test.mjs"),
 ]);
+
+run("node", ["--test", "tests/pasteWorkflow.test.mjs"]);
 
 rmSync(buildDir, { recursive: true, force: true });

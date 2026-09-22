@@ -236,7 +236,8 @@ function getContextModifier(rule: DiagnosisRule, features: ExtractedFeatures, ag
   if (rule.name === "Abdominal aortic aneurysm") {
     const hasUnstableAaaPattern =
       (has(features, "abdominal_pain") || has(features, "flank_pain")) &&
-      (has(features, "collapse") || has(features, "hypotension"));
+      (has(features, "collapse") || has(features, "hypotension")) &&
+      hasCompatibleAaaSyndrome(features);
 
     if (hasUnstableAaaPattern) {
       return 2;
@@ -748,6 +749,86 @@ function applySignatureGate(
   return Math.min(score, rule.strongSignatureGate.cappedScore ?? 6);
 }
 
+function hasCompatibleAaaSyndrome(features: ExtractedFeatures): boolean {
+  const hasAaaPainContext =
+    has(features, "abdominal_pain") ||
+    has(features, "back_pain") ||
+    has(features, "back_radiation") ||
+    has(features, "flank_pain") ||
+    has(features, "pulsatile_abdomen");
+  const hasAcuteSpecificPain =
+    has(features, "sudden_onset") &&
+    (has(features, "severe_pain") ||
+      has(features, "back_pain") ||
+      has(features, "back_radiation") ||
+      has(features, "flank_pain"));
+  const hasPainWithVascularRisk =
+    (has(features, "sudden_onset") ||
+      has(features, "severe_pain") ||
+      has(features, "back_pain") ||
+      has(features, "back_radiation") ||
+      has(features, "flank_pain")) &&
+    (has(features, "smoker") ||
+      has(features, "smoking_history") ||
+      has(features, "vascular_disease") ||
+      has(features, "hypertension"));
+
+  return hasAaaPainContext && (
+    has(features, "collapse") ||
+    has(features, "shock") ||
+    has(features, "pulsatile_abdomen") ||
+    hasAcuteSpecificPain ||
+    hasPainWithVascularRisk
+  );
+}
+
+function hasCompatibleGiBleedSyndrome(features: ExtractedFeatures): boolean {
+  return [
+    "gi_bleed",
+    "pr_bleeding",
+    "melaena",
+    "haematemesis",
+    "coffee_ground_vomit",
+    "haematochezia",
+  ].some((feature) => has(features, feature));
+}
+
+function hasPlausibleInfectionContext(features: ExtractedFeatures): boolean {
+  return [
+    "fever",
+    "hypothermia",
+    "rigors",
+    "infection_source",
+    "productive_cough",
+    "sputum_change",
+    "crackles",
+    "urinary_symptoms",
+    "dysuria",
+    "urinary_frequency",
+    "cva_tenderness",
+  ].some((feature) => has(features, feature));
+}
+
+function applySyndromeCompatibilityGate(
+  rule: DiagnosisRule,
+  features: ExtractedFeatures,
+  score: number,
+): number {
+  if (rule.name === "Abdominal aortic aneurysm" && !hasCompatibleAaaSyndrome(features)) {
+    return Math.min(score, 0);
+  }
+
+  if (rule.name === "GI bleed" && !hasCompatibleGiBleedSyndrome(features)) {
+    return Math.min(score, 0);
+  }
+
+  if (rule.name === "Sepsis" && !hasPlausibleInfectionContext(features)) {
+    return Math.min(score, 0);
+  }
+
+  return score;
+}
+
 function getConflictWeight(rule: DiagnosisRule, feature: string) {
   if (SOFT_NEGATIVE_FEATURES.has(feature)) {
     return -1;
@@ -796,6 +877,7 @@ export function scoreDiagnosis(
   score += getAgeModifier(rule, features, age);
   score += getContextModifier(rule, features, age);
   score = applySignatureGate(rule, features, score);
+  score = applySyndromeCompatibilityGate(rule, features, score);
 
   return {
     name: rule.name,

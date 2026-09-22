@@ -20,7 +20,7 @@ function hasClinicalFeature(features: ExtractedFeatures, feature: string): boole
 }
 
 function hasLabFeature(labs: LabInterpretationResult | undefined, feature: string): boolean {
-  return Boolean(labs?.features.includes(feature));
+  return Boolean(labs?.features.includes(feature) && !labs.qualitativeFeatures?.includes(feature));
 }
 
 function hasAnyClinicalFeature(features: ExtractedFeatures, featureList: string[]): boolean {
@@ -54,9 +54,6 @@ function isInfectionCompatible(features: ExtractedFeatures): boolean {
     "dysuria",
     "urinary_frequency",
     "urinary_incontinence",
-    "ruq_pain",
-    "jaundice",
-    "confusion",
   ]);
 }
 
@@ -65,9 +62,6 @@ function isBiliaryInfectionCompatible(features: ExtractedFeatures): boolean {
     "fever",
     "rigors",
     "infection_source",
-    "sepsis_features",
-    "tachycardia",
-    "hypotension",
   ]);
 }
 
@@ -179,7 +173,11 @@ export function getLabDiagnosisModifiers({
   const modifiers: LabDiagnosisModifier[] = [];
   const infectionCompatible = isInfectionCompatible(features);
   const giBleedCompatible = isGiBleedCompatible(features);
-  const dkaCompatible = isDkaCompatible(features);
+  const dkaCompatible = isDkaCompatible(features) || (
+    hasLabFeature(labs, "metabolic_acidosis") &&
+    labs.abnormalities.some((value) => value.test === "Fasting glucose" && value.status === "high" && (value.value ?? 0) > 11) &&
+    hasAnyClinicalFeature(features, ["polyuria", "polydipsia", "kussmaul_breathing", "ketosis_breath"])
+  );
   const anaemiaCompatible = isAnaemiaCompatible(features);
   const pneumoniaCompatible = isPneumoniaCompatible(features, presentationBlockId);
   const heartFailureCompatible = isHeartFailureCompatible(features, presentationBlockId);
@@ -238,7 +236,7 @@ export function getLabDiagnosisModifiers({
 
   if (dkaCompatible) {
     if (hasLabFeature(labs, "metabolic_acidosis")) {
-      addModifier(modifiers, "Diabetic ketoacidosis", "metabolic_acidosis", 7, "high", "Metabolic acidosis strongly supports DKA when diabetic/metabolic clinical features are present.");
+      addModifier(modifiers, "Diabetic ketoacidosis", "metabolic_acidosis", 7, "high", "Metabolic acidosis supports suspected DKA in this diabetic/metabolic context. Check blood ketones to establish ketoacidosis; acidosis alone is not diagnostic.");
     }
 
     if (hasLabFeature(labs, "low_bicarbonate") || hasLabFeature(labs, "low_bicarbonate_abg")) {
@@ -343,6 +341,61 @@ export function getLabDiagnosisModifiers({
   if (isMesentericCompatible(features) && hasLabFeature(labs, "raised_lactate")) {
     addModifier(modifiers, "Mesenteric ischaemia", "raised_lactate", 2, "moderate", "Raised lactate modestly supports tissue hypoperfusion in a compatible mesenteric ischaemia presentation, but is not diagnostic.");
   }
+
+  // Qualitative reports supply modest support only; they never enter numeric pattern/severity rules.
+  const qualitative = new Set(labs.qualitativeFeatures ?? []);
+  const addQualitative = (diagnosis: string, feature: string, explanation?: string) => {
+    if (qualitative.has(feature) && !modifiers.some((modifier) => modifier.diagnosis === diagnosis && modifier.feature.startsWith("qualitative_"))) {
+      addModifier(
+        modifiers,
+        diagnosis,
+        `qualitative_${feature}`,
+        1,
+        "moderate",
+        explanation ?? "Reported qualitative abnormality offers limited support in this clinical context. Confirm the numeric result; magnitude is unknown.",
+      );
+    }
+  };
+  const hasQualitativeAlpGgt = qualitative.has("raised_alp") && qualitative.has("raised_ggt");
+  const addQualitativeCholestaticSupport = (diagnosis: string) => {
+    if (
+      hasQualitativeAlpGgt &&
+      !modifiers.some((modifier) => modifier.diagnosis === diagnosis && modifier.feature.startsWith("qualitative_"))
+    ) {
+      addModifier(
+        modifiers,
+        diagnosis,
+        "qualitative_cholestatic_pattern",
+        1,
+        "moderate",
+        "Reported raised ALP and GGT offer modest support for cholestasis in this clinical context. Confirm numeric values to assess the magnitude and pattern.",
+      );
+    }
+  };
+  if (anaemiaCompatible) addQualitative("Anaemia", "anaemia");
+  if (giBleedCompatible) addQualitative("GI bleed", "anaemia");
+  if (hasAnyClinicalFeature(features, ["infection_source", "fever", "rigors", "sepsis_features"])) {
+    addQualitative("Sepsis", "leucocytosis");
+    addQualitative("Sepsis", "raised_creatinine");
+  }
+  if (pneumoniaCompatible) addQualitative("Pneumonia", "leucocytosis");
+  if (ruqCompatible) {
+    addQualitative("Acute hepatitis", "raised_alt");
+    if (diliCompatible) addQualitative("Drug-induced liver injury", "raised_alt");
+
+    // Prefer the combined cholestatic signal as the single capped qualitative
+    // reason. Otherwise retain modest support from an individual report.
+    addQualitativeCholestaticSupport("Choledocholithiasis / obstructive jaundice");
+    if (biliaryInfectionCompatible) {
+      addQualitativeCholestaticSupport("Acute cholangitis");
+    }
+
+    for (const feature of ["raised_alp", "raised_ggt", "raised_bilirubin"]) {
+      addQualitative("Choledocholithiasis / obstructive jaundice", feature);
+      if (biliaryInfectionCompatible) addQualitative("Acute cholangitis", feature);
+    }
+  }
+  if (isDkaCompatible(features)) addQualitative("Diabetic ketoacidosis", "hyperglycaemia_lab");
 
   return modifiers;
 }

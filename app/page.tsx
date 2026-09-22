@@ -198,6 +198,7 @@ export default function Home() {
           <CaseForm
             caseInput={caseInput}
             onFieldChange={updateField}
+            onCasePatch={(patch) => setCaseInput((previous) => ({ ...previous, ...patch }))}
             onAnalyse={handleAnalyseCase}
             onClear={handleClearCase}
             isAnalyzing={isAnalyzing}

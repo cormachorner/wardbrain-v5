@@ -8,8 +8,12 @@ export type SmartCaseParseResult = {
 };
 
 function inferAge(text: string): string | undefined {
-  const match = text.match(/\b(\d{1,3})\s*(?:-?\s*year\s*-?\s*old|yo|y\/o|[mf]\b)/i);
-  return match?.[1];
+  const candidates = [...text.matchAll(/\b(?:(\d{1,3})\s*(?:[-–—]?\s*year\s*[-–—]?\s*old|yo\b|y\/o\b|[mf]\b)|aged\s+(\d{1,3})\b)/gi)];
+  const ages = [...new Set(candidates.map((match) => Number(match[1] ?? match[2])))];
+  if (ages.length !== 1 || ages[0] < 0 || ages[0] > 120) return undefined;
+  // Family-history ages are not necessarily the patient's age.
+  if (candidates.some((match) => /\b(?:mother|father|brother|sister|son|daughter|relative)\b[^.;]*$/i.test(text.slice(0, match.index)))) return undefined;
+  return String(ages[0]);
 }
 
 function inferSex(text: string): CaseInput["sex"] | undefined {
@@ -53,7 +57,7 @@ function inferPresentingComplaint(text: string): string | undefined {
   if (/\b(headache|thunderclap)\b/.test(lower)) return "Headache";
   if (/\b(confus(?:ed|ion)|deliri(?:um|ous)|not (?:himself|herself))\b/.test(lower)) return "Confusion";
   if (/\b(chest (?:pain|pressure|tightness|heaviness)|central chest|retrosternal)\b/.test(lower)) return "Chest pain";
-  if (/\b(shortness of breath|breathless|sob|dyspnoea|wheeze)\b/.test(lower)) return "Breathlessness";
+  if (/\b(shortness of breath|breathless(?:ness)?|sob|dyspnoea|wheeze)\b/.test(lower)) return "Breathlessness";
   if (/\b(abdominal pain|abdo pain|tummy pain|epigastric|ruq|rif|flank pain)\b/.test(lower)) return "Abdominal pain";
   if (/\b(jaundice|yellow eyes|yellow skin)\b/.test(lower)) return "Jaundice";
   if (/\bweakness\b/.test(lower)) return "Weakness";
@@ -80,9 +84,9 @@ function extractSocial(text: string): string | undefined {
   return fragments ? Array.from(new Set(fragments.map((item) => item.trim()))).join("; ") : undefined;
 }
 
-export function parseSmartCaseInput(text: string): SmartCaseParseResult {
+export function parseSmartCaseInput(text: string, existingLabs?: CaseInput["labs"]): SmartCaseParseResult {
   const trimmedText = text.trim();
-  const labParse = parseLabText(trimmedText);
+  const labParse = parseLabText(trimmedText, existingLabs);
   const patch: Partial<CaseInput> = {};
 
   if (!trimmedText) {
@@ -114,6 +118,6 @@ export function parseSmartCaseInput(text: string): SmartCaseParseResult {
   return {
     patch,
     parsedLabCount: labParse.parsedValues.length,
-    warnings: labParse.warnings,
+    warnings: [...labParse.warnings, ...(!age ? ["Patient age was not unambiguous. Enter it manually."] : [])],
   };
 }

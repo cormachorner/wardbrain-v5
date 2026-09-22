@@ -45,6 +45,7 @@ export const acuteAbdominalPainFeatureVocabulary = {
     "peritonism",
     "murphys_sign",
     "distension",
+    "pulsatile_abdomen",
     "hernia_present",
     "incarcerated_hernia",
   ],
@@ -151,9 +152,9 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       escalationRules: [
         {
           ifAll: ["abdominal_pain"],
-          ifAny: ["collapse", "hypotension", "shock"],
+          ifAny: ["collapse", "shock", "pulsatile_abdomen"],
           add: 8,
-          reason: "unstable abdominal pain in an older vascular patient must escalate AAA",
+          reason: "abdominal pain with collapse, shock, or a pulsatile mass must escalate AAA",
         },
       ],
       penalties: [
@@ -180,6 +181,46 @@ export const acuteAbdominalPainDiagnoses: DiagnosisDefinition[] = [
       classicPitfalls: ["Mistaking symptomatic AAA for renal colic, gastroenteritis, or generic back pain."],
     },
     sourceNotes: ["Dangerous vascular abdominal emergency."],
+  },
+  {
+    id: "gi_bleed",
+    name: "GI bleed",
+    presentationBlocks: ["acute_abdominal_pain"],
+    summary: "Haematemesis, melaena, or rectal bleeding with escalation for haemodynamic compromise.",
+    features: {
+      core: ["gi_bleed"],
+      discriminating: ["haematemesis", "melaena", "pr_bleeding"],
+      weak: ["abdominal_pain", "vomiting", "dizziness", "pallor"],
+      against: ["jaundice"],
+      riskFactors: ["nsaid_use", "peptic_ulcer_history", "heavy_alcohol_intake"],
+    },
+    logic: {
+      boosts: [
+        {
+          ifAny: ["haematemesis", "melaena", "pr_bleeding"],
+          add: 5,
+          reason: "explicit gastrointestinal bleeding strongly supports GI bleed",
+        },
+      ],
+      escalationRules: [
+        {
+          ifAll: ["gi_bleed"],
+          ifAny: ["collapse", "hypotension", "shock", "tachycardia"],
+          add: 6,
+          reason: "gastrointestinal bleeding with haemodynamic compromise requires urgent escalation",
+        },
+      ],
+    },
+    relationships: {
+      commonMimics: ["Peptic ulcer disease / gastritis / dyspepsia", "Perforated viscus / peritonitis"],
+      patternTags: ["gastrointestinal-bleeding", "shock-pattern"],
+      redFlagTags: ["gi-bleed", "collapse", "hypotension"],
+    },
+    teaching: {
+      keyPearls: ["Hypotension indicates severity only after a bleeding syndrome is established."],
+      classicPitfalls: ["Inferring GI bleed from tachycardia or hypotension without bleeding evidence."],
+    },
+    sourceNotes: ["Existing live-engine emergency diagnosis represented in the acute abdominal definition set."],
   },
   {
     id: "mesenteric_ischaemia",

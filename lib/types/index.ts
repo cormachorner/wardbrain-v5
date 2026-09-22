@@ -20,9 +20,12 @@ export type CaseInput = {
   dangerousDiagnoses?: string;
   suspectedDiagnosis?: string;
   labs?: LabPanels;
+  labNarrative?: string;
 };
 
 export type ExtractedFeatures = {
+  rawText?: string;
+  excludedFeatures?: string[];
   allText: string;
   matchedFeatures: string[];
 };

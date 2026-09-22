@@ -1,3 +1,4 @@
+import { isFeatureExplicitlyNegated } from "../domain/featureExtractor";
 import { canonicalFeatureSlug } from "../domain/featureSlug";
 import type { ExtractedFeatures } from "../types";
 import type { LlmProposedFeature } from "./schema";
@@ -314,6 +315,11 @@ export function filterLlmFeaturesForClinicalSanity(
       continue;
     }
 
+    if (deterministicFeatures.excludedFeatures?.includes(slug)) {
+      rejectedFeatures.push(reject(canonicalFeature, "contradictory_evidence", "deterministic_context"));
+      continue;
+    }
+
     if (deterministic.has(slug)) {
       rejectedFeatures.push(
         reject(canonicalFeature, "already_present_deterministically", "deterministic_context"),
@@ -326,8 +332,13 @@ export function filterLlmFeaturesForClinicalSanity(
       continue;
     }
 
-    if (evidenceHasLocalNegation(slug, evidence)) {
+    if (evidenceHasLocalNegation(slug, evidence) || isFeatureExplicitlyNegated(deterministicFeatures.rawText ?? deterministicFeatures.allText, slug)) {
       rejectedFeatures.push(reject(canonicalFeature, "negated_evidence", "negation"));
+      continue;
+    }
+
+    if (slug === "infection_source" && !/\b(?:productive cough|purulent sputum|green sputum|yellow sputum|dysuria|cellulitis|infected wound|line infection|pneumonia|urinary tract infection|confirmed infection)\b/i.test(evidence)) {
+      rejectedFeatures.push(reject(canonicalFeature, "insufficient_evidence", "evidence_quality"));
       continue;
     }
 

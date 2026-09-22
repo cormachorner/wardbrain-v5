@@ -38,6 +38,7 @@ export type LabSafetyWarning = {
 };
 
 export type LabInterpretationResult = {
+  qualitativeFeatures?: string[];
   features: string[];
   abnormalities: LabValueAssessment[];
   warnings: string[];
